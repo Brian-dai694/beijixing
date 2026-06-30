@@ -1,0 +1,68 @@
+run_trace:
+  run_id: "{workflow_id}-{date}-{sequence}"
+  created_at: "{iso_datetime}"
+  workflow_id: "{workflow_id}"
+  scenario: "{scenario}"
+  status: draft
+
+  request:
+    user_intent: ""
+    requested_output: ""
+    risk_level: low
+    external_write_requested: false
+
+  inputs:
+    materials:
+      - path_or_url: ""
+        source_type: ""
+        date_or_version: ""
+        access_status: pending
+    required_inputs_complete: false
+    missing_inputs: []
+
+  context:
+    policy_file: ".qianlima/context-policy.yaml"
+    compression_level_used: ""
+    files_read_full: []
+    files_summarized: []
+    source_sections: []
+    pending_verification: []
+
+  sources:
+    data_sources: []
+    source_files: []
+    web_sources: []
+    source_limitations: []
+
+  actions_taken:
+    - step: ""
+      result: ""
+      files_created_or_updated: []
+
+  decisions:
+    - decision: ""
+      evidence: ""
+      source_ref: ""
+      risk_level: low
+      confidence: medium
+      requires_confirmation: false
+
+  validation:
+    evaluation_task_ids: []
+    checks:
+      - id: ""
+        passed: false
+        notes: ""
+    result: pending
+
+  usage_summary:
+    model: ""
+    tool_calls: []
+    estimated_cost_usd: null
+    notes: ""
+
+  output:
+    report_path: ""
+    trace_path: ""
+    next_actions: []
+

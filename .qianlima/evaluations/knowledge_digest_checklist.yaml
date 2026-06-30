@@ -1,0 +1,51 @@
+evaluation:
+  id: eval_knowledge_digest_harness_v1
+  workflow_id: knowledge_digest
+  name: 资料消化 Harness 验证清单
+  frequency: every_run
+  purpose: 确认资料消化任务具备来源、上下文、风险、输出和待验证项。
+
+  required_checks:
+    - id: startup_index_loaded
+      description: 已运行 start-qianlima.ps1，并读取 WORKSPACE_INDEX.md 与最小启动包。
+      required: true
+    - id: task_card_loaded
+      description: 已读取 task-cards/knowledge-digest.yaml。
+      required: true
+    - id: inputs_listed
+      description: 报告或 trace 列出全部资料路径、网页链接或用户提供材料。
+      required: true
+    - id: context_policy_applied
+      description: 多文件、长文件或网页资料已按 context-policy.yaml 选择读取或压缩策略。
+      required: true
+    - id: source_citations_present
+      description: 摘要、问题和行动项能追溯到来源。
+      required: true
+    - id: pending_verification_present
+      description: 报告明确写出待验证项，不能把摘要直接当最终事实。
+      required: true
+    - id: no_external_write
+      description: 未自动写回外部系统，未向群聊或第三方发送结果。
+      required: true
+    - id: trace_created
+      description: 已按 run-traces/RUN_TRACE_TEMPLATE.yaml 生成或补充运行记录。
+      required: true
+    - id: status_panel_updated_if_needed
+      description: 如任务改变当前优先级或待确认动作，已更新 WORKSPACE_STATUS.md。
+      required: false
+
+  fail_if:
+    - summary_without_sources
+    - action_items_without_risk_level
+    - external_write_without_confirmation
+    - high_risk_decision_without_source_reload
+
+  output_requirement:
+    report_must_include:
+      - 资料摘要
+      - 关键问题
+      - 行动项
+      - 待验证项
+      - 数据来源
+      - 使用情况
+

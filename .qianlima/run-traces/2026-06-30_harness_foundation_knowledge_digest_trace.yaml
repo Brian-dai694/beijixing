@@ -1,0 +1,145 @@
+run_trace:
+  run_id: harness-foundation-2026-06-30-001
+  created_at: "2026-06-30T10:52:00+08:00"
+  workflow_id: knowledge_digest
+  scenario: harness_foundation
+  status: completed
+
+  request:
+    user_intent: "优化千里马计划，并记录后提交到 Git"
+    requested_output: "新增可追踪、可验证、可总览的 Harness 底座"
+    risk_level: low
+    external_write_requested: false
+
+  inputs:
+    materials:
+      - path_or_url: "https://picrew.github.io/LLM-Harness/"
+        source_type: web_page
+        date_or_version: "2026-06-30 accessed"
+        access_status: read
+      - path_or_url: ".qianlima/WORKSPACE_INDEX.md"
+        source_type: workspace_index
+        date_or_version: "2026-06-30 generated"
+        access_status: read
+      - path_or_url: ".qianlima/task-cards/knowledge-digest.yaml"
+        source_type: task_card
+        date_or_version: "current"
+        access_status: read
+    required_inputs_complete: true
+    missing_inputs: []
+
+  context:
+    policy_file: ".qianlima/context-policy.yaml"
+    compression_level_used: "L0 for small startup/config files"
+    files_read_full:
+      - ".qianlima/WORKSPACE_INDEX.md"
+      - ".qianlima/README.md"
+      - ".qianlima/work.ws"
+      - ".qianlima/workflow-index.yaml"
+      - ".qianlima/risk-rules.yaml"
+      - ".qianlima/context-policy.yaml"
+      - ".qianlima/model-adapters.yaml"
+      - ".qianlima/task-cards/knowledge-digest.yaml"
+      - ".qianlima/workflows/knowledge_digest.yaml"
+    files_summarized: []
+    source_sections:
+      - "WORKSPACE_INDEX.md startup order and required rules"
+      - "context-policy.yaml file reading limits and safety rules"
+      - "risk-rules.yaml defaults and high-risk actions"
+      - "knowledge-digest task card output and forbidden actions"
+    pending_verification:
+      - "Git status requires repository safe.directory registration because ownership differs on this machine."
+
+  sources:
+    data_sources: []
+    source_files:
+      - ".qianlima/WORKSPACE_INDEX.md"
+      - ".qianlima/workflow-index.yaml"
+      - ".qianlima/workflows/knowledge_digest.yaml"
+      - ".qianlima/task-cards/knowledge-digest.yaml"
+      - ".qianlima/risk-rules.yaml"
+      - ".qianlima/context-policy.yaml"
+    web_sources:
+      - "https://picrew.github.io/LLM-Harness/"
+    source_limitations:
+      - "AHE page was used as design inspiration; local workspace rules remain the source of truth."
+
+  actions_taken:
+    - step: "Create workspace status panel"
+      result: "Added .qianlima/WORKSPACE_STATUS.md"
+      files_created_or_updated:
+        - ".qianlima/WORKSPACE_STATUS.md"
+    - step: "Create reusable run trace template"
+      result: "Added .qianlima/run-traces/RUN_TRACE_TEMPLATE.yaml"
+      files_created_or_updated:
+        - ".qianlima/run-traces/RUN_TRACE_TEMPLATE.yaml"
+    - step: "Create knowledge digest validation checklist"
+      result: "Added .qianlima/evaluations/knowledge_digest_checklist.yaml"
+      files_created_or_updated:
+        - ".qianlima/evaluations/knowledge_digest_checklist.yaml"
+    - step: "Wire checklist and trace template into knowledge_digest"
+      result: "Updated workflow index, workflow definition, and task card"
+      files_created_or_updated:
+        - ".qianlima/workflow-index.yaml"
+        - ".qianlima/workflows/knowledge_digest.yaml"
+        - ".qianlima/task-cards/knowledge-digest.yaml"
+    - step: "Record this optimization run"
+      result: "Added this run trace"
+      files_created_or_updated:
+        - ".qianlima/run-traces/2026-06-30_harness_foundation_knowledge_digest_trace.yaml"
+
+  decisions:
+    - decision: "Use knowledge_digest as the first Harness pilot"
+      evidence: "It is low risk and already has a task card, workflow, template, and evaluation task."
+      source_ref: ".qianlima/task-cards/knowledge-digest.yaml"
+      risk_level: low
+      confidence: high
+      requires_confirmation: false
+    - decision: "Do not connect external systems or write back data"
+      evidence: "risk-rules.yaml defaults to read-only and blocks automatic write actions."
+      source_ref: ".qianlima/risk-rules.yaml"
+      risk_level: low
+      confidence: high
+      requires_confirmation: false
+
+  validation:
+    evaluation_task_ids:
+      - eval_knowledge_digest_basic
+      - eval_knowledge_digest_harness_v1
+      - eval_context_budget_safety
+    checks:
+      - id: startup_index_loaded
+        passed: true
+        notes: "start-qianlima.ps1 completed and skeleton validation passed."
+      - id: task_card_loaded
+        passed: true
+        notes: "knowledge-digest task card was read and updated."
+      - id: source_citations_present
+        passed: true
+        notes: "Trace lists local source files and web source."
+      - id: no_external_write
+        passed: true
+        notes: "No external system was connected or updated."
+      - id: trace_created
+        passed: true
+        notes: "This trace file records the run."
+    result: passed
+
+  usage_summary:
+    model: "Codex GPT-5"
+    tool_calls:
+      - "PowerShell startup validation"
+      - "PowerShell file reads"
+      - "apply_patch file updates"
+      - "web page open"
+    estimated_cost_usd: null
+    notes: "No external paid API usage was recorded in the workspace ledger."
+
+  output:
+    report_path: ".qianlima/WORKSPACE_STATUS.md"
+    trace_path: ".qianlima/run-traces/2026-06-30_harness_foundation_knowledge_digest_trace.yaml"
+    next_actions:
+      - "Add automatic trace generation script."
+      - "Add report validation script."
+      - "Port the same Harness pattern to daily_ad_report with risk labels."
+

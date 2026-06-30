@@ -1,0 +1,54 @@
+workflow:
+  id: knowledge_digest
+  name: 资料消化
+  scenario: knowledge_digest
+  status: draft
+  mode: on_demand
+
+  user_intents:
+    - 整理资料
+    - 压缩长文档
+    - 生成摘要和行动项
+
+  reads:
+    - inbox/*
+    - templates/knowledge-digest_template.md
+
+  writes:
+    - reports/{date}_资料消化_{topic}_V{version}.md
+    - logs/{date}_knowledge_digest_trace.json
+    - usage-ledger/{month}_usage_cost.yaml
+
+  updates:
+    - file-registry.yaml
+    - work.ws
+
+  required_inputs:
+    - materials
+    - optional_topic
+
+  validation:
+    required_checks:
+      - startup_index_loaded
+      - task_card_loaded
+      - report_has_summary
+      - report_has_key_questions
+      - report_has_actions
+      - report_has_source_citation
+      - report_has_usage_cost
+      - report_has_pending_verification
+      - trace_created
+    checklist: evaluations/knowledge_digest_checklist.yaml
+
+  trace:
+    template: run-traces/RUN_TRACE_TEMPLATE.yaml
+    default_output_path: "run-traces/{date}_knowledge_digest_{topic}_trace.yaml"
+
+  risk_policy:
+    default_risk_level: low
+    forbidden_operations:
+      - write_external_truth
+      - send_external
+    confirmation_required_for:
+      - send_external
+      - write_back
