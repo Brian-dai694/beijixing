@@ -1,0 +1,189 @@
+model_adapters:
+  version: 1
+  purpose: Provide model-agnostic context, output, caching, and reasoning policies.
+
+  defaults:
+    strategy: conservative
+    total_window_tokens: unknown
+    usable_context_ratio: 0.60
+    safety_reserve_ratio: 0.40
+    max_output_ratio: 0.15
+    summarize_large_files: true
+    require_source_reload_for_high_risk: true
+    notes: Use this profile when a model is unknown or its limits are not verified.
+
+  capability_classes:
+    small_context:
+      total_window_tokens: 32000
+      usable_context_ratio: 0.50
+      safety_reserve_ratio: 0.50
+      direct_read_max_file_size_kb: 10
+      summary_mode: aggressive
+
+    standard_context:
+      total_window_tokens: 128000
+      usable_context_ratio: 0.70
+      safety_reserve_ratio: 0.30
+      direct_read_max_file_size_kb: 20
+      summary_mode: balanced
+
+    long_context:
+      total_window_tokens: 200000
+      usable_context_ratio: 0.65
+      safety_reserve_ratio: 0.35
+      direct_read_max_file_size_kb: 30
+      summary_mode: balanced
+
+    ultra_long_context:
+      total_window_tokens: 1000000
+      usable_context_ratio: 0.55
+      safety_reserve_ratio: 0.45
+      direct_read_max_file_size_kb: 50
+      summary_mode: staged
+      notes: Ultra-long context still needs staged summaries because retrieval quality and cost can degrade.
+
+  providers:
+    deepseek:
+      source:
+        docs:
+          - https://api-docs.deepseek.com/
+          - https://api-docs.deepseek.com/quick_start/pricing
+          - https://api-docs.deepseek.com/guides/kv_cache
+      api_compatibility:
+        openai_format: true
+        anthropic_format: true
+      cache_policy:
+        context_caching: enabled_by_default
+        granularity: 128_tokens            # DeepSeek KV cache block size
+        cost_discount: ~90%                # cache hit ≈ 10% cost of miss
+        track_fields:
+          - prompt_cache_hit_tokens
+          - prompt_cache_miss_tokens
+        prompt_design:
+          - Put stable system instructions first.
+          - Put stable source summaries before changing task instructions.
+          - Avoid rewriting unchanged long prefixes.
+
+        # 🆕 KV Cache Optimization — 来源: awesome-kv-cache-optimization SOTA 项目
+        kv_cache_optimization:
+          version: "1.0"
+          principle: >
+            不是"能缓存就缓存"，而是"主动设计前缀以最大化缓存命中率"。
+            128-token 粒度意味着：一个字的改动可能废掉整个 128-token 块的缓存。
+
+          rules:
+            - rule: "锚定系统提示"
+              description: "系统提示（Constitution/Statutes/Regulations）是最稳定的前缀块。永远不要修改它——甚至不要重新格式化。"
+              impact: high
+
+            - rule: "治理文件原文引用"
+              description: "引用 YAML/MD 文件内容时，保持原文格式。不要用 '我理解的意思是...' 来改写——改写破坏缓存。"
+              impact: high
+              example: "✅ 直接引用: 'health: red' → ❌ 改写为 '健康状态标记为红色'"
+
+            - rule: "追加优先于编辑"
+              description: "对已有消息追加新信息优于编辑旧消息。编辑旧消息 → 之后所有块缓存全部失效。"
+              impact: critical
+              example: "✅ 发新消息 '更新: last_scan = 07-08' → ❌ 编辑旧消息中的 last_scan 字段"
+
+            - rule: "稳定前缀分层"
+              description: |
+                分层顺序（从最稳定到最变动）:
+                Layer 1: 系统提示 (永不变)
+                Layer 2: 治理文件引用 (跨会话稳定)
+                Layer 3: 会话状态 (单次会话稳定, 如 work.ws 加载)
+                Layer 4: 当前任务指令 (每轮变动)
+              impact: high
+
+            - rule: "compaction 是最后手段"
+              description: "compaction 重写整个前缀 → 缓存全部失效。只有当上下文确实超出预算时才触发。不要在缓存命中率 > 60% 时提议 compaction。"
+              impact: critical
+              threshold: "仅在 context 使用 > 80% 且 cache_hit_rate < 20% 时考虑"
+
+            - rule: "子代理独立上下文"
+              description: "子代理默认 fork_context=false（干净上下文）。这比 fork 父上下文更有利于缓存——因为系统提示前缀在父子间共享。"
+              impact: medium
+
+            - rule: "跨 turn 引用用路径"
+              description: "引用前一轮的文件内容时，优先重新 read_file 而非从历史消息中引用——因为历史消息可能已被 compaction 重写过。重新 read_file 的内容与首次加载格式一致，缓存命中。"
+              impact: medium
+
+          anti_patterns:
+            - "在每轮消息中重新嵌入完整的 work.ws 内容 → 破坏跨 turn 前缀稳定性"
+            - "用 '优化建议: ...' 改写 work.ws 的原文 → 丢失缓存"
+            - "在系统提示和用户消息之间插入不稳定的内容 → 破坏前缀"
+            - "过早触发 compaction → 缓存全部失效"
+      models:
+        deepseek-v4-flash:
+          capability_class: ultra_long_context
+          total_window_tokens: 1000000
+          max_output_tokens: 384000
+          thinking_mode: supported
+          recommended_use:
+            - daily_reports
+            - document_digest
+            - data_analysis
+            - low_cost_batch_work
+          context_policy:
+            usable_context_ratio: 0.55
+            safety_reserve_ratio: 0.45
+            warning_threshold_ratio: 0.50
+            stop_threshold_ratio: 0.80
+          notes: Prefer this for broad, cost-sensitive, ordinary-user workflows.
+
+        deepseek-v4-pro:
+          capability_class: ultra_long_context
+          total_window_tokens: 1000000
+          max_output_tokens: 384000
+          thinking_mode: supported
+          recommended_use:
+            - complex_reasoning
+            - multi_file_synthesis
+            - business_decision_review
+            - high_value_analysis
+          context_policy:
+            usable_context_ratio: 0.50
+            safety_reserve_ratio: 0.50
+            warning_threshold_ratio: 0.45
+            stop_threshold_ratio: 0.75
+          notes: Use for high-value reasoning. Keep larger reserve because thinking mode and final synthesis need space.
+
+        deepseek-chat:
+          compatibility_alias_for: deepseek-v4-flash non-thinking mode
+          deprecation_notice: DeepSeek docs say this name is scheduled for deprecation on 2026-07-24 15:59 UTC.
+
+        deepseek-reasoner:
+          compatibility_alias_for: deepseek-v4-flash thinking mode
+          deprecation_notice: DeepSeek docs say this name is scheduled for deprecation on 2026-07-24 15:59 UTC.
+          reasoning_policy:
+            do_not_reinject_reasoning_content: true
+            preserve_final_answer_only_for_next_turn: true
+
+    openai:
+      strategy: use_capability_class_from_runtime
+      notes: Read actual model limits from runtime config. Do not hard-code.
+
+    anthropic:
+      strategy: use_capability_class_from_runtime
+      notes: Read actual model limits from runtime config. Do not hard-code.
+
+    google:
+      strategy: use_capability_class_from_runtime
+      notes: Use for Gemini and NotebookLM-adjacent document workflows when available.
+
+    local_or_open_weight:
+      strategy: require_manual_profile
+      notes: Local model limits vary by serving stack. Require explicit total_window_tokens.
+
+  selection_rules:
+    - if: user_requests_low_cost_or_batch
+      prefer: deepseek-v4-flash
+    - if: task_requires_deep_reasoning
+      prefer: deepseek-v4-pro
+    - if: model_unknown
+      prefer: defaults
+    - if: many_large_documents
+      prefer: staged_summary_even_with_ultra_long_context
+    - if: high_risk_decision
+      require: source_reload
+

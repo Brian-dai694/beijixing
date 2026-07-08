@@ -1,0 +1,123 @@
+# data-sources.example.yaml — 数据源注册表（脱敏模板）
+# 复制此文件为 data-sources.yaml 并填入真实值
+
+data_sources:
+
+  # ── 飞书表格 ──
+
+  - source_id: lark_ads_daily
+    display_name: 广告消耗日报
+    type: lark_sheet
+    owner: current_user
+    status: active
+    business_purpose: 每日广告花费/销售额/ACoS/订单
+    scenarios: [ad_ops, profit_review]
+    workflows: [daily_ad_report]
+    location:
+      provider: lark
+      spreadsheet_token: <YOUR_LARK_SPREADSHEET_TOKEN>
+      sheet_id: "<YOUR_SHEET_ID>"
+      sheet_name: Ad Daily
+    permissions:
+      access_level: read_only
+    refresh:
+      frequency: daily
+
+  - source_id: lark_asin_sales
+    display_name: ASIN 销量台账
+    type: lark_sheet
+    owner: current_user
+    status: active
+    business_purpose: 每日 ASIN 销量/销售额/订单
+    scenarios: [sales_tracking, profit_review]
+    location:
+      provider: lark
+      spreadsheet_token: <YOUR_LARK_SPREADSHEET_TOKEN>
+      sheet_id: "<YOUR_SHEET_ID>"
+      sheet_name: ASIN Sales
+    permissions:
+      access_level: read_only
+
+  - source_id: lark_kw_log
+    display_name: 关键词卡位追踪
+    type: lark_sheet
+    owner: current_user
+    status: active
+    business_purpose: 核心关键词每日排名记录
+    scenarios: [keyword_tracking]
+    location:
+      provider: lark
+      spreadsheet_token: <YOUR_LARK_SPREADSHEET_TOKEN>
+      sheet_id: "<YOUR_SHEET_ID>"
+      sheet_name: KW日志
+    permissions:
+      access_level: read_write_confirmed
+
+  - source_id: lark_product_list
+    display_name: 自有产品清单
+    type: lark_sheet
+    owner: current_user
+    status: active
+    business_purpose: 产品售价/成本/毛利率/库存
+    scenarios: [inventory_monitor, profit_review]
+    location:
+      provider: lark
+      spreadsheet_token: <YOUR_LARK_SPREADSHEET_TOKEN>
+      sheet_name: 自有产品清单
+    permissions:
+      access_level: read_only
+
+  # ── 领星 ERP ──
+
+  - source_id: lingsing_ads
+    display_name: 领星广告仪表盘
+    type: browser
+    owner: current_user
+    status: active
+    business_purpose: 实时广告数据
+    scenarios: [ad_ops]
+    location:
+      provider: lingsing
+      url: https://ads.lingxing.com/amazon/store-dashboard
+      access_method: kimi_webbridge
+    permissions:
+      access_level: read_only
+    refresh:
+      frequency: realtime
+
+  - source_id: lingsing_product
+    display_name: 领星产品表现
+    type: browser
+    owner: current_user
+    status: active
+    business_purpose: ASIN 销量/库存/BSR
+    scenarios: [sales_tracking, inventory_monitor]
+    location:
+      provider: lingsing
+      url: https://erp.lingxing.com/erp/productExpressionNew
+      access_method: kimi_webbridge
+    permissions:
+      access_level: read_only
+
+  # ── MCP 工具 ──
+
+  - source_id: sorftime_mcp
+    display_name: Sorftime MCP
+    type: mcp_tool
+    status: active
+    business_purpose: 关键词排名/竞品数据（首选）
+    scenarios: [keyword_tracking, product_selection]
+
+  - source_id: pangolinfo_mcp
+    display_name: Pangolinfo MCP
+    type: mcp_tool
+    status: active
+    business_purpose: 关键词排名/竞品数据（回退）
+    scenarios: [keyword_tracking, product_selection]
+
+  - source_id: kimi_webbridge
+    display_name: Kimi WebBridge
+    type: browser_automation
+    status: active
+    business_purpose: 浏览器自动化（领星/Amazon SERP）
+    scenarios: [ad_ops, keyword_tracking]

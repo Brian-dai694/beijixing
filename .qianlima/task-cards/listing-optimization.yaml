@@ -1,0 +1,63 @@
+task_card:
+  id: listing_optimization
+  name: Listing 优化诊断与 2026 主副标题合规
+  plain_language_trigger:
+    - 帮我优化 Listing
+    - 诊断这个 ASIN
+    - 看看标题五点怎么改
+    - 主副标题新规怎么改
+    - 商品亮点怎么写
+  when_to_use: 想提升标题、五点、关键词、A+ 页面和转化率。
+  user_needs_to_provide:
+    - 一个 ASIN
+    - 站点
+    - 当前 Listing 文案，可选
+    - 目标关键词，可选
+    - 当前标题和商品亮点/副标题，可选
+    - 主要出单词或广告转化词，可选
+  agent_will_do:
+    - 读取产品详情、关键词表现、流量结构和竞品标题
+    - 按 2026 主标题 + 商品亮点两段式新规做合规诊断
+    - 识别必须保留的核心出单词、自然排名词和高转化广告词
+    - 找出流量机会、转化问题和移动端首屏表达问题
+    - 给出主标题、商品亮点、五点、搜索词、A+ 和图片的修改建议
+    - 标注优先级、删减风险和待验证项
+  output:
+    type: markdown_report
+    template: templates/listing-optimization_template.md
+  required_sources:
+    - rules/amazon-listing-title-subtitle-2026.md
+  preferred_data_sources:
+    - sif_mcp.ops_get_listing_traffic_overview
+    - sif_mcp.ops_get_listing_traffic_structure
+    - sif_mcp.ops_get_listing_keyword_distribution
+    - sorftime_mcp
+    - pangolinfo_mcp
+    - lark_product_list
+  fallback_when_data_missing:
+    - 如果没有 ASIN 流量数据，只做合规与文案结构建议，并明确标注“缺少流量验证”。
+    - 如果没有当前 Listing 文案，先让用户补充标题、五点、图片/A+ 信息，或只输出优化框架。
+    - 如果官方后台字段限制与规则卡不一致，以 Seller Central 后台为准。
+  must_include:
+    - 当前问题
+    - 2026 主标题/商品亮点合规检查
+    - 关键词机会
+    - 主标题建议
+    - 商品亮点/副标题建议
+    - 五点建议
+    - 后台搜索词建议
+    - A+ 和图片建议
+    - 优先级
+    - 删减风险与替代埋词位置
+    - 数据来源和待验证项
+  quality_gates:
+    - 主标题建议必须标注字符数，目标不超过 75 字符（含空格）。
+    - 商品亮点/副标题建议必须标注字符数，目标不超过 125 字符（含空格）。
+    - 高价值出单词不得直接删除；若删除，必须说明替代埋词位置。
+    - 所有建议必须区分“合规必改”“流量机会”“转化表达优化”。
+    - 输出不得声称已修改后台，除非用户另行确认并完成写回操作。
+  forbidden_actions:
+    - 自动上传 Listing
+    - 自动修改亚马逊后台
+    - 未经确认使用 Seller Central 提交表单
+    - 将未验证的新规当作官方最终结论

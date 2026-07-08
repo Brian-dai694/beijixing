@@ -1,0 +1,286 @@
+# loop-engineering.yaml — Loop Engineering 框架
+# 版本: v1.0 | 创建: 2026-07-08
+# 来源: 机器之心 SOTA "Loop Engineering" 项目 + 千里马 Harness v2.0
+# 理念: "Every workflow is a loop. Design the loop, don't just write steps."
+
+loop_engineering:
+  id: loop_engineering
+  version: "1.0"
+  principle: >
+    Workflow 不是步骤列表——是循环。
+    每个循环有明确的迭代条件、收敛标准和退出策略。
+    循环本身的执行过程是可观测、可优化、可进化的。
+
+  # ── 核心 Loop 类型 ──────────────────────────────────────────
+
+  loop_types:
+
+    # ═══ SDR: Scan → Doubt → Reconcile ═══
+    - id: scan_doubt_reconcile
+      acronym: SDR
+      name: "扫描→质疑→调和"
+      description: >
+        数据采集后不直接接受，先走一遍质疑流程。
+        适合：关键词排名扫描、竞品数据采集、任何依赖外部 API 的数据获取。
+
+      phases:
+        - phase: scan
+          order: 1
+          description: "从首选数据源采集数据"
+          agent_type: explore
+          timeout_ms: 60000
+          retry_on_empty: 1
+
+        - phase: doubt
+          order: 2
+          description: "对采集的数据逐条质疑（单源？暴跌？截断？过期？）"
+          agent_type: plan
+          doubt_triggers:        # 继承自 workflow 的 doubt_pass.triggers
+            - single_source
+            - rank_plunge
+            - data_truncation
+            - first_page_disappearance
+            - stale_data
+            - competitor_flood
+          output: "标记置信度: HIGH / MEDIUM / LOW / BLIND"
+
+        - phase: reconcile
+          order: 3
+          description: "多源交叉验证，调和冲突"
+          agent_type: plan
+          rules:                   # 继承自 workflow 的 doubt_pass.reconciliation_rules
+            - "两源一致→置信度 HIGH"
+            - "两源冲突>5位→Sorftime 为准"
+            - "仅一源→置信度 LOW，24h 内补扫"
+            - "三源盲区→标记 '数据盲区-待人工'"
+          output: "最终排名表 + 置信度标注 + 数据盲区清单"
+
+        - phase: loop_check
+          order: 4
+          description: "判断是否需要重新扫描"
+          condition: "存在未解决的 '数据盲区' 且重试次数 < max_retry_per_keyword"
+          action: "对盲区词切换到备选数据源，回到 scan 阶段"
+
+      convergence:
+        target: "所有词的置信度 ≥ MEDIUM，或 max_retries 耗尽"
+        max_iterations: "每词 max_retry_per_keyword 次"
+
+      tracing:
+        metrics:
+          - scan_success_rate: "首选数据源命中率"
+          - doubt_trigger_rate: "质疑触发率（触发数/总数）"
+          - reconcile_confidence_distribution: "HIGH/MEDIUM/LOW/BLIND 分布"
+          - blind_spot_rate: "数据盲区比例"
+          - iterations_per_keyword: "每个词的平均扫描次数"
+
+      adaptive_parameters:
+        - parameter: max_retry_per_keyword
+          adjust: "如果 blind_spot_rate > 0.3，+1（最多 5）"
+        - parameter: primary_data_source
+          adjust: "如果 scan_success_rate < 0.6，切换到备选数据源"
+
+
+    # ═══ EVR: Execute → Verify → Refine ═══
+    - id: execute_verify_refine
+      acronym: EVR
+      name: "执行→验证→精炼"
+      description: >
+        执行生成任务后，独立验证质量，不通过则精炼后重新验证。
+        适合：广告日报生成、利润测算、Listing 优化报告。
+
+      phases:
+        - phase: execute
+          order: 1
+          description: "执行生成任务（读取数据→计算指标→生成报告）"
+          agent_type: implementer
+          checkpoint: "生成后自检：必填字段是否完整？"
+
+        - phase: verify
+          order: 2
+          description: "独立验证（建议用独立子代理，避免确认偏误）"
+          agent_type: verifier
+          checks:
+            - "所有 verification_gates 逐个检查"
+            - "数据源标注完整性"
+            - "跨源数据偏差 < 5%"
+            - "诊断建议是否有数据支撑"
+          output: "pass / fail_with_issues(列出) / fail_critical(阻塞)"
+
+        - phase: refine
+          order: 3
+          description: "根据验证结果精炼报告"
+          condition: "verify 结果为 fail_with_issues"
+          actions:
+            - "补充缺失的数据源标注"
+            - "修正计算错误"
+            - "补全遗漏的诊断规则"
+            - "调整措辞以提高可操作性"
+          agent_type: implementer
+          note: "精炼是局部修补，不全量重新生成"
+
+        - phase: loop_check
+          order: 4
+          description: "判断是否需要重新验证"
+          condition: "refine 后存在未解决的 issue 且迭代次数 < 3"
+          action: "回到 verify 阶段"
+
+      convergence:
+        target: "verify = pass，或 max_iterations 耗尽且无 critical 阻塞"
+        max_iterations: 3
+        escalation: "如果连续 3 次 verify 不通过 → 标记为 '需人工介入'"
+
+      tracing:
+        metrics:
+          - first_pass_rate: "首次 execute→verify 即通过的比例"
+          - avg_refine_iterations: "平均精炼次数"
+          - top_failure_reasons: "最常见的验证失败原因"
+          - verify_time_ratio: "验证耗时占总耗时的比例"
+
+      adaptive_parameters:
+        - parameter: max_iterations
+          adjust: "如果 first_pass_rate < 0.5，+1（最多 5）"
+        - parameter: verify_agent_model
+          adjust: "如果 verify 漏检后续被用户发现 → 升级 verifier 模型"
+
+
+    # ═══ PBV: Plan → Build → Verify ═══
+    - id: plan_build_verify
+      acronym: PBV
+      name: "规划→构建→验证"
+      description: >
+        先规划方案（需用户确认高风险步骤），再构建产出，最后验证。
+        适合：Listing 优化、选品分析、竞品对比、调价建议生成。
+
+      phases:
+        - phase: plan
+          order: 1
+          description: "分析需求→收集证据→生成方案（假设亮牌）"
+          agent_type: plan
+          output: "方案文档 + 假设清单（等待确认）"
+          gate: "如有高风险操作，必须等用户确认假设后再继续"
+
+        - phase: build
+          order: 2
+          description: "按确认的方案构建产出"
+          agent_type: implementer
+          gate: "plan 阶段用户已确认，或方案不含高风险操作"
+
+        - phase: verify
+          order: 3
+          description: "独立验证产出质量"
+          agent_type: verifier
+          checks:
+            - "产出是否对齐 plan 中的方案"
+            - "假设是否在产出中标注"
+            - "数据源是否引用"
+            - "建议是否有风险等级"
+
+        - phase: loop_check
+          order: 4
+          description: "判断是否需要重新规划"
+          condition: "verify 发现方案级别的缺陷（不是小错误，是方向性问题）"
+          action: "回到 plan 阶段，更新方案"
+
+      convergence:
+        target: "verify = pass"
+        max_iterations: 2
+        note: "PBV 循环代价高，严格限制迭代次数"
+
+      tracing:
+        metrics:
+          - plan_acceptance_rate: "用户确认方案的比例"
+          - build_fidelity: "build 产出与 plan 方案的一致性"
+          - assumption_accuracy: "假设被后续数据验证的比例"
+
+
+    # ═══ EDA: Explore → Decide → Act ═══
+    - id: explore_decide_act
+      acronym: EDA
+      name: "探索→决策→行动"
+      description: >
+        并行收集多方面信息，综合分析后决策，行动后跟踪效果。
+        适合：竞品对比、选品探索、关键词需求生命周期分析。
+
+      phases:
+        - phase: explore
+          order: 1
+          description: "多子代理并行收集信息"
+          agent_type: explore
+          pattern: parallel_fanout
+          outputs: "各维度数据摘要"
+
+        - phase: decide
+          order: 2
+          description: "综合所有探索结果，生成推荐决策"
+          agent_type: plan
+          output: "决策建议 + 置信度 + 风险 + 替代方案"
+          gate: "高风险决策需用户确认"
+
+        - phase: act
+          order: 3
+          description: "执行决策（仅限允许的操作）"
+          agent_type: implementer
+          constraint: "不得执行 risk-rules.yaml 中 forbidden 的操作"
+
+        - phase: observe
+          order: 4
+          description: "跟踪行动效果"
+          condition: "仅当 act 阶段有对外操作时执行"
+          timeframe: "行动后 1-7 天复查"
+          metrics:
+            - "决策是否达到预期效果"
+            - "用户是否接受建议"
+
+      convergence:
+        target: "decide 阶段产出置信度 > 0.7"
+        note: "EDA 通常是单次执行，observe 是后续的独立复查"
+
+      tracing:
+        metrics:
+          - explore_coverage: "信息维度覆盖率"
+          - decide_confidence: "决策置信度"
+          - user_acceptance: "用户接受率"
+          - outcome_accuracy: "决策效果准确率"
+
+  # ── Loop 通用属性 ──────────────────────────────────────────
+
+  universal_loop_properties:
+
+    # 每个 loop 都可以被追踪
+    tracing:
+      fields:
+        - loop_id: "本次循环的唯一 ID"
+        - loop_type: "SDR / EVR / PBV / EDA"
+        - workflow_id: "所属 workflow"
+        - start_time: "循环开始时间"
+        - end_time: "循环结束时间"
+        - iterations: "实际迭代次数"
+        - phases_completed: "完成哪些阶段"
+        - convergence_reached: "是否收敛"
+        - exit_reason: "正常收敛 / 达到最大迭代 / 用户中断 / 数据不可得"
+      storage: "logs/loop-trace-{workflow_id}-{date}.json"
+
+    # 每个 loop 都有自适应参数
+    adaptive:
+      description: >
+        Loop 参数不是写死的。每次执行后，根据 tracing 数据自动调整。
+        调整规则记录在 evolutionary-workflow.yaml 中。
+      feedback_cycle: "improvement-loop.yaml v2.0"
+
+    # Loop 失败不阻塞全局
+    failure_policy:
+      on_loop_timeout: "记录当前状态，标记为 'partial_complete'，不阻塞后续流程"
+      on_loop_exhausted: "达到 max_iterations 仍未收敛 → 降级输出，标注 'best_effort'"
+      on_loop_blocked: "关键数据源不可用 → 暂停循环，通知用户，等待恢复"
+
+  # ── Workflow 映射 ──────────────────────────────────────────
+
+  workflow_loop_mapping:
+    keyword_rank_scan:     {loop: SDR, description: "扫描排名→质疑数据→调和冲突"}
+    daily_ad_report:       {loop: EVR, description: "读取数据→计算指标→生成报告→验证→精炼"}
+    competitor_comparison: {loop: EDA, description: "探索竞品→分析差距→推荐策略"}
+    listing_optimization:  {loop: PBV, description: "诊断问题→设计方案→生成优化→验证"}
+    profit_check:          {loop: EVR, description: "读取成本→计算利润→生成报告→验证"}
+    product_discovery:     {loop: EDA, description: "探索市场→评估机会→推荐选品"}
+    traffic_anomaly_diagnosis: {loop: SDR, description: "扫描流量→质疑异常→调和诊断"}
+    knowledge_digest:      {loop: EVR, description: "读取材料→提取要点→生成摘要→验证"}

@@ -1,0 +1,809 @@
+# file-registry.yaml — 文件注册表
+# 版本: v1.0 | 创建: 2026-06-23
+# 记录所有重要文件的位置、用途、来源和调用关系。
+
+files:
+
+  # ── 核心工作文件（只读参考） ──
+
+  - file_id: work_manual
+    path: 全局工作台-工作手册.md
+    display_name: 工作手册
+    scenario: all
+    file_type: reference
+    description: 顶层操作手册，目录结构/工作流/工具链/硬约束
+    can_overwrite: false
+    retention: keep
+
+  - file_id: pitfalls_log
+    path: 全局复利踩坑日志.md
+    display_name: 踩坑日志
+    scenario: all
+    file_type: reference
+    description: 17 个历史踩坑 + 复盘检查清单 + 标签索引
+    can_overwrite: false
+    retention: keep
+
+  - file_id: ops_dashboard
+    path: operations/运营驾驶舱-2026.md
+    display_name: 运营驾驶舱 2026
+    scenario: all
+    file_type: reference
+    description: 年度目标/产品矩阵/库存/PD/新品开发/清货计划
+    can_overwrite: false
+    retention: keep
+
+  - file_id: sop_standard
+    path: SOP-标准操作流程.md
+    display_name: SOP 标准操作流程
+    scenario: all
+    file_type: reference
+    description: 7 份 SOP（关键词/广告/台账/新品/踩坑/飞书/启动）
+    can_overwrite: false
+    retention: keep
+
+  - file_id: sop_patrol
+    path: SOP-领星每日巡检框架.md
+    display_name: 领星巡检框架
+    scenario: all
+    file_type: reference
+    description: 11 模块日报 + 领星 ERP 巡检步骤
+    can_overwrite: false
+    retention: keep
+
+  - file_id: pd_patrol_plan
+    path: operations/PD-2026-半小时巡检方案.md
+    display_name: PD 半小时巡检方案
+    scenario: keyword_tracking
+    file_type: reference
+    description: PD 期间每 30 分钟关键词巡检 SOP
+    can_overwrite: false
+    retention: keep
+
+  # ── 每日产出（按日期归档） ──
+
+  - file_id: daily_patrol_template
+    path: daily-summaries/daily-patrol-{date}.md
+    display_name: 每日巡检日报
+    scenario: all
+    file_type: daily_output
+    generated_by: patrol_workflow
+    can_overwrite: false
+    retention: archive
+
+  - file_id: kw_rank_tracker_template
+    path: kw-records/kw-rank-tracker-{date}.md
+    display_name: 关键词排名记录
+    scenario: keyword_tracking
+    file_type: daily_output
+    generated_by: keyword_rank_scan
+    can_overwrite: false
+    retention: archive
+
+  - file_id: pd_rank_log_template
+    path: kw-records/pd-rank-log-{date}.md
+    display_name: Prime Day 关键词巡检日志
+    scenario: keyword_tracking
+    file_type: daily_output
+    generated_by: keyword_rank_scan
+    can_overwrite: false
+    retention: archive
+
+  - file_id: ad_report_template
+    path: daily-summaries/lingsing-ad-report-{date}.md
+    display_name: 广告消耗日报
+    scenario: ad_ops
+    file_type: daily_output
+    generated_by: daily_ad_report
+    can_overwrite: false
+    retention: archive
+
+  - file_id: asin_sales_template
+    path: daily-summaries/asin-sales-{date}.md
+    display_name: ASIN 销量台账
+    scenario: sales_tracking
+    file_type: daily_output
+    generated_by: sales_ledger
+    can_overwrite: false
+    retention: archive
+
+  # ── 千里马计划（设计文档） ──
+
+  - file_id: qianlima_readme
+    path: 千里马计划/README.md
+    display_name: 千里马计划文档索引
+    scenario: all
+    file_type: reference
+    can_overwrite: true
+    retention: keep
+
+  - file_id: qianlima_ai_start_here
+    path: 千里马计划/AI_START_HERE.md
+    display_name: AI 启动入口
+    scenario: all
+    file_type: startup
+    description: 大模型打开千里马计划后的第一读取入口，要求先生成工作区索引
+    can_overwrite: true
+    retention: keep
+
+  - file_id: qianlima_agents_rules
+    path: 千里马计划/AGENTS.md
+    display_name: Agent 启动规则
+    scenario: all
+    file_type: startup
+    description: 给 Agent/Codex 类工具读取的项目级规则，要求先运行启动索引
+    can_overwrite: true
+    retention: keep
+
+  - file_id: qianlima_start_script
+    path: 千里马计划/start-qianlima.ps1
+    display_name: 千里马启动脚本
+    scenario: all
+    file_type: script
+    description: 生成 WORKSPACE_INDEX.md、workspace-index.json 并运行骨架校验
+    can_overwrite: true
+    retention: keep
+
+  - file_id: qianlima_start_script_cn
+    path: 千里马计划/启动千里马计划.ps1
+    display_name: 千里马中文启动入口
+    scenario: all
+    file_type: script
+    description: 面向普通用户的中文入口，内部调用 start-qianlima.ps1
+    can_overwrite: true
+    retention: keep
+
+  - file_id: qianlima_governance
+    path: 千里马计划/Work Scenario Governance Spec 工作场景治理标准.md
+    display_name: 工作场景治理标准
+    scenario: all
+    file_type: reference
+    can_overwrite: true
+    retention: keep
+
+  - file_id: qianlima_harness
+    path: 千里马计划/Harness 千里马计划 MVP 数据上下文层与广告运营日报 Agent.md
+    display_name: Harness MVP 架构
+    scenario: all
+    file_type: reference
+    can_overwrite: true
+    retention: keep
+
+  - file_id: qianlima_dataconnector
+    path: 千里马计划/Data Connector Spec 数据连接器标准.md
+    display_name: 数据连接器标准
+    scenario: all
+    file_type: reference
+    can_overwrite: true
+    retention: keep
+
+  # ── .qianlima 治理文件 ──
+
+  - file_id: work_ws
+    path: 千里马计划/.qianlima/work.ws
+    display_name: 工作状态总索引
+    scenario: all
+    file_type: governance
+    description: Agent 每次执行任务前必读
+    can_overwrite: true
+    retention: keep
+
+  - file_id: workspace_index_md
+    path: 千里马计划/.qianlima/WORKSPACE_INDEX.md
+    display_name: 工作区启动索引
+    scenario: all
+    file_type: generated_index
+    generated_by: bootstrap_qianlima
+    description: 大模型启动后必须先读取的人类可读索引
+    can_overwrite: true
+    retention: keep
+
+  - file_id: workspace_index_json
+    path: 千里马计划/.qianlima/workspace-index.json
+    display_name: 工作区机器索引
+    scenario: all
+    file_type: generated_index
+    generated_by: bootstrap_qianlima
+    description: 给 Agent 和工具读取的机器可读索引
+    can_overwrite: true
+    retention: keep
+
+  - file_id: data_sources_yaml
+    path: 千里马计划/.qianlima/data-sources.yaml
+    display_name: 数据源注册表
+    scenario: all
+    file_type: governance
+    can_overwrite: true
+    retention: keep
+
+  - file_id: file_registry_yaml
+    path: 千里马计划/.qianlima/file-registry.yaml
+    display_name: 文件注册表
+    scenario: all
+    file_type: governance
+    can_overwrite: true
+    retention: keep
+
+  - file_id: ahe_adaptation_doc
+    path: 千里马计划/AHE 借鉴清单与千里马适配方案.md
+    display_name: AHE 借鉴清单与千里马适配方案
+    scenario: all
+    file_type: reference
+    source: agentic-Harness-engineering
+    can_overwrite: true
+    retention: keep
+
+  - file_id: observability_config
+    path: 千里马计划/.qianlima/observability.yaml
+    display_name: 观测指标配置
+    scenario: all
+    file_type: governance
+    source: ahe_adaptation
+    can_overwrite: true
+    retention: keep
+
+  - file_id: evaluation_tasks
+    path: 千里马计划/.qianlima/evaluation-tasks.yaml
+    display_name: 评估任务配置
+    scenario: all
+    file_type: governance
+    source: ahe_adaptation
+    used_by:
+      - daily_ad_report
+    can_overwrite: true
+    retention: keep
+
+  - file_id: improvement_loop
+    path: 千里马计划/.qianlima/improvement-loop.yaml
+    display_name: 改进循环配置
+    scenario: all
+    file_type: governance
+    source: ahe_adaptation
+    can_overwrite: true
+    retention: keep
+
+  - file_id: amz_simple_playbook
+    path: 千里马计划/.qianlima/playbooks/amz-simple-playbook.yaml
+    display_name: 亚马逊运营大众版流程
+    scenario: all
+    file_type: playbook
+    source: amz-evo-harness
+    can_overwrite: true
+    retention: keep
+
+  - file_id: task_card_competitor_comparison
+    path: 千里马计划/.qianlima/task-cards/competitor-comparison.yaml
+    display_name: 竞品对比任务卡
+    scenario: product_selection
+    file_type: task_card
+    source: amz-evo-harness
+    can_overwrite: true
+    retention: keep
+
+  - file_id: task_card_listing_optimization
+    path: 千里马计划/.qianlima/task-cards/listing-optimization.yaml
+    display_name: Listing 优化任务卡
+    scenario: product_selection
+    file_type: task_card
+    source: amz-evo-harness
+    can_overwrite: true
+    retention: keep
+
+  - file_id: rule_amazon_listing_title_subtitle_2026
+    path: 千里马计划/.qianlima/rules/amazon-listing-title-subtitle-2026.md
+    display_name: Amazon Listing 主副标题 2026 新规执行卡
+    scenario: product_selection
+    file_type: rule
+    source: 用户提供文档《亚马逊 2026 最新主副标题新规.docx》
+    used_by:
+      - listing_optimization
+    can_overwrite: true
+    retention: keep
+
+  - file_id: task_card_profit_check
+    path: 千里马计划/.qianlima/task-cards/profit-check.yaml
+    display_name: 利润测算任务卡
+    scenario: profit_review
+    file_type: task_card
+    source: amz-evo-harness
+    can_overwrite: true
+    retention: keep
+
+  - file_id: task_card_keyword_monitoring
+    path: 千里马计划/.qianlima/task-cards/keyword-monitoring.yaml
+    display_name: 关键词监控任务卡
+    scenario: keyword_tracking
+    file_type: task_card
+    source: amz-evo-harness
+    can_overwrite: true
+    retention: keep
+
+  - file_id: task_card_product_discovery
+    path: 千里马计划/.qianlima/task-cards/product-discovery.yaml
+    display_name: 新品机会任务卡
+    scenario: product_selection
+    file_type: task_card
+    source: amz-evo-harness
+    can_overwrite: true
+    retention: keep
+
+  - file_id: rule_amazon_product_selection_human_plus
+    path: 千里马计划/.qianlima/rules/amazon-product-selection-human-plus.md
+    display_name: Amazon 选品 Human-Plus 执行卡
+    scenario: product_selection
+    file_type: rule
+    source: amazon-selection-human-plus skill + 用户选品方法论 + amazon-keyword-relevance + asin-classification-report-V2
+    used_by:
+      - product_discovery
+    can_overwrite: true
+    retention: keep
+
+  - file_id: external_skill_amazon_keyword_relevance
+    path: D:/戴晨民/缓存/xwechat_files/wxid_qf5ph36uipdb21_1ed3/msg/file/2026-07/amazon-keyword-relevance(1)/amazon-keyword-relevance
+    display_name: Amazon 关键词相关性分层 Skill 参考源
+    scenario: product_selection
+    file_type: external_reference
+    source: 用户提供目录 amazon-keyword-relevance(1)
+    used_by:
+      - product_discovery
+      - listing_optimization
+    can_overwrite: false
+    retention: source_reference_only
+
+  - file_id: external_skill_asin_classification_report_v2
+    path: D:/戴晨民/缓存/xwechat_files/wxid_qf5ph36uipdb21_1ed3/msg/file/2026-07/asin-classification-report-V2/asin-classification-report-V2
+    display_name: ASIN 产品形态归类报告 Skill 参考源
+    scenario: product_selection
+    file_type: external_reference
+    source: 用户提供目录 asin-classification-report-V2
+    used_by:
+      - product_discovery
+      - competitor_comparison
+    can_overwrite: false
+    retention: source_reference_only
+
+  - file_id: template_competitor_comparison
+    path: 千里马计划/.qianlima/templates/competitor-comparison_template.md
+    display_name: 竞品对比报告模板
+    scenario: product_selection
+    file_type: template
+    used_by:
+      - competitor_comparison
+    can_overwrite: true
+    retention: keep
+
+  - file_id: template_listing_optimization
+    path: 千里马计划/.qianlima/templates/listing-optimization_template.md
+    display_name: Listing 优化报告模板
+    scenario: product_selection
+    file_type: template
+    used_by:
+      - listing_optimization
+    can_overwrite: true
+    retention: keep
+
+  - file_id: template_profit_check
+    path: 千里马计划/.qianlima/templates/profit-check_template.md
+    display_name: 利润测算报告模板
+    scenario: profit_review
+    file_type: template
+    used_by:
+      - profit_check
+    can_overwrite: true
+    retention: keep
+
+  - file_id: template_keyword_monitoring
+    path: 千里马计划/.qianlima/templates/keyword-monitoring_template.md
+    display_name: 关键词监控报告模板
+    scenario: keyword_tracking
+    file_type: template
+    used_by:
+      - keyword_monitoring
+    can_overwrite: true
+    retention: keep
+
+  - file_id: template_product_discovery
+    path: 千里马计划/.qianlima/templates/product-discovery_template.md
+    display_name: 新品机会报告模板
+    scenario: product_selection
+    file_type: template
+    used_by:
+      - product_discovery
+    can_overwrite: true
+    retention: keep
+
+  - file_id: notebooklm_playbook
+    path: 千里马计划/.qianlima/playbooks/notebooklm-simple-playbook.yaml
+    display_name: NotebookLM 资料消化流程
+    scenario: knowledge_digest
+    file_type: playbook
+    source: notebooklm_adaptation
+    can_overwrite: true
+    retention: keep
+
+  - file_id: task_card_knowledge_digest
+    path: 千里马计划/.qianlima/task-cards/knowledge-digest.yaml
+    display_name: 资料消化任务卡
+    scenario: knowledge_digest
+    file_type: task_card
+    source: notebooklm_adaptation
+    can_overwrite: true
+    retention: keep
+
+  - file_id: template_knowledge_digest
+    path: 千里马计划/.qianlima/templates/knowledge-digest_template.md
+    display_name: 资料消化报告模板
+    scenario: knowledge_digest
+    file_type: template
+    used_by:
+      - knowledge_digest
+    can_overwrite: true
+    retention: keep
+
+  - file_id: workflow_knowledge_digest
+    path: 千里马计划/.qianlima/workflows/knowledge_digest.yaml
+    display_name: 资料消化工作流
+    scenario: knowledge_digest
+    file_type: workflow
+    used_by:
+      - knowledge_digest
+    can_overwrite: true
+    retention: keep
+
+  - file_id: workflow_keyword_rank_scan
+    path: 千里马计划/.qianlima/workflows/keyword_rank_scan.yaml
+    display_name: 关键词巡检工作流
+    scenario: keyword_tracking
+    file_type: workflow
+    used_by:
+      - keyword_rank_scan
+    can_overwrite: true
+    retention: keep
+
+  - file_id: task_card_traffic_anomaly_diagnosis
+    path: 千里马计划/.qianlima/task-cards/traffic-anomaly-diagnosis.yaml
+    display_name: 流量异常诊断任务卡
+    scenario: keyword_tracking
+    file_type: task_card
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: workflow_traffic_anomaly_diagnosis
+    path: 千里马计划/.qianlima/workflows/traffic_anomaly_diagnosis.yaml
+    display_name: 西柚复刻版流量异常诊断工作流
+    scenario: keyword_tracking
+    file_type: workflow
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: template_traffic_anomaly_diagnosis
+    path: 千里马计划/.qianlima/templates/traffic-anomaly-diagnosis_template.md
+    display_name: 流量异常诊断报告模板
+    scenario: keyword_tracking
+    file_type: template
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: local_traffic_history
+    path: 千里马计划/.qianlima/local-data/traffic-history
+    display_name: 本地流量异常历史库
+    scenario: keyword_tracking
+    file_type: local_dataset
+    source: sorftime_pangolinfo_snapshots
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: false
+    retention: keep
+
+  - file_id: traffic_anomaly_replica_playbook
+    path: 千里马计划/.qianlima/playbooks/traffic-anomaly-replica-playbook.md
+    display_name: 西柚复刻版流量异常诊断 Playbook
+    scenario: keyword_tracking
+    file_type: playbook
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: traffic_anomaly_replica_script
+    path: 千里马计划/.qianlima/scripts/invoke-traffic-anomaly-replica.ps1
+    display_name: 西柚复刻版流量异常诊断本地报告脚本
+    scenario: keyword_tracking
+    file_type: script
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: traffic_anomaly_snapshot_importer
+    path: 千里马计划/.qianlima/scripts/import-traffic-anomaly-snapshot.ps1
+    display_name: 流量异常诊断快照入库脚本
+    scenario: keyword_tracking
+    file_type: script
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: traffic_anomaly_snapshot_schema_example
+    path: 千里马计划/.qianlima/local-data/traffic-history/snapshot-schema.example.json
+    display_name: 流量异常诊断快照 JSON 示例
+    scenario: keyword_tracking
+    file_type: schema_example
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: traffic_anomaly_snapshot_mapping
+    path: 千里马计划/.qianlima/local-data/traffic-history/mcp-to-snapshot-mapping.md
+    display_name: Sorftime/Pangolinfo 到流量诊断快照映射
+    scenario: keyword_tracking
+    file_type: reference
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: traffic_anomaly_snapshot_template_generator
+    path: 千里马计划/.qianlima/scripts/new-traffic-anomaly-snapshot-template.ps1
+    display_name: 流量异常诊断快照模板生成脚本
+    scenario: keyword_tracking
+    file_type: script
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: traffic_anomaly_one_command_runner
+    path: 千里马计划/.qianlima/scripts/run-traffic-anomaly-replica.ps1
+    display_name: 西柚复刻版流量异常诊断单入口脚本
+    scenario: keyword_tracking
+    file_type: script
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: traffic_anomaly_replica_quickstart
+    path: 千里马计划/.qianlima/playbooks/traffic-anomaly-replica-quickstart.md
+    display_name: 西柚复刻版流量异常诊断 Quickstart
+    scenario: keyword_tracking
+    file_type: playbook
+    source: xiyou_replica_design
+    used_by:
+      - traffic_anomaly_diagnosis
+    can_overwrite: true
+    retention: keep
+
+  - file_id: context_policy
+    path: 千里马计划/.qianlima/context-policy.yaml
+    display_name: 上下文压缩策略
+    scenario: all
+    file_type: governance
+    source: qianlima_context_governance
+    can_overwrite: true
+    retention: keep
+
+  - file_id: context_compression_playbook
+    path: 千里马计划/.qianlima/playbooks/context-compression-playbook.yaml
+    display_name: 自动上下文压缩流程
+    scenario: all
+    file_type: playbook
+    source: qianlima_context_governance
+    can_overwrite: true
+    retention: keep
+
+  - file_id: model_adapters
+    path: 千里马计划/.qianlima/model-adapters.yaml
+    display_name: 大模型适配策略
+    scenario: all
+    file_type: governance
+    source: qianlima_model_governance
+    can_overwrite: true
+    retention: keep
+
+  - file_id: model_integration_guide
+    path: 千里马计划/如何把千里马计划合并到大模型.md
+    display_name: 如何把千里马计划合并到大模型
+    scenario: all
+    file_type: reference
+    source: qianlima_model_governance
+    can_overwrite: true
+    retention: keep
+  - file_id: task_card_keyword_demand_lifecycle_timing
+    path: 千里马计划/.qianlima/task-cards/keyword-demand-lifecycle-timing.yaml
+    display_name: 关键词需求生命周期与行动时机任务卡
+    scenario: keyword_tracking
+    file_type: task_card
+    source: xiyou_demand_replica
+    used_by:
+      - keyword_demand_lifecycle_timing
+    can_overwrite: true
+    retention: keep
+
+  - file_id: workflow_keyword_demand_lifecycle_timing
+    path: 千里马计划/.qianlima/workflows/keyword_demand_lifecycle_timing.yaml
+    display_name: 关键词三层需求 + 竞争格局工作流
+    scenario: keyword_tracking
+    file_type: workflow
+    source: xiyou_demand_replica
+    used_by:
+      - keyword_demand_lifecycle_timing
+    can_overwrite: true
+    retention: keep
+
+  - file_id: template_demand_data
+    path: 千里马计划/.qianlima/templates/keyword-demand-data_template.md
+    display_name: 需求量化层模板
+    scenario: keyword_tracking
+    file_type: template
+    source: xiyou_demand_replica
+    used_by:
+      - keyword_demand_lifecycle_timing
+    can_overwrite: true
+    retention: keep
+
+  - file_id: template_demand_boundary
+    path: 千里马计划/.qianlima/templates/keyword-demand-boundary_template.md
+    display_name: 需求边界层模板
+    scenario: keyword_tracking
+    file_type: template
+    source: xiyou_demand_replica
+    used_by:
+      - keyword_demand_lifecycle_timing
+    can_overwrite: true
+    retention: keep
+
+  - file_id: template_demand_competition
+    path: 千里马计划/.qianlima/templates/keyword-competition_template.md
+    display_name: 竞争格局模板
+    scenario: keyword_tracking
+    file_type: template
+    source: xiyou_demand_replica
+    used_by:
+      - keyword_demand_lifecycle_timing
+    can_overwrite: true
+    retention: keep
+
+  - file_id: playbook_keyword_demand_lifecycle
+    path: 千里马计划/.qianlima/playbooks/keyword-demand-lifecycle-timing-playbook.md
+    display_name: 关键词三层需求 + 竞争格局 Playbook
+    scenario: keyword_tracking
+    file_type: playbook
+    source: xiyou_demand_replica
+    used_by:
+      - keyword_demand_lifecycle_timing
+    can_overwrite: true
+    retention: keep
+
+  - file_id: demand_data_input_example
+    path: 千里马计划/.qianlima/local-data/keyword-demand-history/demand-data-input.example.json
+    display_name: 需求量化层输入示例
+    scenario: keyword_tracking
+    file_type: schema_example
+    source: xiyou_demand_replica
+    used_by:
+      - keyword_demand_lifecycle_timing
+    can_overwrite: true
+    retention: keep
+
+  - file_id: demand_boundary_input_example
+    path: 千里马计划/.qianlima/local-data/keyword-demand-history/demand-boundary-input.example.json
+    display_name: 需求边界层输入示例
+    scenario: keyword_tracking
+    file_type: schema_example
+    source: xiyou_demand_replica
+    used_by:
+      - keyword_demand_lifecycle_timing
+    can_overwrite: true
+    retention: keep
+
+  - file_id: competition_input_example
+    path: 千里马计划/.qianlima/local-data/keyword-demand-history/competition-input.example.json
+    display_name: 竞争格局输入示例
+    scenario: keyword_tracking
+    file_type: schema_example
+    source: xiyou_demand_replica
+    used_by:
+      - keyword_demand_lifecycle_timing
+    can_overwrite: true
+    retention: keep
+
+  # ── v2.0-v2.2 新增治理文件 ─────────────────────────────────
+
+  - file_id: harness_health_check
+    path: 千里马计划/.qianlima/harness-health-check.yaml
+    display_name: Harness 健康自检配置
+    scenario: all
+    file_type: governance
+    description: 5 维度健康自检（数据新鲜度/文件一致性/治理完整性/场景一致性/数据源可达性）
+    generated_by: agent
+    can_overwrite: true
+    retention: keep
+
+  - file_id: harness_status
+    path: 千里马计划/.qianlima/HARNESS_STATUS.md
+    display_name: Harness 自述
+    scenario: all
+    file_type: governance
+    description: 自动维护的 harness 状态报告，每次启动时更新
+    generated_by: agent
+    can_overwrite: true
+    retention: keep
+
+  - file_id: subagent_orchestration
+    path: 千里马计划/.qianlima/subagent-orchestration.yaml
+    display_name: 子代理编排标准
+    scenario: all
+    file_type: governance
+    description: 4 种子代理类型 + 4 种编排模式 + marshal+celery 任务调度
+    generated_by: agent
+    can_overwrite: true
+    retention: keep
+
+  - file_id: evolutionary_workflow
+    path: 千里马计划/.qianlima/evolutionary-workflow.yaml
+    display_name: 进化式 Workflow 框架
+    scenario: all
+    file_type: governance
+    description: 3 种进化策略 + gdpo 策略优化增强
+    generated_by: agent
+    can_overwrite: true
+    retention: keep
+
+  - file_id: loop_engineering
+    path: 千里马计划/.qianlima/loop-engineering.yaml
+    display_name: Loop Engineering 框架
+    scenario: all
+    file_type: governance
+    description: SDR/EVR/PBV/EDA 四层 Loop + workflow 映射
+    generated_by: agent
+    can_overwrite: true
+    retention: keep
+
+  - file_id: skill_registry
+    path: 千里马计划/.qianlima/skill-registry.yaml
+    display_name: Skill 注册表
+    scenario: all
+    file_type: governance
+    description: 8 个 Skill 标准化（trigger/scope/capability/output/constraint/quality_gate）
+    generated_by: agent
+    can_overwrite: true
+    retention: keep
+
+  - file_id: alembic_migration
+    path: 千里马计划/.qianlima/alembic-migration.yaml
+    display_name: 配置演化版本追踪
+    scenario: all
+    file_type: governance
+    description: 迁移记录（forward/rollback/diff/audit）+ 6 条今日迁移
+    generated_by: agent
+    can_overwrite: true
+    retention: keep
+
+  - file_id: kw_rank_scan_20260708
+    path: kw-records/kw-rank-scan-2026-07-08.md
+    display_name: 关键词排名扫描 2026-07-08
+    scenario: keyword_tracking
+    file_type: daily_output
+    generated_by: keyword_rank_scan
+    description: SDR Loop best_effort 扫描 — 5/9 词有数据，4 盲区
+    can_overwrite: false
+    retention: archive

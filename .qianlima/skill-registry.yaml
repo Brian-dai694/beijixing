@@ -1,0 +1,275 @@
+# skill-registry.yaml — 千里马 Skill 注册表
+# 版本: v1.0 | 创建: 2026-07-08
+# 来源: nemo-skills — 借鉴 NeMo Skills 的技能管理体系
+# 理念: "Every task-card is a skill. Skills have triggers, scope, capabilities, and quality gates.
+#         Skills can be composed. Skills can be audited."
+
+skill_registry:
+  id: qianlima_skills
+  version: "1.0"
+  principle: >
+    Task-card 不只是"用户说了什么就做什么"的映射表——
+    它是技能的完整定义：触发条件、能力边界、输入输出、约束和质量门禁。
+    每个 skill 都可以被独立测试、审计和进化。
+
+  # ── Skill 定义标准 ──────────────────────────────────────────
+
+  skill_schema:
+    required_fields:
+      - skill_id: "唯一标识符"
+      - name: "人类可读名称"
+      - description: "一句话说明这个 skill 做什么"
+      - triggers: "用户说什么会触发这个 skill（自然语言模式列表）"
+      - scope: "这个 skill 的边界——它做什么，不做什么"
+      - capabilities: "具体的执行能力列表"
+      - outputs: "产出物格式和路径"
+      - constraints: "硬约束（不可绕过）"
+      - quality_gates: "质量门禁列表"
+
+    optional_fields:
+      - requires_confirmation: "执行前是否需要用户确认"
+      - estimated_tokens: "预估 token 消耗"
+      - estimated_duration_min: "预估执行时间"
+      - anti_rationalization: "预判 Agent 偷懒借口"
+      - sub_skills: "依赖的子技能"
+      - evolution_history: "技能自身的进化历史"
+
+  # ── 已注册 Skill ────────────────────────────────────────────
+
+  skills:
+
+    - skill_id: keyword_rank_scan
+      name: "关键词排名扫描"
+      description: "查询 ASIN 在核心关键词下的最新排名，标记变化趋势，识别暴跌和机会词"
+      triggers:
+        - "跑一下关键词排名"
+        - "看看卡位"
+        - "扫描关键词"
+        - "排名巡检"
+        - "今天的关键词"
+      scope:
+        does:
+          - "查询 Sorftime MCP 获取排名数据"
+          - "Pangolinfo 交叉验证"
+          - "标记暴跌（↓≥15位）、上升（↑≥10位）、稳定"
+          - "生成 kw-rank-scan-{date}.md 报告"
+        does_not:
+          - "修改广告竞价"
+          - "自动写回后台"
+          - "在没有交叉验证的情况下声称排名准确"
+      capabilities:
+        - "SDR Loop: Scan → Doubt → Reconcile"
+        - "多数据源自动切换（Sorftime → Pangolinfo → Kimi WebBridge）"
+        - "置信度标注（HIGH/MEDIUM/LOW/BLIND）"
+      outputs:
+        - format: markdown
+          path: "kw-records/kw-rank-scan-{date}.md"
+      constraints:
+        - "不得在仅单源数据时宣称置信度 HIGH"
+        - "数据盲区必须标注，不得伪装成全量覆盖"
+        - "排名暴跌必须触发交叉验证"
+      quality_gates:
+        - "覆盖率 ≥ 78%"
+        - "每个词标注数据源"
+        - "大幅变动词有趋势箭头和可能原因"
+      estimated_tokens: 8000
+      estimated_duration_min: 3
+      anti_rationalization: "见 task-cards/keyword-monitoring.yaml"
+
+    - skill_id: daily_ad_report
+      name: "每日广告运营日报"
+      description: "读取广告数据，计算核心指标（ACoS/CPC/CTR/CVR/TACoS），识别异常活动，生成结构化日报"
+      triggers:
+        - "生成广告日报"
+        - "广告数据报告"
+        - "昨天广告表现"
+        - "广告消耗"
+      scope:
+        does:
+          - "读取领星/飞书广告数据"
+          - "计算 8 项核心指标"
+          - "应用 5 条诊断规则"
+          - "生成日报 Markdown"
+        does_not:
+          - "修改广告活动"
+          - "自动调竞价"
+          - "自动加预算"
+      capabilities:
+        - "EVR Loop: Execute → Verify → Refine"
+        - "跨源数据偏差检测（< 5%）"
+        - "诊断建议标注数据支撑和风险等级"
+      outputs:
+        - format: markdown
+          path: "reports/{date}_广告运营_日报_US_V{version}.md"
+        - format: json
+          path: "logs/{date}_daily_ad_report_trace.json"
+      requires_confirmation: true
+      estimated_tokens: 12000
+      estimated_duration_min: 5
+
+    - skill_id: competitor_comparison
+      name: "竞品对比分析"
+      description: "对比自身产品与竞品在排名、价格、评论、关键词覆盖等维度的差异，给出策略建议"
+      triggers:
+        - "竞品对比"
+        - "看看对手"
+        - "和 XX 比较"
+        - "benchmark"
+      scope:
+        does:
+          - "收集竞品 ASIN 核心数据"
+          - "多维度对比分析"
+          - "生成策略建议"
+        does_not:
+          - "修改自身 Listing"
+          - "自动调价"
+      capabilities:
+        - "EDA Loop: Explore → Decide → Act"
+        - "并行子代理收集多维数据"
+        - "综合决策 + 置信度标注"
+      outputs:
+        - format: markdown
+          path: "reports/{date}_竞品对比_US_V{version}.md"
+      estimated_tokens: 15000
+      estimated_duration_min: 8
+
+    - skill_id: profit_check
+      name: "利润测算"
+      description: "基于成本结构、广告费、FBA 费等计算产品净利润率和盈亏平衡点"
+      triggers:
+        - "算利润"
+        - "这个产品赚不赚钱"
+        - "毛利"
+        - "盈亏"
+      scope:
+        does:
+          - "假设亮牌（汇率/佣金/FBA/退货率/广告占比）"
+          - "逐项费用计算"
+          - "敏感度分析（+2% 退货率 → 净利润变多少）"
+        does_not:
+          - "在假设未确认时输出确定性结论"
+      capabilities:
+        - "EVR Loop: Execute → Verify → Refine"
+        - "Assumption Surfacing（6 维度亮牌）"
+        - "What-if 场景分析"
+      requires_confirmation: true
+      constraints:
+        - "所有假设必须逐条等待用户确认后才能计算"
+      estimated_tokens: 6000
+      estimated_duration_min: 3
+
+    - skill_id: listing_optimization
+      name: "Listing 优化诊断"
+      description: "诊断 Listing 的标题/五点/搜索词/图片问题，给出符合 Amazon 规则的优化建议"
+      triggers:
+        - "优化 Listing"
+        - "标题优化"
+        - "五点描述"
+        - "Search Terms"
+      scope:
+        does:
+          - "诊断当前 Listing 问题"
+          - "对比竞品 Listing"
+          - "生成优化建议"
+        does_not:
+          - "直接修改 Amazon 后台"
+      capabilities:
+        - "PBV Loop: Plan → Build → Verify"
+        - "符合 Amazon 7/27 新规检查"
+        - "Search Terms 去重 + 长度验证"
+      estimated_tokens: 10000
+      estimated_duration_min: 6
+
+    - skill_id: product_discovery
+      name: "新品机会探索"
+      description: "评估品类市场容量、竞争格局、利润空间，判断选品可行性"
+      triggers:
+        - "选品"
+        - "这个品类能不能做"
+        - "新品机会"
+        - "市场分析"
+      scope:
+        does:
+          - "市场容量估算"
+          - "竞争格局分析"
+          - "利润空间测算"
+        does_not:
+          - "代替实际下单和采购决策"
+      capabilities:
+        - "EDA Loop: Explore → Decide → Act"
+        - "多维度信息并行收集"
+        - "风险标注 + 替代方案"
+      estimated_tokens: 20000
+      estimated_duration_min: 10
+
+    - skill_id: knowledge_digest
+      name: "资料消化"
+      description: "读取长文档/多文件/课程资料，提取关键要点、生成结构化摘要和行动项"
+      triggers:
+        - "消化资料"
+        - "总结这篇文章"
+        - "提炼要点"
+        - "帮我看看这个文档"
+      scope:
+        does:
+          - "按 context-policy 压缩长文档"
+          - "提取目标/事实/决策/风险/行动"
+        does_not:
+          - "把外部资料当作绝对真理写入知识库"
+      capabilities:
+        - "EVR Loop"
+        - "L0-L4 五级压缩策略"
+        - "摘要来源追溯"
+      estimated_tokens: 5000
+      estimated_duration_min: 2
+
+    - skill_id: traffic_anomaly_diagnosis
+      name: "流量异常诊断"
+      description: "当产品流量/排名出现异常时，系统性诊断原因并给出恢复方案"
+      triggers:
+        - "流量异常"
+        - "排名掉了"
+        - "突然没单了"
+        - "崩盘"
+      scope:
+        does:
+          - "对比历史流量数据"
+          - "检查竞品动态"
+          - "诊断可能的根因（广告/Listing/类目/竞品）"
+        does_not:
+          - "在未确认根因时盲目调价"
+      capabilities:
+        - "SDR Loop"
+        - "多维度根因分析"
+        - "恢复方案 + 时间预估"
+      estimated_tokens: 10000
+      estimated_duration_min: 5
+
+  # ── Skill 组合 ──────────────────────────────────────────────
+
+  compositions:
+    # 多个 skill 可以组合成复合能力
+    - id: daily_patrol
+      name: "每日运营巡检"
+      description: "关键词扫描 + 广告日报 + 销量台账 → 一次输出"
+      skills: [keyword_rank_scan, daily_ad_report]
+      estimated_tokens: 18000
+      estimated_duration_min: 8
+
+    - id: post_pd_recovery
+      name: "PD 后恢复诊断"
+      description: "关键词扫描 + 流量异常诊断 → 定位 PD 后恢复瓶颈"
+      skills: [keyword_rank_scan, traffic_anomaly_diagnosis]
+      estimated_tokens: 16000
+      estimated_duration_min: 7
+
+  # ── Skill 审计 ──────────────────────────────────────────────
+
+  audit:
+    metrics:
+      - "每个 skill 的执行次数"
+      - "首次通过率（无需 refine 即通过 quality gates）"
+      - "平均 token 消耗 vs 预估"
+      - "用户接受率"
+      - "anti_rationalization 触发次数（Agent 试图偷懒被拦截）"
+    review_frequency: monthly

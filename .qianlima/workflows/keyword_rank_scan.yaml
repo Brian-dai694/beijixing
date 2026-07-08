@@ -1,0 +1,152 @@
+# keyword_rank_scan.yaml — 关键词巡检 Workflow
+# 版本: v2.0 | 更新: 2026-07-08
+# 变更: 显式嵌入 SDR Loop（Scan→Doubt→Reconcile）结构
+
+workflow:
+  id: keyword_rank_scan
+  name: 关键词巡检
+  scenario: keyword_tracking
+  status: active
+  mode: recurring
+  description: 优先读取 Sorftime，再用 Pangolinfo 交叉验证关键词露出、广告位和变化趋势，写回本地巡检日志
+
+  schedule:
+    type: hourly
+    timezone: Asia/Shanghai
+    auto_run: false
+    notes: Prime Day 等特殊场景按 PT 归档
+
+  user_intents:
+    - 跑一下关键词排名
+    - 看看卡位
+    - 每小时巡检关键词
+    - 复查 Prime Day 关键词
+
+  reads:
+    - 全局工作台-工作手册.md
+    - 全局复利踩坑日志.md
+    - kw-records/pd-rank-log-{date}.md
+    - daily-summaries/daily-patrol-{date}.md
+    - 千里马计划/.qianlima/task-cards/keyword-monitoring.yaml
+    - 千里马计划/.qianlima/data-sources.yaml
+    - 千里马计划/.qianlima/file-registry.yaml
+
+  writes:
+    - kw-records/pd-rank-log-{date}.md
+    - daily-summaries/daily-patrol-{date}.md
+    - 千里马计划/.qianlima/logs/{date}_keyword_rank_scan_trace.json
+
+  updates:
+    - 千里马计划/.qianlima/work.ws
+    - 千里马计划/.qianlima/file-registry.yaml
+
+  required_inputs:
+    - marketplace
+    - keywords
+    - optional_compare_time
+
+  required_data_sources:
+    - sorftime_mcp
+    - pangolinfo_mcp
+
+  validation:
+    required_checks:
+      - report_has_keyword_ranking_table
+      - report_has_trend_and_risk_words
+      - report_has_inventory_risk
+      - report_has_source_citation
+      - report_has_no_auto_bid_change
+
+  forbidden_operations:
+    - change_bid
+    - change_budget
+    - write_back
+
+  # ── Doubt Pass ──────────────────────────────────────────────
+  # 每次查询排名后，不直接接受数据，先走一遍质疑流程。
+  # 模式: CLAIM → EXTRACT → DOUBT → RECONCILE → STOP
+  doubt_pass:
+    enabled: true
+    description: >
+      从 agent-skills 的 doubt-driven-development 适配。
+      关键词排名是广告运营的核心决策依据，单源数据+不质疑=盲目调价。
+      每个排名数据点必须通过至少一项质疑检查，未通过的标记为"待验证"。
+
+    triggers:
+      - id: single_source
+        condition: "排名数据仅来自一个数据源（如仅 Pangolinfo）"
+        action: "标记为 '单源验证-置信度LOW'。若 Sorftime 可用则补扫；否则启动 Kimi WebBridge"
+        severity: warning
+
+      - id: rank_plunge
+        condition: "排名相比上次记录下降 ≥ 15 位"
+        action: "立即交叉验证两个数据源。两源一致→确认是真跌，标红预警。两源冲突→三源裁决"
+        severity: critical
+
+      - id: data_truncation
+        condition: "数据源返回 'no data'、空值、或结果数明显少于预期"
+        action: "标记为 '数据盲区'。切换到备选数据源。三源都无法确认→人工复查"
+        severity: critical
+
+      - id: first_page_disappearance
+        condition: "关键词从 P1 消失（原排名 ≤ 10，现排名 > 10 或未见）"
+        action: "最高优先级触发。双源交叉验证。确认真消失→立即预警，建议当天调竞价"
+        severity: critical
+
+      - id: stale_data
+        condition: "数据源返回的时间戳非今日或距上次查询 > 2 小时"
+        action: "标记置信度为 MEDIUM。如果是 PD 等高频场景，必须重新查询新鲜数据"
+        severity: warning
+
+      - id: competitor_flood
+        condition: "Top 4 位置全部为 Sponsored（广告位）"
+        action: "记录竞品 ASIN 和广告类型。这是竞品加大广告投入的信号，不是你的排名问题——不要调自己的竞价去跟"
+        severity: info
+
+    reconciliation_rules:
+      - rule: "两源一致"
+        action: "以两源共认为准，置信度 HIGH。直接写入报告"
+      - rule: "两源冲突（偏差 > 5 位）"
+        action: "以 Sorftime 为准，Pangolinfo 为参考。置信度 MEDIUM。标注冲突"
+      - rule: "两源冲突（偏差 ≤ 5 位）"
+        action: "取均值，置信度 HIGH。标注 '两源基本一致'"
+      - rule: "三源都无法确认"
+        action: "标记为 '数据盲区-MANUAL REVIEW'。不写入最终报告正文，单独列入 '待复查' 附录"
+      - rule: "仅一源可用"
+        action: "置信度 LOW。标注数据源。24 小时内必须补扫第二源"
+
+    exit_condition: "所有标记 '待验证' 的词都已交叉确认，或明确标注为 '数据盲区-待人工复查'"
+
+  # ── SDR Loop（v2.0 新增）────────────────────────────────────
+  # 本 workflow 使用 Scan→Doubt→Reconcile 循环。
+  # 完整定义见 loop-engineering.yaml → loop_types.scan_doubt_reconcile
+  loop:
+    type: SDR                              # Scan → Doubt → Reconcile
+    source: loop-engineering.yaml
+
+    phases:
+      - {phase: scan,    order: 1, description: "Sorftime MCP → 排名数据采集"}
+      - {phase: doubt,   order: 2, description: "按 doubt_pass.triggers 逐条质疑 → 标置信度"}
+      - {phase: reconcile, order: 3, description: "多源交叉验证 → 调和冲突 → 最终排名表"}
+      - {phase: loop_check, order: 4, description: "盲区词切换到备选数据源 → 回到 scan"}
+
+    convergence:
+      target: "所有词置信度 ≥ MEDIUM，或 max_retry_per_keyword 耗尽"
+      max_iterations: "每词 max_retry_per_keyword 次（当前: 2）"
+
+    tracing:
+      enabled: true
+      metrics:
+        - scan_success_rate
+        - doubt_trigger_rate
+        - reconcile_confidence_distribution
+        - blind_spot_rate
+        - iterations_per_keyword
+      output: "logs/loop-trace-keyword_rank_scan-{date}.json"
+
+    adaptive:
+      - parameter: max_retry_per_keyword
+        rule: "如果 blind_spot_rate > 0.3，+1（上限 5）"
+      - parameter: primary_data_source
+        rule: "如果 scan_success_rate < 0.6 且连续 3 次，切换到备选数据源"
+

@@ -1,0 +1,96 @@
+# 千里马计划 .gitignore
+# Harness v2.2 | 2026-07-08
+
+# ═══════════════════════════════════════════════════
+# 隐私数据 — 绝对不提交
+# ═══════════════════════════════════════════════════
+
+# 飞书配置（含 token）
+.qianlima/data-sources.yaml
+
+# 工作状态（含 ASIN/价格/利润）
+.qianlima/work.ws
+
+# 用户偏好
+.qianlima/user-preferences.yaml
+
+# 工作区索引（含绝对路径）
+.qianlima/WORKSPACE_INDEX.md
+.qianlima/workspace-index.json
+
+# 历史报告（含实际运营数据）
+reports/
+kw-records/
+daily-summaries/
+
+# 本地数据
+.qianlima/local-data/
+.qianlima/inbox/
+.qianlima/working/
+
+# ═══════════════════════════════════════════════════
+# 运行时产物 — 不提交
+# ═══════════════════════════════════════════════════
+
+# 日志
+.qianlima/logs/
+.qianlima/run-traces/
+
+# 用量账本
+.qianlima/usage-ledger/
+
+# 反馈
+.qianlima/feedback/
+
+# 评估结果
+.qianlima/evaluations/
+
+# 上下文摘要
+.qianlima/context-summaries/
+
+# 归档
+.qianlima/archive/
+
+# 导出
+.qianlima/exports/
+
+# 迁移日志
+.qianlima/alembic-migration.yaml
+
+# HARNESS_STATUS（含运行时状态）
+.qianlima/HARNESS_STATUS.md
+
+# work-hub（含事件记录）
+.qianlima/work-hub.ws
+
+# ═══════════════════════════════════════════════════
+# 系统文件 — 不提交
+# ═══════════════════════════════════════════════════
+Thumbs.db
+.DS_Store
+*.tmp
+*.bak
+*.swp
+*~
+
+# Python
+__pycache__/
+*.pyc
+
+# 平台特定
+.qianlima/platforms/
+.qianlima/openai-docs-cache/
+
+# 本地缓存（不提交）
+.npm-cache/
+.agents/
+.learnings/
+.agent-browser/
+.codewhale/
+memory/
+from-root/
+open-design/
+working/
+skills-lock.json
+SESSION-STATE.md
+MEMORY.md

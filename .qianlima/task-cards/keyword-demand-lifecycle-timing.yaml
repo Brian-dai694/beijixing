@@ -1,0 +1,44 @@
+﻿task_card:
+  id: keyword_demand_lifecycle_timing
+  name: 关键词需求生命周期与行动时机
+  plain_language_trigger:
+    - 判断这个词现在能不能做
+    - 这个关键词是在增长还是萎缩
+    - 关键词需求生命周期
+    - 需求判断层
+    - weeks_to_peak
+    - demand_data
+    - demand_boundary
+    - demand
+    - competition
+    - 搜索量具体数字
+    - ABA 排名
+    - 这个词值不值得做
+    - 竞品做了哪些词
+  when_to_use: 判断 1-20 个关键词处于增长、萎缩、季节性低谷或峰值阶段；或评估某词的竞争格局和可进入性。
+  user_needs_to_provide:
+    - 关键词列表，1-20 个
+    - 站点或国家，默认 US
+    - 目标 ASIN，可选（competition 层需要）
+  agent_will_do:
+    - 优先用 SIF market_get_keyword_history 获取 ABA 搜索量/排名/Top3 集中度真值
+    - 优先用 SIF market_get_keyword_root_trend 获取词根覆盖率和分散度
+    - 优先用 SIF market_get_keyword_demand 获取生命周期诊断和行动时机
+    - 优先用 SIF market_get_keyword_competition 获取竞争格局和可进入性
+    - SIF 不可用时降级到 Sorftime + Pangolinfo + Google Trends 代理模式
+    - 输出 profiles[] 和 timing_summary[]，按 weeks_to_peak 排序
+  output:
+    type: json_and_markdown
+    template: templates/keyword-demand-lifecycle-timing_template.md
+  must_include:
+    - profiles[] 每词一个结构化诊断
+    - timing_summary[] 按 weeks_to_peak 升序排序
+    - data_coverage 数据覆盖说明
+    - 数据来源标注（sif / sorftime / pangolinfo）
+    - SIF 模式下不标 proxy；降级模式下标 proxy
+    - 待验证项
+  forbidden_actions:
+    - 自动调广告
+    - 自动改价
+    - 自动采购
+    - 自动写回后台

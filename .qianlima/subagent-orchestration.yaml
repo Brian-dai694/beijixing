@@ -1,0 +1,316 @@
+# subagent-orchestration.yaml — 子代理编排标准
+# 版本: v1.0 | 创建: 2026-07-08
+# 来源: Lilian Weng "Harness Engineering for Self-Improvement" (2026-07-04)
+#         Pattern 3: Sub-agent and Backend Jobs
+# 理念: "Sub-agents are not an afterthought — they are first-class building blocks of harness design."
+
+orchestration:
+  id: subagent_orchestration
+  version: "1.0"
+  principle: >
+    子代理不是"额外功能"——它们是 harness 架构的一等公民。
+    每个 workflow 在设计时就应该考虑：哪些步骤适合拆分为子代理？
+    哪些步骤必须由父代理亲自执行？
+
+  # ── 何时使用子代理 ──────────────────────────────────────────
+
+  decision_tree:
+    use_subagent_when:
+      - condition: "任务涉及的上下文 > 50KB 或需要读 3+ 个独立文件"
+        reason: "避免父代理上下文膨胀"
+        subagent_type: explore
+
+      - condition: "多个独立数据源需要并行查询"
+        reason: "并行子代理比串行读取快 3-5 倍"
+        subagent_type: explore
+        pattern: parallel_fanout
+
+      - condition: "需要深度推理但结果独立于其他步骤"
+        reason: "思考型工作适合独立上下文"
+        subagent_type: plan
+        pattern: think_then_report
+
+      - condition: "文件写入/代码生成/实现类工作"
+        reason: "减少父代理的工具调用序列长度"
+        subagent_type: implementer
+        pattern: build_then_verify
+
+      - condition: "复杂验证需要多维度检查"
+        reason: "验证器独立上下文避免确认偏误"
+        subagent_type: verifier
+        pattern: verify_then_sign_off
+
+    keep_in_parent_when:
+      - condition: "单次读取/单次搜索/简单问答"
+        reason: "子代理有启动开销"
+      - condition: "结果直接影响架构决策"
+        reason: "架构决策需要完整的全局视角"
+      - condition: "用户正在交互式对话中等待"
+        reason: "子代理异步返回会打断对话流"
+
+  # ── 子代理类型与模式 ──────────────────────────────────────────
+
+  agent_types:
+
+    explore:
+      description: "只读查询/搜索/状态检查"
+      model_strength: faster
+      thinking: "off"
+      max_tool_calls: 15
+      stop_condition: "QUESTION 已回答或证据足够"
+      timeout_ms: 120000
+      use_for:
+        - "关键词排名扫描（单个 ASIN）"
+        - "领星页面数据提取"
+        - "飞书表格查询"
+        - "竞品数据收集"
+
+    plan:
+      description: "设计/分析/策略推荐"
+      model_strength: same
+      thinking: "medium"
+      max_tool_calls: 30
+      stop_condition: "方案完成且有可用证据支撑"
+      timeout_ms: 300000
+      use_for:
+        - "广告竞价策略分析"
+        - "选品可行性评估"
+        - "PD 复盘分析"
+        - "Listing 优化方案"
+
+    implementer:
+      description: "文件写入/代码生成/配置修改"
+      model_strength: same
+      thinking: "medium"
+      max_tool_calls: 50
+      stop_condition: "产出已写入并验证通过"
+      timeout_ms: 600000
+      checkpoints:
+        - "写入前: 展示变更计划"
+        - "写入后: 读取验证"
+        - "失败后: 最多重试 2 次"
+      use_for:
+        - "生成日报文件"
+        - "更新飞书表格"
+        - "修改配置文件"
+        - "创建新 task-card"
+
+    verifier:
+      description: "独立验证/质量检查"
+      model_strength: faster
+      thinking: "off"
+      max_tool_calls: 20
+      stop_condition: "所有 verification gates 检查完毕"
+      use_for:
+        - "日报数据交叉验证"
+        - "关键词覆盖率检查"
+        - "治理文件一致性验证"
+      independence_rule: "验证器不得与实现器共享上下文，避免确认偏误"
+
+  # ── 编排模式 ────────────────────────────────────────────────
+
+  patterns:
+
+    parallel_fanout:
+      name: "并行扇出"
+      description: "多个独立数据源同时查询，父代理收集结果后合成"
+      structure: |
+        父代理 → [子代理 A: 查数据源 1]
+                → [子代理 B: 查数据源 2]   ← 同时启动
+                → [子代理 C: 查数据源 3]
+                → 父代理合成 → 输出
+      use_when: "数据源之间无依赖关系"
+      example:
+        workflow: keyword_rank_scan
+        fanout:
+          - child: "查 ASIN B0FY5677XC 排名 (Sorftime)"
+          - child: "查 ASIN B0FM7GWXYN 排名 (Pangolinfo)"
+          - child: "查领星最新广告数据"
+        parent: "汇总排名表 + 广告数据 → 生成日报"
+      max_concurrent: 5
+      warning: "并行子代理共享 rate-limit 预算，过度并发可能触发 API 限流"
+
+    sequential_pipeline:
+      name: "顺序管道"
+      description: "A 的输出是 B 的输入，串行执行"
+      structure: |
+        父代理 → 子代理 A → 父代理审阅 → 子代理 B → 父代理审阅 → 输出
+      use_when: "步骤间有严格依赖关系"
+      example:
+        workflow: daily_ad_report
+        pipeline:
+          - child_a: "从领星提取原始广告数据 → 返回 JSON"
+          - parent_review: "确认数据完整性"
+          - child_b: "基于 JSON 生成日报 Markdown → 返回文件路径"
+          - parent_review: "最终质量检查"
+      handoff_format: "子代理 A 输出 = {output_type: json, path: ..., summary: ...}"
+
+    build_verify_pair:
+      name: "实现+验证对"
+      description: "实现器和验证器成对运行，互相独立"
+      structure: |
+        父代理 → 子代理 A (implementer): 生成日报
+                → 子代理 B (verifier): 独立验证日报   ← 同时或稍后启动
+                → 父代理: 对比两份结果 → 决策
+      use_when: "产出质量要求高，需要独立验证"
+      example:
+        build: "子代理 A 生成 daily_ad_report"
+        verify: "子代理 B 检查: 数据源是否标注、字段是否完整、跨源偏差是否 <5%"
+        parent_action: "如果验证通过 → 发布; 如果不通过 → 退回子代理 A 修复"
+      independence: "验证器不得看到实现器的上下文"
+
+    explore_then_decide:
+      name: "探索后决策"
+      description: "多个探索子代理并行收集信息，父代理基于结果做决策"
+      structure: |
+        父代理 → [explore A: 竞品价格]
+                → [explore B: 竞品关键词]
+                → [explore C: 竞品评论趋势]
+                → 父代理: 综合分析 → 推荐策略
+      use_when: "需要收集多方面信息后才做决策"
+      example:
+        workflow: competitor_comparison
+        explore:
+          - child: "收集 3 个竞品 ASIN 的排名数据"
+          - child: "收集竞品价格历史"
+          - child: "收集竞品评论数和评分趋势"
+        parent_decision: "对比自身产品 → 定价建议 + 关键词策略"
+
+  # ── 失败处理 ────────────────────────────────────────────────
+
+  failure_handling:
+    timeout:
+      action: "取消子代理，父代理降级执行（用更简单的方法）"
+      max_wait_ms: 600000
+
+    tool_error:
+      action: "子代理重试 1 次（换数据源或参数）"
+      escalate_after: 2
+
+    permission_denied:
+      action: "子代理向父代理报告，父代理向用户请求权限"
+
+    empty_result:
+      action: "标记为 '数据不可得'，不阻塞后续步骤"
+      notation: "在报告中标注数据缺口"
+
+    agent_crash:
+      action: "父代理检测到子代理未完成 → 自行补做关键步骤"
+      fallback_priority:
+        - "优先补做 critical 级别的步骤"
+        - "non-critical 步骤标记为 'pending'"
+
+  # ── Workflow 集成 ──────────────────────────────────────────
+
+  workflow_integration:
+    # 每个 workflow 应该声明其子代理使用计划
+    example_declaration: |
+      在 workflow-index.yaml 的每个 workflow 下新增 subagent_plan 字段：
+      
+      workflows:
+        - id: daily_ad_report
+          subagent_plan:
+            pattern: sequential_pipeline
+            stages:
+              - {type: explore, name: "fetch_ads_data", source: lingsing_ads}
+              - {type: implementer, name: "generate_report", input_from: fetch_ads_data}
+              - {type: verifier, name: "verify_report", input_from: generate_report}
+
+  # ── marshal + celery: 任务编排与调度 ────────────────────────
+  # 来源: marshal (编排调度) + celery (分布式任务队列)
+  task_orchestration:
+    version: "1.0"
+    description: >
+      子代理不只是"开一个跑一个"——它们需要优先级、依赖图、
+      重试策略和资源限流。marshal 负责编排，celery 负责调度。
+
+    # ── 任务优先级 ──
+    priority:
+      levels:
+        - level: critical
+          description: "阻塞性任务——父代理无法继续直到此任务完成"
+          examples: ["关键词排名扫描（直接影响后续调价决策）"]
+          preempt: true              # 可抢占低优先级任务的资源
+          timeout_ms: 300000
+
+        - level: high
+          description: "重要但非阻塞——可以异步进行"
+          examples: ["竞品数据收集", "飞书表格同步"]
+          preempt: false
+          timeout_ms: 120000
+
+        - level: normal
+          description: "常规任务"
+          examples: ["日报生成", "使用量账本记录"]
+          timeout_ms: 60000
+
+        - level: background
+          description: "后台任务——完全不阻塞父代理"
+          examples: ["记忆去重", "harness 健康审计", "迁移日志更新"]
+          timeout_ms: 300000
+
+    # ── 任务依赖图 ──
+    dependency_graph:
+      description: "声明任务间的依赖关系，marshal 自动拓扑排序"
+      format: |
+        tasks:
+          - {id: fetch_ads, depends_on: [], priority: critical}
+          - {id: fetch_keywords, depends_on: [], priority: critical}
+          - {id: generate_report, depends_on: [fetch_ads, fetch_keywords], priority: high}
+          - {id: verify_report, depends_on: [generate_report], priority: normal}
+          - {id: sync_feishu, depends_on: [verify_report], priority: background}
+      execution: "按拓扑顺序执行，同层无依赖的任务并行"
+      deadlock_detection: "检测循环依赖 → 报错而非死锁"
+
+    # ── celery: 重试与退避 ──
+    retry_policy:
+      description: "指数退避 + 抖动，避免惊群效应"
+      max_retries: 3
+      backoff: "指数退避: 1s → 4s → 16s"
+      jitter: "±20% 随机抖动（避免多个任务同时重试）"
+      retry_on:
+        - "API 超时 (timeout)"
+        - "临时错误 (HTTP 429/503)"
+        - "网络错误"
+      no_retry_on:
+        - "权限拒绝 (HTTP 403/401)"
+        - "数据不存在 (HTTP 404)"
+        - "参数错误 (HTTP 400)"
+      dead_letter: "重试耗尽后 → 移入 dead_letter 队列 → 人工处理"
+
+    # ── 资源限流 ──
+    rate_limiting:
+      per_workflow:
+        max_concurrent_subagents: 5
+        max_total_subagents_per_run: 8
+      per_data_source:
+        sorftime_mcp: {max_concurrent: 3, min_interval_ms: 2000}
+        pangolinfo_mcp: {max_concurrent: 2, min_interval_ms: 3000}
+        kimi_webbridge: {max_concurrent: 1, min_interval_ms: 5000}
+        lark_api: {max_concurrent: 2, min_interval_ms: 1000}
+      global:
+        max_concurrent_all_workflows: 10
+
+    # ── 任务监控 ──
+    monitoring:
+      queue_depth: "每个优先级的等待任务数"
+      avg_wait_time: "任务从提交到开始执行的平均等待时间"
+      failure_rate_by_type: "按错误类型统计的失败率"
+      dead_letter_size: "死信队列大小"
+      alert: "dead_letter_size > 5 或 avg_wait_time > 60s → 通知用户"
+
+  # ── 成本控制 ────────────────────────────────────────────────
+
+  cost_control:
+    budget_per_workflow:
+      explore_children: "单个 workflow 最多 5 个 explore 子代理"
+      implementer_children: "单个 workflow 最多 2 个 implementer 子代理"
+      total_children: "单个 workflow 最多 8 个子代理"
+
+    model_selection:
+      default: "explore/verifier 用 faster; plan/implementer 用 same"
+      override: "用户可指定某个 workflow 全部用 same 以保证质量"
+
+    context_isolation:
+      prefer_fresh: true    # 默认不 fork_context，子代理从干净上下文开始
+      fork_when: "子代理需要访问父代理的完整对话历史时才 fork"

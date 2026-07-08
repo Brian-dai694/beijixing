@@ -1,0 +1,261 @@
+﻿# traffic_anomaly_diagnosis.yaml — 流量异常诊断 Workflow（SIF 优先版）
+# 版本: v0.3 | 更新: 2026-07-02
+# 变更: SIF MCP 接入后，从代理指标层升级为真值层
+
+workflow:
+  id: traffic_anomaly_diagnosis
+  name: 流量异常诊断
+  scenario: keyword_tracking
+  status: active
+  mode: on_demand
+  description: 以 SIF MCP analyze_traffic_anomaly 为首选项，Sorftime/Pangolinfo 作为公开数据补充和降级方案。
+
+  user_intents:
+    - 诊断流量为什么跌了
+    - 复刻西柚流量诊断
+    - analyze_traffic_anomaly
+    - 看看 ASIN 最近流量异常
+    - 流量跌了帮我查下根因
+
+  required_inputs:
+    - asin
+    - marketplace
+  optional_inputs:
+    - keywords
+    - time_type
+    - time_value
+    - compare_window
+    - competitor_asins
+
+  required_data_sources:
+    - sif_mcp
+    - local_traffic_history
+
+  optional_data_sources:
+    - sorftime_mcp
+    - pangolinfo_mcp
+    - lingsing_ads
+    - lingsing_product
+    - lark_ads_daily
+    - lark_asin_sales
+
+  # ——————————————————————————————————————————————
+  # SIF 优先采集链（6 步，替代原 5 步代理流程）
+  # ——————————————————————————————————————————————
+  execution_steps:
+    - step: sif_auto_diagnose
+      tool: mcp__sif__analyze_traffic_anomaly
+      inputs: { asin, country, time_type, time_value }
+      outputs: [conclusion, reasoning_path, evidence, recommendation, confidence]
+      rule: 总是先调 SIF auto-diagnose。如果 SIF 不可用，才降级到代理流程。
+      notes: |
+        SIF 返回的 conclusion 是端到端诊断结论（competitor_displacement / decline_detected /
+        natural_declining / ad_declining 等），不需要自己算代理指标。
+        reasoning_path 是多步假设检验，每步有 confirmed/rejected/unresolved。
+
+    - step: sif_traffic_trend
+      tool: mcp__sif__ops_get_asin_traffic_trend
+      inputs: { asin, country, granularity=week, lastMonths=3 }
+      outputs: [dates, totalScore, nfScore, adScore, spScore, recSpScore, sbScore, sbvScore, trend_analysis]
+      rule: 总是调，用来画流量趋势图和确认异常周。
+      notes: |
+        trend_analysis 包含 overall_direction / recent_change / anomaly_weeks / anomaly_latest_drop。
+        直接用 nfScore 做自然流量基线，adScore 做广告流量基线，不需要代理 visibility score。
+
+    - step: sif_keyword_signals
+      tool: mcp__sif__market_get_asin_keyword_signals
+      inputs: { asin, country, topN=50 }
+      outputs: [declining[], gaining[], rank_gaps[], top_keywords[]]
+      rule: 总是调。把 at_risk / volatile 词提取出来，送 step 4 和 demand_judgment。
+      notes: |
+        top_keywords[] 包含 traffic_share, contri_change, natural_ratio, organic_rank, sp_rank,
+        keyword_health (core/at_risk/volatile/paid_dependent/standard), rank_evolution,
+        channel_coverage, top3_click_share, top3_conversion_share, search_volume, aba_rank。
+        这些字段直接替代原来traffic_terms_snapshot + keyword_rank_history + serp_competitor_snapshot 的代理拼接。
+
+    - step: sif_keyword_down Drill
+      tool: mcp__sif__ops_get_asin_traffic_trend_detail
+      inputs: { asin, country, endDay=<异常周>, granularity=week, desc=true, pageNum=1, pageSize=50 }
+      outputs: [total, list[{ keyword, totalScore, naturalScore, adScore, naturalRank, spRank, sbRank }]]
+      rule: 只在 SIF auto-diagnose 返回异常周、且 keyword_signals 有 at_risk 词时调。
+      notes: 精确到单周单词的自然/广告流量分数和排名，替代原 product_ranking_trend_by_keyword。
+
+    - step: sif_listing_structure
+      tool: mcp__sif__ops_get_listing_traffic_structure
+      inputs: { asin, country }
+      outputs: [list[{ asin, dimensionValue, totalScore, nfs, ads, sps, recs, sbs, sbvs }]]
+      rule: 多变体 ASIN 必调；单 ASIN 跳过。用来定位问题出在哪个变体。
+      notes: 替代原来从 SERP 手动推断变体流量分布的方式。
+
+    - step: demand_check
+      tools:
+        - mcp__sif__market_get_keyword_demand
+        - mcp__sif__market_get_keyword_competition
+      inputs:
+        keywords: from step 3 declining[] + at_risk keywords
+        asin: original asin
+        country: original country
+      outputs: [diagnosis, weeks_to_peak, action_hint, competition_position, system_state]
+      rule: |
+        当 SIF auto-diagnose conclusion 包含 "market" / "demand" / "seasonal" 时自动触发。
+        当 keyword_signals 有 at_risk 词但排名未明显掉时自动触发。
+      notes: |
+        demand 判断市场需求是否萎缩；competition 判断是否被竞品取代。
+        两者的结论会合并进最终报告的"根因链路"图。
+
+  # ——————————————————————————————————————————————
+  # 降级方案：SIF 不可用时走 Sorftime + Pangolinfo 代理
+  # ——————————————————————————————————————————————
+  fallback_chain:
+    trigger: sif_mcp 链接失败 / 超时 / UNAUTHORIZED / FORBIDDEN
+    steps:
+      - step: collect_sorftime
+        tools: [product_detail, product_traffic_terms, product_trend, product_ranking_trend_by_keyword]
+        rule: 用 Sorftime 站内搜索量替代 ABA，标 proxy。
+      - step: collect_pangolinfo
+        tools: [get_amazon_product, search_amazon]
+        rule: 用 SERP 可见度替代流量分，标 proxy。
+      - step: compute_proxy_metrics
+        formula: organic_visibility_score / sponsored_visibility_score / competitor_pressure_score / anomaly_score
+        rule: 只在降级模式下使用代理指标，报告必须标 proxy。
+      - step: local_history_baseline
+        rule: 用本地 CSV 历史做基线对比，历史不足 7 天时只出当前风险诊断。
+
+  # ——————————————————————————————————————————————
+  # 代理指标（仅降级模式使用）
+  # ——————————————————————————————————————————————
+  proxy_metrics:
+    organic_visibility_score:
+      purpose: SIF 不可用时的自然流量代理
+      formula: "sum(search_volume * ctr_weight(organic_absolute_rank) * freshness_weight(organic_seen_at))"
+      notes: SIF 可用时直接用 nfScore 替代。
+    sponsored_visibility_score:
+      purpose: SIF 不可用时的广告流量代理
+      formula: "sum(search_volume * ad_position_weight(sponsored_absolute_rank) * freshness_weight(sponsored_seen_at))"
+      notes: SIF 可用时直接用 adScore + spScore 替代。
+    competitor_pressure_score:
+      purpose: SIF 不可用时的竞品压力代理
+      formula: "top_competitor_count + sponsored_competitor_count + price_rating_review_advantage"
+      notes: SIF 可用时直接用 market_get_keyword_competition 替代。
+    anomaly_score:
+      purpose: SIF 不可用时的异常触发
+      formula: "0.4*organic_drop + 0.25*sponsored_drop + 0.2*rank_loss + 0.15*competitor_pressure"
+      notes: SIF 可用时直接用 analyze_traffic_anomaly 的 conclusion 替代。
+
+  # ——————————————————————————————————————————————
+  # 根因分类（SIF 模式直接采用 SIF 结论，降级模式用规则推断）
+  # ——————————————————————————————————————————————
+  diagnosis_rules:
+    sif_mode:
+      rule: 直接采用 analyze_traffic_anomaly 返回的 conclusion 和 reasoning_path。不在 Agent 侧重新推断。
+      common_conclusions:
+        - competitor_displacement: 竞品取代
+        - decline_detected: 检测到下滑
+        - natural_declining: 自然侧下滑
+        - ad_declining: 广告侧下滑
+        - compound_declining: 复合型下滑
+        - seasonal_demand_drop: 季节性需求回落
+        - market_demand_decline: 市场需求萎缩
+        - conversion_issue: 转化问题
+    fallback_mode:
+      natural_side_drop:
+        trigger: [organic_visibility_score_drop_pct >= 25, or core_keyword_absolute_rank_drop >= 10, or p1_core_keyword_count_drop >= 2]
+        conclusion: 自然侧下滑
+      advertising_side_drop:
+        trigger: [sponsored_visibility_score_drop_pct >= 30, or sponsored_seen_at_stale_days >= 7]
+        conclusion: 广告侧覆盖下降
+      compound_drop:
+        trigger: [natural_side_drop, advertising_side_drop]
+        conclusion: 复合型下滑
+      competitor_pressure:
+        trigger: [competitor_pressure_score_increase_pct >= 25]
+        conclusion: 竞品挤压
+      seasonality_or_market_drop:
+        trigger: [major_terms_are_seasonal, broad_term_rank_stable, demand_terms_recent_event_ended]
+        conclusion: 季节性或大盘需求回落
+      conversion_or_supply_issue:
+        trigger: [visibility_scores_stable, sales_or_bsr_deteriorates]
+        conclusion: 非流量侧问题
+      data_insufficient:
+        trigger: [local_history < 7 days, sorftime_only_snapshot]
+        conclusion: 数据不足
+
+  # ——————————————————————————————————————————————
+  # 数据源真值 vs 代理 速查表
+  # ——————————————————————————————————————————————
+  source_truth_mapping:
+    asin_total_traffic:
+      sif: ops_get_asin_traffic_trend.totalScore
+      proxy: organic_visibility_score + sponsored_visibility_score
+      label: SIF 模式标"真值流量分"，降级标"代理可见度分"
+    natural_traffic:
+      sif: ops_get_asin_traffic_trend.nfScore
+      proxy: organic_visibility_score
+    ad_traffic:
+      sif: ops_get_asin_traffic_trend.adScore
+      proxy: sponsored_visibility_score
+    ad_breakdown_sp:
+      sif: ops_get_asin_traffic_trend.spScore
+      proxy: 不可获取
+    ad_breakdown_sb:
+      sif: ops_get_asin_traffic_trend.sbScore
+      proxy: 不可获取
+    ad_breakdown_sbv:
+      sif: ops_get_asin_traffic_trend.sbvScore
+      proxy: 不可获取
+    keyword_traffic_contribution:
+      sif: market_get_asin_keyword_signals.top_keywords[].traffic_share
+      proxy: 不可获取（只有 SERP 位置可见性）
+    keyword_health:
+      sif: market_get_asin_keyword_signals.top_keywords[].keyword_health
+      proxy: 不可获取
+    keyword_natural_ratio:
+      sif: market_get_asin_keyword_signals.top_keywords[].natural_ratio
+      proxy: 不可获取
+    aba_search_volume:
+      sif: market_get_keyword_history.volumes[]
+      proxy: sorftime keyword_detail search_volume（标"站内搜索量，非 ABA"）
+    aba_rank:
+      sif: market_get_keyword_history.ranks[]
+      proxy: 不可获取
+    top3_click_share:
+      sif: market_get_keyword_history.top3_click_shares[]
+      proxy: SERP Top3 密度粗略估算
+    top3_conversion_share:
+      sif: market_get_keyword_history.top3_conversion_shares[]
+      proxy: 不可获取
+    competition_natural_ratio:
+      sif: market_get_keyword_competition.top_asins[].natural_ratio
+      proxy: 不可获取
+    competition_sp_ratio:
+      sif: market_get_keyword_competition.top_asins[].sp_ratio
+      proxy: 不可获取
+    competition_position:
+      sif: market_get_keyword_competition.competition_position
+      proxy: 推理推断（标"推理，无 SIF 验证"）
+    listing_variant_traffic:
+      sif: ops_get_listing_traffic_structure.list[].nfs / sps / sbvs
+      proxy: 不可获取
+    anomaly_conclusion:
+      sif: analyze_traffic_anomaly.conclusion
+      proxy: anomaly_score 阈值推断
+
+  forbidden_operations:
+    - change_bid
+    - change_budget
+    - change_price
+    - write_back
+    - delete_data
+
+  validation:
+    required_checks:
+      - report_has_mermaid_diagram
+      - report_has_reasoning
+      - report_has_conclusion
+      - report_has_data_sources
+      - report_has_pending_verification
+      - report_has_no_auto_write_or_bid_change
+      - sif_mode_report_labels_sif_as_primary_source
+      - fallback_mode_report_labels_all_metrics_as_proxy
+      - report_includes_keyword_signals_when_keyword_data_available
+      - report_includes_demand_check_when_conclusion_involves_market_or_seasonal

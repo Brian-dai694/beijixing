@@ -1,0 +1,62 @@
+task_card:
+  id: profit_check
+  name: 利润测算
+  plain_language_trigger:
+    - 帮我算利润
+    - 这个产品赚不赚钱
+    - 算一下采购和售价空间
+  when_to_use: 想判断产品是否值得卖，或价格、采购成本、广告费是否健康。
+  user_needs_to_provide:
+    - 目标售价或竞品售价
+    - 采购成本，可选
+    - 站点
+    - FBA 费或产品尺寸重量，可选
+  agent_will_do:
+    - 整理售价、采购成本、平台费用、广告费
+    - 计算毛利率和净利率
+    - 标注不确定项
+    - 给出是否继续推进的建议
+  output:
+    type: markdown_report
+    template: templates/profit-check_template.md
+  must_include:
+    - 成本表
+    - 利润测算
+    - 敏感项
+    - 待验证项
+    - 下一步动作
+  forbidden_actions:
+    - 自动下采购单
+    - 自动改售价
+
+  # ── Anti-Rationalization Table ──────────────────────────────
+  anti_rationalization:
+    - excuse: "飞书表格里的成本数据应该没问题，直接用就行"
+      rebuttal: >
+        飞书自有产品清单的数据可能已过时。采购成本可能因汇率、供应商调价、
+        批次差异而变化。头程运费每批不同（第 8 批的实际运费 ≠ 第 7 批）。
+        每次利润测算必须核实数据日期，超过 30 天的成本数据标注为"待验证"。
+
+    - excuse: "退货率我按 3% 估算一下就行"
+      rebuttal: >
+        品线之间退货率差异巨大。TIG 套装配件品类退货率约 3%，但 MIG 和
+        Plasma 品类可能完全不同。必须用该 ASIN 近 30 天的实际退货率（领星数据），
+        不可用品类均值或猜测值。没有实际数据时标注为"无退货数据-假设 X%"。
+
+    - excuse: "FBA 费用 Amazon 标准费率表算就行"
+      rebuttal: >
+        FBA 费率 2026 年有调整，且旺季/淡季费率不同，尺寸分段也可能变化。
+        必须用领星近 30 天实际 FBA 费均值，或用 FBA Revenue Calculator 查
+        该 ASIN 的实际费率。标准费率表只能作为交叉验证参考。
+
+    - excuse: "利润算出来是正的就说明这个产品能做"
+      rebuttal: >
+        毛利率为正 ≠ 净利润为正。必须扣除广告费（TACOS）、退货损失、头程运费、
+        仓储超龄费后才算净利润。PD 期间还要扣除 Coupon/Deal 折扣和增量广告成本。
+        "能做"的底线是净利润率 ≥ 15%，不是毛利率 > 0%。
+
+    - excuse: "汇率波动不大，不用每次更新"
+      rebuttal: >
+        CNY/USD 汇率在 06/2026 波动范围 7.15-7.32，对 $50 客单价产品的影响
+        约 ¥8.5/sale。100 单就是 ¥850。每次利润测算必须确认当前汇率。
+        来源：飞书自有产品清单最近记录的汇率值。

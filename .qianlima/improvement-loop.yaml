@@ -1,0 +1,441 @@
+# improvement-loop.yaml — 进化式反馈闭环
+# 版本: v2.0 | 更新: 2026-07-08
+# 来源: Lilian Weng "Harness Engineering for Self-Improvement" (2026-07-04)
+# 理念: "Evolve the harness through experimentation, not just bug fixing."
+#
+# v1→v2 核心变更:
+#   - 从线性修复（fix only）变为进化式多分支（fix + explore + optimize）
+#   - 新增实验框架：A/B 变体 + 效果验证 + 经验固化
+#   - 新增经验自动提取：从每次运行中学习，无需手动记录
+#   - 新增改进历史：追踪每个改进的「为什么」和「效果如何」
+
+improvement_loop:
+  version: "2.0"
+  purpose: >
+    不只是在出错时修 bug，而是持续地从每次运行中学习，
+    探索更好的 harness 配置，验证改进效果，并将成功经验固化为规则。
+
+  # ── 核心循环（v2 扩展）──────────────────────────────────────
+
+  cycle:
+
+    # Step 1: 运行 — 执行 workflow 并收集全维度数据
+    - step: run
+      description: "执行 workflow，收集运行数据"
+      inputs:
+        - work.ws
+        - workflow-index.yaml
+        - data-sources.yaml
+      outputs:
+        - reports/
+        - usage-ledger/
+        - logs/run-{workflow_id}-{timestamp}.json
+      collect:
+        - metric: execution_time_ms
+        - metric: tool_calls_count
+        - metric: token_usage
+        - metric: cost_estimate
+        - metric: data_source_hits     # 数据源命中次数
+        - metric: data_source_misses   # 数据源未命中次数
+        - metric: user_interventions   # 用户中途干预次数
+
+    # Step 2: 评估 — 按维度打分
+    - step: evaluate
+      description: "多维度评估本次运行质量"
+      inputs:
+        - evaluation-tasks.yaml
+        - logs/run-{workflow_id}-{timestamp}.json
+      dimensions:
+        - id: correctness
+          name: "数据正确性"
+          weight: 0.30
+          checks:
+            - "所有 required_fields 是否有值"
+            - "数据源时间戳是否是今天"
+            - "跨源数据偏差是否 < 5%"
+        - id: completeness
+          name: "覆盖完整性"
+          weight: 0.25
+          checks:
+            - "关键词覆盖率是否 ≥ 78%"
+            - "广告活动覆盖率是否 = 100%"
+            - "报告模块是否无缺失"
+        - id: efficiency
+          name: "执行效率"
+          weight: 0.20
+          checks:
+            - "工具调用数是否在合理范围"
+            - "token 使用是否在预算内"
+            - "执行时间是否 < 目标值"
+        - id: actionability
+          name: "可操作性"
+          weight: 0.15
+          checks:
+            - "是否包含明确的行动建议"
+            - "建议是否标注风险等级"
+            - "建议是否有数据支撑"
+        - id: user_satisfaction
+          name: "用户满意度"
+          weight: 0.10
+          checks:
+            - "用户是否接受建议"
+            - "用户是否修改模板"
+            - "用户是否要求重做"
+      output:
+        - logs/eval-{workflow_id}-{timestamp}.json
+        - score: 0.0 ~ 1.0
+
+    # Step 3: 分析 — 分类并生成改进假设（v2 核心扩展）
+    - step: analyze
+      description: "分类问题 + 生成改进假设 + 排序优先级"
+      
+      # 问题分类
+      failure_categories:
+        - id: data_gap
+          name: "数据缺口"
+          triggers: [data_source_misses > 0, required_fields_missing]
+          severity: high
+
+        - id: pattern_inefficiency
+          name: "执行模式低效"
+          triggers: [tool_calls > baseline * 1.5, execution_time > baseline * 1.5]
+          severity: medium
+
+        - id: quality_drift
+          name: "质量漂移"
+          triggers: [eval_score < previous_score * 0.9]
+          severity: medium
+
+        - id: user_rejection
+          name: "用户拒绝建议"
+          triggers: [user_rejected_suggestion, user_changed_template]
+          severity: high
+
+        - id: cost_spike
+          name: "成本异常"
+          triggers: [cost > baseline * 1.3]
+          severity: medium
+
+        - id: harness_decay
+          name: "Harness 衰减"
+          triggers: [data_freshness_age > 3, file_registry_drift > 5%]
+          severity: low
+
+      # 🆕 改进假设生成（不只修 bug，也探索优化）
+      hypothesis_generation:
+        sources:
+          - "本轮问题分类结果"
+          - "历史成功改进记录"
+          - "踩坑日志中的复利点"
+          - "work.ws 中的 attention_required"
+        types:
+          - type: fix
+            description: "修复已知问题（数据源不可用、字段缺失、模板错误）"
+            risk: low
+          - type: optimize
+            description: "优化现有配置（调整阈值、改进路由规则、压缩策略）"
+            risk: medium
+          - type: explore
+            description: "探索新方案（尝试不同数据源顺序、新 workflow 参数、不同 context 策略）"
+            risk: high
+          - type: learn
+            description: "从本次运行提取可复用的经验（新的复利点、新的规则）"
+            risk: low
+
+      # 🆕 优先级排序
+      prioritization:
+        factors:
+          - factor: severity
+            weight: 0.40
+            values: {critical: 5, high: 4, medium: 2, low: 1}
+          - factor: frequency
+            weight: 0.30
+            values: "近 5 次执行中出现的次数 / 5"
+          - factor: improvement_potential
+            weight: 0.20
+            values: "预估改进后的 score 提升幅度"
+          - factor: cost_to_implement
+            weight: 0.10
+            values: "实施的 token/时间成本估算"
+
+      output:
+        - logs/analysis-{workflow_id}-{timestamp}.json
+        - hypothesis_list: "按优先级排序的改进假设列表"
+
+    # Step 4: 改进 — 执行改进实验（v2 核心扩展）
+    - step: improve
+      description: "选择改进策略并执行（支持多分支并行）"
+
+      # 🆕 改进策略选择
+      strategies:
+        - id: direct_fix
+          name: "直接修复"
+          applies_to: [data_gap, harness_decay]
+          method: "修改配置文件/模板/数据源注册表"
+          auto_apply: true           # 低风险修复自动执行
+          requires_confirmation: false
+
+        - id: parameter_tuning
+          name: "参数调优"
+          applies_to: [pattern_inefficiency, cost_spike]
+          method: "调整 workflow 参数（阈值、超时、并发数等）"
+          auto_apply: false
+          requires_confirmation: true
+
+        - id: ab_experiment
+          name: "A/B 实验"
+          applies_to: [quality_drift, pattern_inefficiency]
+          method: >
+            创建 workflow 变体（如不同的数据源顺序、不同的 context 策略），
+            在后续执行中对比 A/B 效果，选择更优的变体。
+          auto_apply: false
+          requires_confirmation: true
+          experiment_design:
+            - "定义变体 A（当前）和变体 B（候选）的差异"
+            - "设定评估窗口：至少 3 次执行"
+            - "设定胜出标准：B 的 eval_score > A 且不引入新问题"
+            - "胜出后自动将 B 提升为默认"
+
+        - id: knowledge_extraction
+          name: "经验提取"
+          applies_to: [user_rejection, quality_drift]
+          method: >
+            从本轮运行中提取可复用的经验：
+            - 新发现的踩坑 → 追加到 全局复利踩坑日志
+            - 新发现的规则 → 追加到 risk-rules.yaml
+            - 新发现的最佳实践 → 更新 work.ws 的 attention_required
+          auto_apply: true
+          requires_confirmation: false
+
+        - id: rule_evolution
+          name: "规则进化"
+          applies_to: [user_rejection]
+          method: >
+            当用户多次拒绝同类建议时：
+            - 调整 risk-rules.yaml 的阈值
+            - 更新 task-card 的 anti_rationalization 表
+            - 收紧或放宽 verification_gates 的条件
+          auto_apply: false
+          requires_confirmation: true
+
+      # 🆕 改进效果验证
+      validation:
+        required_for: [parameter_tuning, ab_experiment, rule_evolution]
+        method: >
+          改进应用后，在后续 1-3 次执行中监控:
+          - eval_score 是否提升
+          - 是否引入新问题
+          - 用户是否接受
+        rollback_condition: "如果 eval_score 下降 > 5% 或引入新问题，回滚改进"
+        rollback_method: "从 git log 或备份恢复修改前的文件"
+
+      # 可更新的目标
+      allowed_updates:
+        - file-registry.yaml
+        - data-sources.yaml
+        - naming-rules.yaml
+        - user-preferences.yaml
+        - workflows/
+        - templates/
+        - rules/
+        - task-cards/                        # 🆕 v2: 任务卡也可进化
+        - harness-health-check.yaml          # 🆕 v2: 健康检查阈值可调
+
+      blocked_updates:
+        - delete_source_files
+        - write_external_system_without_confirmation
+        - change_budget_without_confirmation
+        - change_bid_without_confirmation
+
+    # Step 5: 记录 — 记录改进日志（v2 新增）
+    - step: record
+      description: "记录改进历史和效果追踪"
+      outputs:
+        - feedback/{workflow_id}-improvement-{timestamp}.md
+        - work-hub.ws → events 追加
+        - work.ws → harness_evolution 更新
+      record_format:
+        - improvement_id: "唯一 ID"
+        - date: "执行日期"
+        - strategy: "使用的改进策略"
+        - hypothesis: "改进假设"
+        - changes_made: "具体修改了什么"
+        - validation_result: "效果验证结果"
+        - learned: "这次改进教给我们什么"
+
+  # ── 长期记忆治理（v3.0: memgovern）───────────────────────────
+  # 来源: memgovern — Memory Governance for AI Agents
+  # 理念: "Memory without governance is noise.
+  #         Every memory has a lifecycle, a quality score, and an expiry date."
+
+  memory_governance:
+    version: "3.0"
+    principle: >
+      记忆不是越多越好——未经治理的记忆是噪声。
+      每条记忆必须经历完整的生命周期，拥有质量评分和过期时间。
+      记忆系统自己也要被审计：去重率、命中率、衰减率和存储成本。
+
+    # ── 记忆类型 ──────────────────────────────────────────────
+
+    memory_types:
+
+      - type: insight
+        description: "从运行中提炼的通用规律（如 'Pangolinfo 对长尾词截断率高达 40%'）"
+        lifecycle: {create: instant, validate: "连续 3 次运行确认", decay_days: 90}
+        quality_min: 0.7
+        example: "06-13: Pangolinfo 对长尾词的截断率高达 40%，需 Sorftime 交叉验证"
+
+      - type: pattern
+        description: "被验证有效的工作流模式或参数组合"
+        lifecycle: {create: "A/B 实验验证后", validate: "用户确认", decay_days: 180}
+        quality_min: 0.8
+        example: "keyword_rank_scan: 先 Sorftime 扫 → Pangolinfo 交叉 → Kimi 三源裁决"
+
+      - type: pitfall
+        description: "已知的陷阱和失败路径（类似踩坑日志的自动版）"
+        lifecycle: {create: instant, validate: "被触发 ≥ 2 次", decay_days: 365}
+        quality_min: 0.5
+        example: "PowerShell ConvertTo-Json 吃掉 $ 符号 → 金额数据走 Python json.dump"
+
+      - type: threshold
+        description: "被调优后验证有效的阈值"
+        lifecycle: {create: "参数调优验证后", validate: "连续 5 次运行无回归", decay_days: 60}
+        quality_min: 0.6
+        example: "tig welding accessories ACoS 阈值: 0.80 → 0.65 (06-23 调优)"
+
+      - type: context_clue
+        description: "帮助场景路由或 context 分配的启发式线索"
+        lifecycle: {create: instant, validate: "被命中 ≥ 3 次", decay_days: 30}
+        quality_min: 0.4
+        example: "用户说 '崩盘' 时，80% 情况是 tig welding accessories 排名暴跌"
+
+    # ── 记忆生命周期 ──────────────────────────────────────────
+
+    lifecycle:
+      stages:
+
+        - stage: create
+          description: "新记忆产生（从 workflow 执行、用户反馈、错误处理中）"
+          required_fields: [type, content, source_run_id, confidence, created_at]
+          auto_create: true
+
+        - stage: validate
+          description: "新记忆需要被后续运行验证才能提升质量分"
+          validation_rules:
+            - "insight 类型: 连续 3 次运行中观察到相同模式"
+            - "pattern 类型: A/B 实验或用户明确确认"
+            - "pitfall 类型: 同一陷阱触发 ≥ 2 次"
+            - "threshold 类型: 新阈值连续 5 次运行无回归"
+          quality_boost_on_validate: +0.2
+
+        - stage: consolidate
+          description: "高质量记忆被提升为 'consolidated'，写入持久存储"
+          condition: "quality >= type_specific_quality_min"
+          action: "写入 memory-store.yaml（结构化持久存储）"
+          consolidation_rule: "相同 key 的旧记忆被新记忆覆盖，但保留旧版本在 history"
+
+        - stage: decay
+          description: "未被访问的记忆质量随时间衰减"
+          decay_rate: "每天 -0.01 × (1 + days_since_last_access / 30)"
+          minimum_quality: 0.1  # 不归零，保留残值
+
+        - stage: archive
+          description: "极低质量的记忆被归档（不删除，只是不主动检索）"
+          condition: "quality < 0.2 且 last_access > 90 天"
+          action: "移动到 memory-archive.yaml"
+
+    # ── 记忆去重 ──────────────────────────────────────────────
+
+    dedup:
+      description: "避免创建本质相同的重复记忆"
+      similarity_threshold: 0.7
+      method: "基于 content 的语义相似度 + type 匹配"
+      on_duplicate: "合并: 保留 quality 更高的，更新 last_access，追加 source_run_id 列表"
+      dedup_check_on: create
+
+    # ── 记忆检索 ──────────────────────────────────────────────
+
+    retrieval:
+      description: "上下文感知的检索——不是简单的全文搜索"
+      ranking_factors:
+        - factor: "语义相关性"
+          weight: 0.4
+        - factor: "quality"
+          weight: 0.25
+        - factor: "recency (last_access)"
+          weight: 0.20
+        - factor: "type_match (同一 type 加成)"
+          weight: 0.10
+        - factor: "scenario_match (同一 scenario 加成)"
+          weight: 0.05
+
+      trigger_on:
+        - "新 workflow 启动前: 检索相关的 pattern 和 pitfall"
+        - "异常触发时: 检索相关的 insight 和 pitfall"
+        - "参数调优时: 检索相关的 threshold 和 pattern"
+        - "场景切换时: 检索 context_clue"
+
+      max_results: 5
+      note: "检索结果必须标注 quality 和 last_access，Agent 自行判断是否采信"
+
+    # ── 记忆审计 ──────────────────────────────────────────────
+
+    audit:
+      frequency: weekly
+      metrics:
+        - total_memories: "记忆总量"
+        - by_type: "各类型分布"
+        - quality_distribution: "HIGH(≥0.7) / MEDIUM(0.4-0.7) / LOW(<0.4)"
+        - dedup_rate: "去重命中率"
+        - retrieval_hit_rate: "检索命中率（检索后有实际使用的比例）"
+        - decayed_count: "本周衰减的记忆数"
+        - archived_count: "本周归档的记忆数"
+      storage: "memory-audit-{date}.json"
+
+  # ── 配置 ────────────────────────────────────────────────────
+
+  policies:
+    auto_apply_low_risk_improvements: true
+    require_confirmation_for_template_rewrite: true
+    require_confirmation_for_permission_change: true
+    require_confirmation_for_external_write: true
+    require_confirmation_for_ab_experiment: true    # 🆕
+    max_concurrent_experiments: 2                   # 🆕
+    experiment_min_runs: 3                          # 🆕
+    rollback_auto_on_regression: true               # 🆕
+
+  # ── 示例（v2 扩展）───────────────────────────────────────────
+
+  examples:
+    - trigger: report_missing_data_source
+      strategy: direct_fix
+      improvement: "将缺失的数据源加入 data-sources.yaml 并标注 required_fields"
+
+    - trigger: repeated_missing_field
+      strategy: direct_fix
+      improvement: "在 data-sources.yaml 中添加字段别名映射"
+
+    - trigger: high_cost_run
+      strategy: parameter_tuning
+      improvement: "缩减查询范围或调整 context-policy 的压缩级别"
+
+    - trigger: user_rejected_bid_suggestion
+      strategy: rule_evolution
+      improvement: "调整诊断规则阈值，或增加 confirmation gate 要求更明确的证据"
+
+    # 🆕 v2 新增示例
+    - trigger: "连续 3 次关键词覆盖率 < 70%"
+      strategy: ab_experiment
+      improvement: "创建变体 B: 改用 Kimi WebBridge 直接搜 SERP 替代 Pangolinfo"
+      experiment_design:
+        variant_a: "Pangolinfo search_amazon → Sorftime 回退"
+        variant_b: "Kimi WebBridge SERP 扫描 → Sorftime 回退 → Pangolinfo 校准"
+        success_criteria: "覆盖率 ≥ 78% 且执行时间不增加 > 30%"
+
+    - trigger: "用户在 PD 期间频繁手动调整竞价（已固化经验）"
+      strategy: knowledge_extraction
+      improvement: "提取 PD 调价模式 → 写入 risk-rules.yaml 的 pd_price_adjustment 规则"
+
+    - trigger: "harness-health-check 连续 3 天报告 RED"
+      strategy: rule_evolution
+      improvement: "将数据新鲜度告警阈值从 '被动提示' 升级为 '阻断后续高风险操作'"

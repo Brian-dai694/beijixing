@@ -1,0 +1,283 @@
+﻿# keyword_demand_lifecycle_timing.yaml — 关键词三层需求 + 竞争格局（SIF 优先版）
+# 版本: v0.3 | 更新: 2026-07-02
+# 变更: SIF MCP 接入后，四层全部从代理/估算升级为 SIF 真值
+
+workflow:
+  id: keyword_demand_lifecycle_timing
+  name: 关键词三层需求 + 竞争格局
+  scenario: keyword_tracking
+  status: active
+  mode: on_demand
+  description: 以 SIF MCP 四件套为首选项，Sorftime/Pangolinfo/Google Trends 作为可视化补充和降级方案。
+
+  sibling_layers:
+    demand_data_layer:
+      sif_tool: mcp__sif__market_get_keyword_history
+      description: 需求量化层。返回 ABA 搜索量、ABA 排名、Top3 点击/转化集中度的完整历史时序。
+      fallback: Sorftime keyword_detail / keyword_trend（标 proxy，非 ABA）
+    demand_boundary_layer:
+      sif_tool: mcp__sif__market_get_keyword_root_trend
+      description: 需求边界层。精确词搜索量 vs 词根综合量，含 coverage_ratio。
+      fallback: Sorftime keyword_extends + Pangolinfo keyword_trends（标 estimation）
+    demand_judgment_layer:
+      sif_tool: mcp__sif__market_get_keyword_demand
+      description: 需求判断层。生命周期诊断、季节性、动量、行动时机，含 weeks_to_peak。
+      fallback: Pangolinfo keyword_trends 自算（标 proxy，Google Trends 相对热度）
+    competition_layer:
+      sif_tool: mcp__sif__market_get_keyword_competition
+      description: 竞争格局。Top20 ASIN 流量份额（自然/SP/品牌/视频）、集中度趋势、可进入性、competition_position。
+      fallback: Pangolinfo search_amazon + Sorftime product_search（标 proxy，仅 SERP 可见度）
+
+  user_intents:
+    - 判断这个词现在能不能做
+    - 这个关键词是在增长还是萎缩
+    - 需求判断层
+    - 关键词需求生命周期
+    - demand_data
+    - demand_boundary
+    - demand
+    - competition
+    - weeks_to_peak
+    - 搜索量具体数字
+    - ABA 排名
+    - 这个词值不值得做
+    - 竞品做了哪些词
+
+  required_inputs:
+    - keywords
+  optional_inputs:
+    - country
+    - asin
+    - compare_keywords
+
+  input_contract:
+    keywords:
+      type: array
+      min_items: 1
+      max_items: 20
+    country:
+      type: string
+      default: US
+
+  required_data_sources:
+    - sif_mcp
+
+  optional_data_sources:
+    - sorftime_mcp
+    - pangolinfo_mcp
+    - local_keyword_demand_history
+    - local_traffic_history
+
+  forbidden_operations:
+    - change_bid
+    - change_budget
+    - change_price
+    - purchase_order
+    - write_back
+    - delete_data
+
+  # ——————————————————————————————————————————————
+  # SIF 优先执行链
+  # ——————————————————————————————————————————————
+  execution_steps:
+    - step: demand_data
+      tool: mcp__sif__market_get_keyword_history
+      inputs: { keywords, country, granularity=week }
+      outputs:
+        - keywords[].keyword
+        - keywords[].data_points
+        - keywords[].dates / volumes / ranks
+        - keywords[].top3_click_shares / top3_conversion_shares
+        - keywords[].latest.{date, volume, rank, top3_asins, top3_click_share, top3_conversion_share}
+      rule: 总是先调。1-10 个关键词一次调用。
+      notes: |
+        这是 ABA 真值数据，不是 Sorftime 站内搜索量。
+        latest.rank=0 时说明该词当前未进入 ABA 排名。
+        转化集中度远高于点击集中度 = 品牌黏性极强。
+
+    - step: demand_boundary
+      tool: mcp__sif__market_get_keyword_root_trend
+      inputs: { keyword, country, granularity=week }
+      outputs:
+        - keyword, data_points
+        - dates / keyword_search_volumes / keyword_ranks
+        - ext_search_volumes
+        - latest.{date, keyword_search_volume, keyword_rank, ext_search_volume, coverage_ratio}
+      rule: 评估词根市场规模时调。只接受单个 keyword。
+      notes: |
+        coverage_ratio > 0.8 = 需求集中；0.4-0.8 = 各占一部分；< 0.4 = 高度分散，建议系统铺长尾。
+        精确词量下降但 ext 平稳/上升 = 需求转移到长尾；同步下降 = 品类萎缩。
+
+    - step: demand_judgment
+      tool: mcp__sif__market_get_keyword_demand
+      inputs: { keywords, country }
+      outputs:
+        - profiles[].{keyword, demand_structure, data_coverage, current, trend, momentum, seasonality, diagnosis, interpretation, current_phase, weeks_to_peak, action_hint, seasonal_strength}
+        - timing_summary[] sorted by weeks_to_peak asc
+      rule: 总是调。1-20 个关键词一次调用。
+      notes: |
+        SIF 直接给 diagnosis 标签（growing / peaking_reversing / recovering / recent_weakening
+        / mature_stable / seasonal_dip / structural_declining 等）和 action_hint。
+        Agent 不再自己算 YoY / annual_decay_rate / momentum。
+        当 diagnosis=insufficient_data 时，action_hint 会标"历史数据不足"。
+
+    - step: competition
+      tool: mcp__sif__market_get_keyword_competition
+      inputs: { keyword, asin, country, rank_evolution=true }
+      outputs:
+        - competition_position (dominant/defending/advancing/stalled/opportunity/challenging/blocked/displaced)
+        - concentration_profile.{level, trend.divergence, leader_diverge, efficiency_leader.reliable}
+        - top_asins[].{asin, natural_ratio, sp_ratio, brand_ratio, video_ratio}
+        - demand_snapshot.interpretation
+        - market_context.{is_branded_keyword, recommended_ad_focus, rationale}
+        - system_state.{可进入性, 可沉淀性, 可持续性}
+        - supply_profile.total_asin_trend
+        - my_position.key_insight (当提供 asin 时)
+      rule: |
+        评估某词可否布局时调。
+        从 traffic_anomaly 进入时：如果 conclusion 涉及 competitor_displacement，必须调。
+        独立使用时：用户提供 keyword 后直接调。
+      notes: |
+        natural_ratio / sp_ratio / brand_ratio / video_ratio 是 SIF 真值，不再标 proxy。
+        competition_position 是数据驱动结论，不再标"推理"。
+        concentration_profile.trend.divergence = diverging 是最佳机会信号。
+        efficiency_leader.reliable = false 意味着 Top3 之外仍有机会。
+
+  # ——————————————————————————————————————————————
+  # 自动编排规则
+  # ——————————————————————————————————————————————
+  auto_orchestration:
+    full_chain:
+      trigger: 用户问"这个词值不值得做" / "能不能做" / "帮我分析这个词"
+      sequence: demand_data -> demand_judgment -> competition
+      notes: demand_boundary 只在用户明确问"总盘子"/"分散度"时调，因为 keyword_root_trend 只接受单个词。
+
+    from_traffic_anomaly:
+      trigger: traffic_anomaly_diagnosis 的 conclusion 包含 competitor_displacement / seasonal_demand_drop / market_demand_decline
+      sequence: |
+        1. demand_judgment (确认需求是否在萎缩)
+        2. competition (确认竞品是否在取代)
+        3. demand_data (出原始数字做证据)
+      handoff:
+        keywords: from traffic_anomaly 的 keyword_signals declining[] + at_risk keywords
+        asin: from traffic_anomaly 的 original asin
+        country: from traffic_anomaly 的 original country
+
+    keyword_signals_first:
+      trigger: 用户提供 ASIN 但不确定看哪些词
+      sequence: |
+        1. market_get_asin_keyword_signals (先找 at_risk / declining 词)
+        2. demand_judgment (对 at_risk 词判断需求生命周期)
+        3. competition (对 top traffic_share 词评估竞争格局)
+      notes: 这条路径从 traffic_anomaly 的 step 3 自然延伸过来。
+
+  # ——————————————————————————————————————————————
+  # 降级方案
+  # ——————————————————————————————————————————————
+  fallback_chain:
+    demand_data_fallback:
+      trigger: SIF 不可用
+      tools: [Sorftime keyword_detail, Sorftime keyword_trend, Pangolinfo search_amazon]
+      label: "站内搜索量（非 ABA）+ SERP Top3 密度代理"
+    
+    demand_boundary_fallback:
+      trigger: SIF 不可用
+      tools: [Sorftime keyword_extends, Pangolinfo keyword_trends]
+      label: "延伸词数量 + Google Trends 相对热度估算 coverage_ratio"
+    
+    demand_judgment_fallback:
+      trigger: SIF 不可用
+      tools: [Pangolinfo keyword_trends]
+      label: "Google Trends 相对热度自算 YoY / 季节性 / 动量"
+    
+    competition_fallback:
+      trigger: SIF 不可用
+      tools: [Pangolinfo search_amazon, Sorftime product_search, Pangolinfo get_amazon_product]
+      label: "SERP 可见度 + 推理推断 competition_position"
+
+  # ——————————————————————————————————————————————
+  # 输出契约（SIF 模式直接透传 SIF 字段，降级模式标 proxy）
+  # ——————————————————————————————————————————————
+  output_contract:
+    demand_data:
+      sif_mode: 直接透传 market_get_keyword_history 的 keywords[]
+      fallback_mode: 标 "proxy: Sorftime 站内搜索量，非 ABA"
+      must_label: data_source (sif / sorftime / pangolinfo)
+
+    demand_boundary:
+      sif_mode: 直接透传 market_get_keyword_root_trend 的 coverage_ratio 和 latest
+      fallback_mode: 标 "estimation: keyword_extends + keyword_trends 粗略估算"
+      must_label: data_source
+
+    demand_judgment:
+      sif_mode: 直接透传 market_get_keyword_demand 的 profiles[] 和 timing_summary[]
+      fallback_mode: 标 "proxy: Google Trends 相对热度自算"
+      must_label: data_source
+
+    competition:
+      sif_mode: 直接透传 market_get_keyword_competition 的全部字段
+      fallback_mode: 标 "proxy: SERP 可见度 + 推理推断"
+      must_label: data_source
+
+  # ——————————————————————————————————————————————
+  # 诊断规则（SIF 模式不需要，SIF 自己算；降级模式用这些阈值）
+  # ——————————————————————————————————————————————
+  diagnosis_rules:
+    sif_mode:
+      rule: 直接采用 SIF 返回的 diagnosis / action_hint / competition_position / system_state。不在 Agent 侧重新推断。
+    fallback_mode:
+      demand_judgment_lifecycle:
+        growing: [yoy_change >= 0.15, or annual_decay_rate >= 0.10]
+        declining: [yoy_change <= -0.15, or annual_decay_rate <= -0.10]
+        stable: [abs(yoy_change) < 0.15]
+      seasonality_strength:
+        high: amplitude >= 0.80
+        moderate: amplitude >= 0.35
+        low: amplitude < 0.35
+      timing:
+        enter_or_prepare: weeks_to_peak > 8 and current_phase in [trough, rising]
+        accelerate: weeks_to_peak between 3 and 8 and direction != declining
+        harvest: weeks_to_peak <= 2 and current_phase in [rising, peak]
+        contract: current_phase == falling or direction == declining
+      demand_boundary:
+        demand_concentrated: coverage_ratio > 0.8
+        split_even: coverage_ratio between 0.4 and 0.8
+        highly_dispersed: coverage_ratio < 0.4
+      competition:
+        blocked: top5_has > 3 branded heavy ASINs or sp_density > 0.6
+        opportunity: concentration diverging and leader_diverge and efficiency_leader_reliable == false
+
+  # ——————————————————————————————————————————————
+  # 跨工作流数据传递规范
+  # ——————————————————————————————————————————————
+  handoff_schema:
+    from_traffic_anomaly:
+      carries:
+        - asin
+        - country
+        - keywords: from keyword_signals declining[] + at_risk
+        - anomaly_conclusion: from analyze_traffic_anomaly
+        - anomaly_weeks: from traffic_trend anomaly_weeks
+      receives:
+        - demand_diagnosis: per keyword
+        - competition_position: per keyword
+        - recommended_action: per keyword
+
+    to_traffic_anomaly:
+      carries:
+        - keywords: with diagnosis and competition_position
+        - weeks_to_peak: per keyword
+        - action_hint: per keyword
+      notes: traffic_anomaly 的最终报告需要整合 demand 结论来区分"排名问题 vs 市场需求问题"。
+
+  validation:
+    required_checks:
+      - output_has_profiles
+      - output_has_timing_summary_sorted_by_weeks_to_peak
+      - output_marks_insufficient_when_less_than_26_weeks
+      - output_has_no_auto_write_or_bid_change
+      - sif_mode_output_does_not_label_sif_fields_as_proxy
+      - fallback_mode_output_labels_all_fields_as_proxy
+      - output_includes_data_source_label_per_field
+      - competition_output_includes_system_state_when_keyword_provided
+      - demand_judgment_output_includes_action_hint_per_keyword

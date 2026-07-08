@@ -1,0 +1,39 @@
+﻿task_card:
+  id: traffic_anomaly_diagnosis
+  name: 流量异常诊断
+  plain_language_trigger:
+    - 诊断流量为什么跌了
+    - 复刻西柚流量诊断
+    - analyze_traffic_anomaly
+    - 看看 ASIN 最近流量异常
+    - 流量跌了帮我查下根因
+  when_to_use: 想判断某个 ASIN 的流量下跌是广告侧、自然侧、竞品挤压、季节性、转化或供给问题。
+  user_needs_to_provide:
+    - ASIN
+    - 站点，默认 US
+    - 核心关键词列表，可选；SIF 模式下会自动从 keyword_signals 获取
+    - 对比窗口，可选：近7天、近30天或指定周
+  agent_will_do:
+    - 优先用 SIF analyze_traffic_anomaly 做端到端自动诊断
+    - 用 SIF ops_get_asin_traffic_trend 确认流量趋势和异常周
+    - 用 SIF market_get_asin_keyword_signals 获取关键词级流量信号和健康度
+    - 用 SIF ops_get_asin_traffic_trend_detail 下钻异常周关键词
+    - 用 SIF ops_get_listing_traffic_structure 拆解变体流量（多变体时）
+    - 当结论涉及市场/竞品时，自动触发 demand_judgment + competition
+    - SIF 不可用时降级到 Sorftime + Pangolinfo 代理模式
+    - 输出 Mermaid 根因链路、证据表、结论和单一最紧迫行动
+  output:
+    type: markdown_report
+    template: templates/traffic-anomaly-diagnosis_template.md
+  must_include:
+    - 异常窗口或数据不足说明
+    - SIF 结论和推理链（SIF 模式）或代理指标（降级模式）
+    - 广告侧、自然侧、竞品侧、季节性、转化侧和供给侧检查
+    - 数据来源标注（sif / sorftime / pangolinfo / local）
+    - 置信度和待验证项
+    - 单一最紧迫行动建议
+  forbidden_actions:
+    - 自动调广告
+    - 自动改价
+    - 自动写回后台
+    - 自动删除或覆盖历史数据

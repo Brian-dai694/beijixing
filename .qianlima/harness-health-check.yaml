@@ -1,0 +1,203 @@
+# harness-health-check.yaml — Harness 健康自检
+# 版本: v1.0 | 创建: 2026-07-08
+# 来源: Lilian Weng "Harness Engineering for Self-Improvement" (2026-07-04)
+# 理念: "A harness must observe its own state before it can improve itself."
+#
+# 职责: 每次会话启动时运行，诊断 harness 自身健康状态，
+#       生成健康报告并写入 work.ws 的 harness_health 字段。
+
+health_check:
+  id: harness_health
+  version: "1.0"
+  frequency: every_session_start
+  principle: >
+    Harness 不能只管理别人，也得管理自己。
+    每次启动时运行自检，发现问题在 work.ws 中标记，
+    让 Agent 和用户都能看到 harness 自己的健康状态。
+
+  # ── 检查项 ──────────────────────────────────────────────────
+
+  checks:
+
+    # ═══ 数据新鲜度 ═══
+    - id: data_freshness
+      name: "数据新鲜度检查"
+      priority: critical
+      description: "work.ws 中的关键数据是否过时？"
+      checks:
+        - metric: work_ws_age_days
+          description: "work.ws 自上次更新至今的天数"
+          source_field: "work.ws → workspace.updated"
+          thresholds:
+            green: "≤ 1 天"
+            yellow: "2-7 天"
+            red: "> 7 天"
+          action_on_red: "提示用户：work.ws 数据可能严重过时，建议立即刷新"
+
+        - metric: last_keyword_scan_age_days
+          description: "关键词排名扫描距今的天数"
+          source_field: "work.ws → scenarios.keyword_tracking.last_scan"
+          thresholds:
+            green: "≤ 1 天"
+            yellow: "2-3 天"
+            red: "> 3 天"
+          action_on_red: "提示用户：关键词排名数据已过期，建议立即补扫"
+
+        - metric: last_patrol_age_days
+          description: "领星巡检距今的天数"
+          source_field: "work.ws → status.last_patrol"
+          thresholds:
+            green: "≤ 1 天"
+            yellow: "2-3 天"
+            red: "> 3 天"
+          action_on_red: "提示用户：领星巡检数据已过期"
+
+      aggregation: worst_of
+      # 取最差的一个：任一指标红则整体红
+
+    # ═══ 文件注册表一致性 ═══
+    - id: file_registry_consistency
+      name: "文件注册表一致性"
+      priority: high
+      description: "file-registry.yaml 中注册的文件是否真实存在？"
+      checks:
+        - metric: registered_files_exist_pct
+          description: "已注册文件在磁盘上的存在比例"
+          source: "file-registry.yaml → files[].path"
+          method: "对每个 path 检查文件是否存在"
+          thresholds:
+            green: "≥ 95%"
+            yellow: "80-94%"
+            red: "< 80%"
+          action_on_red: "列出缺失文件，建议清理注册表或恢复文件"
+
+        - metric: orphaned_files_count
+          description: "磁盘上存在但未注册的新文件数量"
+          source: "对比 file-registry.yaml 与实际磁盘文件"
+          scope: "kw-records/, daily-summaries/, reports/"
+          thresholds:
+            green: "≤ 3"
+            yellow: "4-10"
+            red: "> 10"
+          action_on_yellow: "建议将未注册文件加入注册表"
+
+      aggregation: worst_of
+
+    # ═══ 治理文件完整性 ═══
+    - id: governance_integrity
+      name: "治理文件完整性"
+      priority: critical
+      description: "所有治理基础设施文件是否存在？"
+      required_files:
+        - ".qianlima/work.ws"
+        - ".qianlima/WORKSPACE_INDEX.md"
+        - ".qianlima/workflow-index.yaml"
+        - ".qianlima/risk-rules.yaml"
+        - ".qianlima/context-policy.yaml"
+        - ".qianlima/model-adapters.yaml"
+        - ".qianlima/meta-scenario-router.md"
+        - ".qianlima/data-sources.yaml"
+        - ".qianlima/file-registry.yaml"
+        - ".qianlima/improvement-loop.yaml"
+        - ".qianlima/observability.yaml"
+        - ".qianlima/evaluation-tasks.yaml"
+      thresholds:
+        green: "全部存在"
+        yellow: "缺失 1 个非关键文件"
+        red: "缺失 ≥ 2 个或任何关键文件"
+      action_on_red: "列出缺失文件，建议运行 start-qianlima.ps1 重新生成"
+
+    # ═══ 场景状态一致性 ═══
+    - id: scenario_consistency
+      name: "场景状态一致性"
+      priority: medium
+      description: "work.ws 中声明的 active scenarios 与实际 workflow 定义是否匹配？"
+      checks:
+        - metric: active_scenario_has_workflows
+          description: "每个 active scenario 是否有对应的 workflow 定义"
+          method: "对比 work.ws → scenarios (status==active) 的 workflows 列表与 workflow-index.yaml"
+          thresholds:
+            green: "全部匹配"
+            yellow: "有 workflow 缺失定义"
+            red: "有 scenario 无任何 workflow"
+
+        - metric: workflow_has_template
+          description: "workflow-index.yaml 中的 workflow 是否有对应模板文件"
+          method: "检查 workflow-index.yaml 中每个 template 字段指向的文件是否存在"
+          thresholds:
+            green: "全部存在"
+            yellow: "缺失 1-2 个"
+            red: "缺失 ≥ 3 个"
+
+      aggregation: worst_of
+
+    # ═══ 数据源可达性（轻量） ═══
+    - id: datasource_reachability_lite
+      name: "数据源可达性（轻量）"
+      priority: low
+      description: "关键数据源是否可访问？仅做轻量检查。"
+      note: "此检查仅验证配置存在，不实际连接（避免启动时耗时过长）"
+      checks:
+        - metric: lark_token_configured
+          description: "飞书 token 是否已配置"
+          method: "检查 lark-cli 是否可用或 token 文件是否存在"
+          thresholds:
+            green: "可访问"
+            red: "未配置"
+          action_on_red: "提示用户运行 lark-cli auth login"
+
+        - metric: kimi_webbridge_available
+          description: "Kimi WebBridge 是否运行"
+          method: "检查 wb.ps1 是否存在"
+          thresholds:
+            green: "存在"
+            red: "缺失"
+          action_on_red: "提示用户检查 Kimi WebBridge 安装"
+
+      aggregation: worst_of
+
+  # ── 聚合规则 ────────────────────────────────────────────────
+
+  aggregation_rules:
+    overall_health:
+      green: "所有检查项的 aggregation 均为 green"
+      yellow: "有检查项为 yellow，无 red"
+      red: "有任何检查项为 red"
+    priority_weight:
+      critical: 3
+      high: 2
+      medium: 1
+      low: 0
+
+  # ── 输出 ────────────────────────────────────────────────────
+
+  output:
+    - target: "work.ws → status.harness_health"
+      format: "green | yellow | red"
+      description: "更新 work.ws 的 harness_health 字段"
+    - target: "控制台"
+      format: "简洁摘要"
+      description: "Agent 启动时输出一句话健康摘要"
+    - target: "logs/harness-health-{date}.json"
+      format: "详细 JSON"
+      description: "完整健康报告存档"
+      retention: "保留最近 30 天"
+
+  # ── 执行流程 ────────────────────────────────────────────────
+
+  execution:
+    step_1: "读取 work.ws → 获取 updated / last_scan / last_patrol 时间戳"
+    step_2: "读取 file-registry.yaml → 抽样检查 5-10 个关键文件是否存在"
+    step_3: "检查 .qianlima/ 目录下治理文件完整性（12 个文件）"
+    step_4: "对比 work.ws 的 scenarios 与 workflow-index.yaml"
+    step_5: "轻量检查数据源配置存在性（不实际连接）"
+    step_6: "按聚合规则计算 overall_health"
+    step_7: "更新 work.ws 的 harness_health 字段"
+    step_8: "在 Agent 响应中输出一句话健康摘要"
+
+  # ── 集成点 ──────────────────────────────────────────────────
+
+  integration:
+    bootstrap_phase: "Phase 1 末尾 — 治理文件加载完成后立即执行"
+    router_hook: "meta-scenario-router.md 的 always_load 之后"
+    fallback: "如果健康检查本身失败（如 work.ws 不存在），标记 harness_health = 'critical_error' 并进入最小可用模式"

@@ -1,0 +1,86 @@
+task_card:
+  id: product_discovery
+  name: 新品机会探索与人有我优选品
+  plain_language_trigger:
+    - 帮我找新品
+    - 看看这个品类能不能做
+    - 做一个选品分析
+    - 选品 Skill
+    - 人有我有
+    - 人有我优
+    - 10 万预算怎么选品
+  when_to_use: 想判断一个品类或产品概念是否值得进入。
+  user_needs_to_provide:
+    - 产品概念或关键词
+    - 目标站点
+    - 目标利润率，默认广告前利润率不低于 35%
+    - 预算或供应链条件，可选
+    - 已有供应商报价、尺寸重量、包装方式，可选
+    - 目标形态：平替、升级款、套装、配件、耗材或专业版，可选
+    - Sorftime TOP 产品 Excel，可选，用于 ASIN 产品形态归类和入场评分
+    - 关键词反查表或搜索词表，可选，用于关键词相关性分层和广告词/否词生成
+  agent_will_do:
+    - 先定义市场边界：包含什么、不包含什么
+    - 从 2-3 个核心关键词抓取并去重竞品集合
+    - 如有 TOP 产品表，按产品主体形态做 ASIN 分层，区分真正竞品、相邻产品和排除项
+    - 如有关键词表，按产品适配对象、用途和规格做高/中/低/不相关分层
+    - 拆分可确认市场总量、对标市场总量和潜在增量
+    - 用“人有我有、人有我优”定义产品方案
+    - 用需求、竞争、利润、推广四道闸门筛掉不合适产品
+    - 计算广告前利润率、盈亏平衡 ACOS、目标 CPA/CPC 和首月广告预算
+    - 输出 可做 / 有条件可做 / 调整后再看 / 不做，以及 7 天验证计划
+  output:
+    type: markdown_report
+    template: templates/product-discovery_template.md
+  required_sources:
+    - rules/amazon-product-selection-human-plus.md
+  preferred_data_sources:
+    - pangolinfo_mcp.search_amazon
+    - pangolinfo_amazon_scraper.get_amazon_product
+    - pangolinfo_amazon_scraper.get_amazon_reviews
+    - pangolinfo_amazon_niche
+    - pangolinfo_ai_serp
+    - local_skill.asin-classification-report-V2
+    - local_skill.amazon-keyword-relevance
+    - sif_mcp.market_get_keyword_demand
+    - sif_mcp.market_get_keyword_competition
+    - sif_mcp.market_get_keyword_history
+    - sorftime_mcp
+  fallback_when_data_missing:
+    - 如果未返回销量字段，只能列入“潜在增量”，不得计入可确认市场总量。
+    - 如果没有 Sorftime TOP 产品表，只用 Pangolinfo SERP/PDP 做竞品去重，不输出分类 HTML。
+    - 如果没有关键词反查表，只输出种子关键词和待验证词根，不生成完整关键词相关性 Excel。
+    - 如果没有成本/尺寸/重量，只输出利润测算所需字段清单，不给最终“可做”。
+    - 如果没有评论数据，只能做市场和利润初筛，并把痛点判断标注为待验证。
+    - 如果没有 CPC/CVR 数据，用广告模型公式列出待验证阈值，不编造点击成本。
+  must_include:
+    - 市场边界
+    - 数据完整性
+    - 市场总量三层口径
+    - 竞品去重表
+    - ASIN 产品形态分层
+    - 关键词相关性分层
+    - 需求闸门
+    - 竞争闸门
+    - 利润闸门
+    - 推广闸门
+    - 人有我有
+    - 人有我优
+    - 阶段广告与订单目标
+    - 可做 / 有条件可做 / 调整后再看 / 不做
+    - 7 天验证计划
+    - 样品验证清单和供应商 RFQ 参数
+  quality_gates:
+    - 必须明确本次统计包含什么、不包含什么。
+    - 竞品集合必须按 ASIN 去重，广告位和自然位不得重复计数。
+    - 可确认市场总量只能使用工具返回销量字段或用户确认销量字段。
+    - 广告前利润率低于 35% 时，不得输出“可做”。
+    - 每个“人有我优”升级点必须对应可验证证据。
+    - ASIN 归类必须按产品主体形态，不得按颜色、尺寸、标题尾部配件词误分。
+    - 关键词投放建议必须先过相关性分层，不得只按搜索量/CPC 选词。
+    - 结论必须附下一步动作，不能只写方向判断。
+  forbidden_actions:
+    - 自动创建产品
+    - 自动下采购单
+    - 未经确认联系供应商或发送 RFQ
+    - 编造销量、份额、利润或市场规模

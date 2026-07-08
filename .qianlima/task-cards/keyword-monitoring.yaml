@@ -1,0 +1,86 @@
+task_card:
+  id: keyword_monitoring
+  name: 关键词监控
+  plain_language_trigger:
+    - 跑一下关键词排名
+    - 看看卡位
+    - 监控这些关键词
+  when_to_use: 想知道 ASIN 在核心关键词下的排名变化和机会词。
+  user_needs_to_provide:
+    - ASIN
+    - 关键词列表
+    - 站点
+    - 对比时间，可选
+  agent_will_do:
+    - 查询关键词排名
+    - 对比历史变化
+    - 找出上升、下滑和空白机会
+    - 给出广告或 Listing 动作建议
+  output:
+    type: markdown_report
+    template: templates/keyword-monitoring_template.md
+  must_include:
+    - 关键词排名表
+    - 变化趋势
+    - 机会词
+    - 风险词
+    - 下一步建议
+  forbidden_actions:
+    - 自动调广告
+    - 自动写回后台
+
+  # ── Anti-Rationalization Table ──────────────────────────────
+  # 预判 agent 在关键词巡检中会找的借口，提前写死反驳。
+  # 每条 excuse 必须匹配 agent 实际出现过的偷懒话术。
+  anti_rationalization:
+    - excuse: "Pangolinfo 有返回数据，大部分词都扫到了，缺一两个没关系"
+      rebuttal: >
+        06-13 历史证明 Pangolinfo 对长尾词的截断率高达 40%。PD Day1 9 个核心词
+        里 5 个数据截断，仅靠 Pangolinfo 等于自欺欺人。缺数据的词必须标注"数据盲区"，
+        并启动 Kimi WebBridge 补扫或 Sorftime 交叉验证。无例外。
+
+    - excuse: "这个排名波动很小，掉了两三位没什么好记录的"
+      rebuttal: >
+        小波动是大崩盘的前兆。06-13 崩盘前一周有 3 个词已持续下滑 5-10 位，
+        当时若记录了就能在崩盘前介入。任何超过 5 位的排名变动都必须记录并标趋势箭头。
+        累计 3 天同向变动触发预警。
+
+    - excuse: "关键词太多了，扫 Top 5 就够了，后面的自然位不重要"
+      rebuttal: >
+        Top 5 已被广告位占满。你的自然位集中在 P1#6-10 和 P2。不扫后面等于
+        看不到自己的真实排名。ARCCAPTAIN 的 6+ 个词占据广告 #1 + 自然位，
+        如果你只扫 Top 5，你看到的全是竞品广告——不是你的排名。
+
+    - excuse: "Sorftime 超时/报错了，Pangolinfo 的数据也能用，先出报告吧"
+      rebuttal: >
+        Sorftime 是首选数据源（SOP 明确）。它挂了不能成为用次选数据凑合的理由。
+        正确的做法：记录 Sorftime 故障 → 启用 Pangolinfo 回退 → 标记报告为
+        "单源验证" → 事后用 Sorftime 补扫 → 标注数据置信度为 LOW。不是跳过。
+
+    - excuse: "报告已经写好了，数据源标注下次再说"
+      rebuttal: >
+        没有数据源标注的报告是不可追溯的。下次复查时无法判断是 Sorftime 还是
+        Pangolinfo 的数据，无法判断置信度。06-24 的日志就因为这个原因无法做
+        根因分析。每条排名数据必须标注来源（SF/PG/KW）。
+
+    # 🆕 v2.1: Loop 执行相关的 anti-rationalization
+    - excuse: "这个关键词 Sorftime 返回空了，Pangolinfo 有数据，直接用 Pangolinfo 的就行，不用再跑第三源了"
+      rebuttal: >
+        SDR Loop 的 reconcile 阶段明确要求：仅一源可用时置信度为 LOW。
+        不能因为"不想多跑一轮"就跳过第三源交叉验证。如果 Sorftime 和 Pangolinfo
+        冲突（偏差>5位），必须启动 Kimi WebBridge 作为第三源。loop_check 阶段
+        也会判定"盲区词未解决"→ 回到 scan 阶段换数据源重扫。
+
+    - excuse: "验证阶段发现几个小问题，影响不大，直接 pass 吧"
+      rebuttal: >
+        EVR Loop 的 verify→refine 机制就是为了抓这些小问题。verify=fail_with_issues
+        时必须进入 refine 阶段修补，不能手动"放水"改成 pass。连续 3 次 verify 不通过
+        会触发 escalation → 标记为"需人工介入"。这是安全网，不是可选项。
+
+    - excuse: "已经迭代 2 次了，再有盲区就用上次的旧数据凑数"
+      rebuttal: >
+        Loop 的 convergence 条件是"所有词置信度 ≥ MEDIUM，或 max_retries 耗尽"。
+        如果 max_retries 耗尽仍有盲区，正确的做法是标记为"best_effort+数据盲区"，
+        写入报告的"待复查"附录——不是用旧数据伪装成全量覆盖。
+        上一轮 06-24 的数据腐烂就是因为你偷了这个懒。
+

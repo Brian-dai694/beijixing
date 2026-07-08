@@ -1,0 +1,306 @@
+# evolutionary-workflow.yaml — 进化式 Workflow 框架
+# 版本: v1.0 | 创建: 2026-07-08
+# 来源: Lilian Weng "Harness Engineering for Self-Improvement" (2026-07-04)
+#        — Evolutionary Search / Joint Optimization with Model Weights
+# 理念: "Don't just run workflows — evolve them.
+#         Let the best parameters survive, reproduce, and improve."
+
+evolutionary_framework:
+  id: evolutionary_workflow
+  version: "1.0"
+  principle: >
+    工作流不应该被写死——它们应该像生物一样演化。
+    每次执行都是"一代"，效果好的参数存活到下一代，
+    效果差的参数被淘汰或变异。最终收敛到最优配置。
+
+  # ── 可进化参数定义 ──────────────────────────────────────────
+
+  evolvable_parameters:
+
+    # 广告日报 workflow 的可进化参数
+    - workflow_id: daily_ad_report
+      parameters:
+        - id: data_source_order
+          name: "数据源优先级顺序"
+          type: permutation
+          current: [lingsing_ads, lark_ads_daily]
+          candidates: [[lingsing_ads, lark_ads_daily], [lark_ads_daily, lingsing_ads]]
+          fitness_impact: "影响数据新鲜度和获取速度"
+          mutation_rate: 0.20
+
+        - id: ad_warning_threshold_acos
+          name: "广告警告阈值 ACoS"
+          type: float
+          current: 0.80
+          range: [0.40, 1.50]
+          step: 0.05
+          fitness_impact: "影响警告数量和用户接受率"
+          constraint: "不得低于 0.30（避免过度警告）"
+
+        - id: max_campaigns_per_report
+          name: "日报最大活动数"
+          type: integer
+          current: 20
+          range: [10, 50]
+          fitness_impact: "影响报告完整性和生成速度"
+
+        - id: report_include_competitor_snapshot
+          name: "日报是否包含竞品快照"
+          type: boolean
+          current: false
+          fitness_impact: "提升可操作性但增加 30% token 成本"
+
+    # 关键词扫描 workflow 的可进化参数
+    - workflow_id: keyword_rank_scan
+      parameters:
+        - id: primary_data_source
+          name: "首选数据源"
+          type: categorical
+          current: sorftime_mcp
+          candidates: [sorftime_mcp, pangolinfo_mcp, kimi_webbridge]
+          fitness_impact: "影响覆盖率（78% target）和执行速度"
+
+        - id: fallback_strategy
+          name: "回退策略"
+          type: categorical
+          current: "sequential"    # 逐个尝试
+          candidates: ["sequential", "parallel_first_2", "all_at_once"]
+          fitness_impact: "影响覆盖率和执行时间"
+
+        - id: min_coverage_threshold
+          name: "最低覆盖率阈值"
+          type: float
+          current: 0.78
+          range: [0.60, 0.95]
+          step: 0.05
+          fitness_impact: "影响扫描完整性和重试频率"
+
+        - id: max_retry_per_keyword
+          name: "每个关键词最大重试次数"
+          type: integer
+          current: 2
+          range: [1, 5]
+          fitness_impact: "影响覆盖率和执行时间"
+
+        - id: concurrent_keyword_scan
+          name: "并行扫描关键词数"
+          type: integer
+          current: 1
+          range: [1, 5]
+          fitness_impact: "影响速度但可能触发 API 限流"
+
+    # 竞品对比 workflow 的可进化参数
+    - workflow_id: competitor_comparison
+      parameters:
+        - id: max_competitors
+          name: "最大竞品数量"
+          type: integer
+          current: 5
+          range: [3, 10]
+          fitness_impact: "影响报告深度和 token 成本"
+
+        - id: comparison_dimensions
+          name: "对比维度数量"
+          type: integer
+          current: 6
+          range: [4, 12]
+          fitness_impact: "影响可操作性和执行时间"
+
+  # ── 适应度函数 ──────────────────────────────────────────────
+
+  fitness_function:
+    description: >
+      适应度 = 加权多维度得分。得分越高 → 参数组合越优。
+      基于 evaluation-tasks.yaml 的评估维度，但允许 workflow 自定义权重。
+
+    base_dimensions:
+      - id: correctness
+        weight: 0.30
+        description: "数据正确性得分"
+      - id: completeness
+        weight: 0.25
+        description: "覆盖完整性得分"
+      - id: efficiency
+        weight: 0.15
+        description: "执行效率得分"
+      - id: actionability
+        weight: 0.15
+        description: "可操作性得分"
+      - id: user_satisfaction
+        weight: 0.15
+        description: "用户满意度得分"
+
+    # 每个 workflow 可以覆盖默认权重
+    workflow_fitness_overrides:
+      daily_ad_report:
+        correctness: 0.35       # 广告数据正确性最重要
+        completeness: 0.20
+        efficiency: 0.15
+        actionability: 0.15
+        user_satisfaction: 0.15
+
+      keyword_rank_scan:
+        correctness: 0.20
+        completeness: 0.35       # 关键词覆盖率最关键
+        efficiency: 0.20         # 速度也重要
+        actionability: 0.10
+        user_satisfaction: 0.15
+
+    # 最小可行适应度
+    minimum_viable_fitness: 0.60  # 低于此值的参数组合自动淘汰
+
+  # ── gdpo: 策略优化增强 ──────────────────────────────────────
+  # 来源: gdpo — 策略优化思想融入进化搜索
+  policy_optimization:
+    version: "1.0"
+    description: >
+      爬山法太保守（exploration=low），进化算法太昂贵。
+      gdpo 融合三种思想：模拟退火（跳出局部最优）、
+      多目标优化（不止一个 fitness 维度）、策略梯度（用历史指导搜索）。
+
+    enhancements:
+
+      - id: simulated_annealing
+        applies_to: hill_climbing
+        description: "以一定概率接受退步，概率随时间降低"
+        acceptance_probability: "exp(-|fitness_loss| / temperature)"
+        temperature_schedule: "初始 T=0.5 × baseline_fitness，每步 T ← T × 0.9"
+        benefit: "早期允许探索，后期收敛到最优"
+
+      - id: epsilon_greedy_exploration
+        applies_to: all_strategies
+        description: "以 ε 概率完全随机变异（不限于小步），以 1-ε 概率正常变异"
+        epsilon_schedule: "初始 0.3，每代 ε ← ε × 0.85（下限 0.05）"
+        benefit: "保留跳出局部最优的能力"
+
+      - id: multi_objective_pareto
+        applies_to: fitness_function
+        description: "不止优化单维度 fitness，同时追踪 correctness/completeness/efficiency"
+        pareto_frontier: "保留所有不被任何其他个体完全支配的个体"
+        selection: "在 Pareto 前沿上优先选 correctness 和 completeness 更高的个体"
+        benefit: "避免 'efficiency 极高但 correctness 差' 的畸形最优"
+
+      - id: gradient_guided_mutation
+        applies_to: hill_climbing, evolutionary_algorithm
+        description: "用最近 5 次变异的 Δfitness/Δparam 近似梯度，指导变异方向"
+        method: "对每个参数，计算 (fitness_after - fitness_before) / (param_after - param_before)"
+        direction: "沿正梯度方向变异（参数增大带来 fitness 提升 → 继续增大）"
+        noise: "梯度方向 + 高斯噪声（σ=0.1）避免确定性陷阱"
+        benefit: "从随机游走升级为有方向的搜索"
+
+  # ── 进化策略 ────────────────────────────────────────────────
+
+  strategies:
+
+    # 策略 1: 爬山法（默认）— 简单、安全、可解释
+    hill_climbing:
+      name: "爬山法"
+      description: "在当前最佳参数附近小步尝试，接受改进，拒绝退步"
+      algorithm: |
+        1. 从 current 参数开始作为 baseline
+        2. 每次变异 1 个参数（随机选 + 小步调整）
+        3. 运行 workflow → 计算 fitness
+        4. 如果 fitness > baseline: 接受新参数
+        5. 如果 fitness < baseline * 0.95: 拒绝，回退
+        6. 连续 5 次无改进 → 停止（可能到达局部最优）
+      safe: true
+      convergence_speed: slow
+      exploration: low
+      best_for: "稳定运行中的 workflow，渐进式优化"
+
+    # 策略 2: 进化算法 — 更激进，可能跳出局部最优
+    evolutionary_algorithm:
+      name: "进化算法"
+      description: "维护参数种群，通过选择、交叉、变异迭代优化"
+      algorithm: |
+        1. 初始种群 = current + 5 个随机变异个体
+        2. 每代: 运行所有个体 → 计算 fitness
+        3. 选择: Top 50% 存活（截断选择）
+        4. 交叉: 存活个体两两交叉产生新个体
+        5. 变异: 每代 20% 概率随机扰动
+        6. 精英保留: 最优个体直接进入下一代
+        7. 10 代后停止 → 输出最优个体
+      population_size: 6
+      generations: 10
+      safe: false           # 需要更多运行来验证
+      convergence_speed: medium
+      exploration: high
+      best_for: "新 workflow 或当前参数明显不够好时"
+
+    # 策略 3: 贝叶斯优化 — 样本效率最高
+    bayesian_optimization:
+      name: "贝叶斯优化"
+      description: "用概率模型指导搜索，在最少运行次数内找到最优参数"
+      algorithm: |
+        1. 建立高斯过程代理模型
+        2. 用采集函数 (Expected Improvement) 选择下一个参数点
+        3. 运行 workflow → 更新代理模型
+        4. 重复直到收敛或预算耗尽
+      max_iterations: 20
+      safe: true
+      convergence_speed: fast
+      exploration: balanced
+      best_for: "运行成本高的 workflow（如需要大量 API 调用），样本效率优先"
+
+  # ── 安全约束 ────────────────────────────────────────────────
+
+  safety_constraints:
+
+    # 硬约束：违反任何一条则参数不可用
+    hard_constraints:
+      - id: no_data_loss
+        description: "新参数不得导致必填字段缺失"
+        check: "evaluation-tasks 的 required_fields_present = true"
+
+      - id: no_cost_explosion
+        description: "token 成本不得超过 baseline 的 2 倍"
+        check: "cost <= baseline_cost * 2.0"
+
+      - id: no_rate_limit_violation
+        description: "API 调用频率不得超过已知限流阈值"
+        check: "concurrent_keyword_scan <= 5"
+
+      - id: no_risk_escalation
+        description: "不得绕过 risk-rules.yaml 的限制"
+        check: "参数变更不涉及 change_bid / change_budget / delete_data"
+
+    # 不可进化参数（写死在代码中）
+    immutable_parameters:
+      - workflow_id: "*"
+        parameters:
+          - "change_bid"        # 绝对不可自动调
+          - "change_budget"
+          - "delete_data"
+          - "write_back_without_confirmation"
+
+  # ── 进化历史 ────────────────────────────────────────────────
+
+  evolution_history:
+    storage: "logs/evolution-{workflow_id}-{timestamp}.json"
+    record:
+      - generation: "第几代"
+      - parameters: "参数组合"
+      - fitness: "适应度得分"
+      - parent: "来源个体"
+      - mutation: "变异了什么"
+      - verdict: "accepted / rejected / elite"
+
+    visualization:
+      type: "适应度趋势图"
+      description: "展示 fitness 随代数变化的趋势"
+      generate_when: "进化结束后自动生成"
+
+  # ── Workflow 集成 ──────────────────────────────────────────
+
+  integration_with_improvement_loop:
+    description: >
+      进化式 workflow 与 improvement-loop.yaml v2 协同工作：
+      - improvement-loop 的 A/B 实验用于离散的"策略选择"
+      - evolutionary-workflow 用于连续的"参数调优"
+      - 两者互补：A/B 选策略，进化调参数
+
+    trigger_evolution:
+      - "新 workflow 首次上线 → 进化算法 (10 代)"
+      - "workflow fitness 连续 3 次下降 → 爬山法"
+      - "用户反馈 workflow 效果不好 → 贝叶斯优化"
+      - "季度性复查 → 进化算法"

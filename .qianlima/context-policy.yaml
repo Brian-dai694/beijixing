@@ -1,0 +1,277 @@
+context_policy:
+  version: 1
+  purpose: Control how agents read, compress, and carry file context safely.
+  model_adapter_file: model-adapters.yaml
+
+  principle:
+    - Never assume the model can read every file in full.
+    - Always keep safety reserve for reasoning, tool results, and final answer.
+    - Prefer source references over copying full files into context.
+    - Preserve source of truth in files; compress only working context.
+
+  model_context_budget:
+    mode: configurable
+    notes: Do not hard-code vendor-specific maximum context windows.
+    usable_context_ratio: 0.70
+    safety_reserve_ratio: 0.30
+    warning_threshold_ratio: 0.60
+    stop_threshold_ratio: 0.85
+
+  default_budget_tokens:
+    total_window: 128000
+    usable_context: 89600
+    safety_reserve: 38400
+    warning_threshold: 76800
+    stop_threshold: 108800
+
+  adapter_resolution:
+    order:
+      - explicit_workflow_model
+      - user_selected_model
+      - provider_default
+      - generic_capability_class
+      - conservative_defaults
+    fallback_profile: defaults
+    deepseek_default_profile: deepseek-v4-flash
+    deepseek_reasoning_profile: deepseek-v4-pro
+
+  provider_notes:
+    deepseek:
+      official_context_length_tokens: 1000000
+      official_max_output_tokens: 384000
+      use_staged_summary_even_with_1m_context: true
+      recommended_reserve:
+        flash: 0.45
+        pro: 0.50
+      cache_hint: Keep stable prefixes unchanged to benefit from context caching.
+
+  file_reading_limits:
+    direct_read:
+      max_file_size_kb: 20
+      max_files_per_turn: 5
+      use_when: Small instructions, current workflow files, short templates.
+    extract_then_read:
+      max_file_size_kb: 200
+      use_when: Medium documents with headings, tables, or repeated structure.
+    summarize_first:
+      max_file_size_kb: 2048
+      use_when: Long docs, reports, transcripts, PDFs, exports, knowledge files.
+    index_only:
+      min_file_size_kb: 2048
+      use_when: Very large files, datasets, logs, archives.
+
+  compression_levels:
+    - level: L0
+      name: full_context
+      description: Read full file into context.
+      allowed_for: Small files only.
+    - level: L1
+      name: relevant_extract
+      description: Extract only sections matching the current task.
+      allowed_for: Medium files and targeted lookups.
+    - level: L2
+      name: structured_summary
+      description: Summarize into goal, facts, decisions, risks, and next actions.
+      allowed_for: Long docs and knowledge materials.
+    - level: L3
+      name: outline_index
+      description: Keep table of contents, key entities, and file references only.
+      allowed_for: Very large files and recurring references.
+    - level: L4
+      name: source_reference_only
+      description: Keep path, metadata, and retrieval instructions only.
+      allowed_for: Archives, raw data, and source files not needed immediately.
+
+  auto_compression_triggers:
+    - planned_context_ratio_above_warning_threshold
+    - more_than_5_files_needed
+    - any_file_above_direct_read_limit
+    - repeated_reference_to_same_large_file
+    - workflow_runs_longer_than_3_steps
+    - user_provides_many_documents
+    - conversation_history_blocks_current_task
+
+  required_summary_schema:
+    file_path: required
+    source_type: required
+    date_or_version: optional
+    why_relevant: required
+    key_facts: required
+    decisions: optional
+    risks: optional
+    open_questions: optional
+    action_items: optional
+    source_sections: required
+    confidence: required
+
+  safety_rules:
+    - Summaries must cite source file paths.
+    - Summaries must not replace original files.
+    - Financial, legal, medical, account, credential, and customer data must be summarized with extra caution.
+    - Raw sensitive fields must not be copied into context unless explicitly needed and permitted.
+    - If a conclusion depends on omitted content, mark it as pending verification.
+    - Before high-risk action, reload the source section instead of relying only on summary.
+
+  workflow_integration:
+    preflight:
+      - estimate_needed_context
+      - classify_files_by_size_and_relevance
+      - choose_compression_level
+      - reserve_safety_budget
+    execute:
+      - read_small_files_directly
+      - summarize_large_files_to_working
+      - pass_summary_manifest_between_agents
+    verify:
+      - check_summary_has_source_paths
+      - reload_source_sections_for_high_risk_decisions
+      - record_context_usage_in_trace
+
+  # ═══════════════════════════════════════════════════════════════
+  # v2 扩展: Context Engineering 2.0
+  # 版本: v2.0 | 更新: 2026-07-08
+  # 来源: Lilian Weng "Harness Engineering for Self-Improvement" (2026-07-04)
+  # 理念: "Context is not just about what fits — it's about what matters."
+  # ═══════════════════════════════════════════════════════════════
+
+  v2_extensions:
+
+    # ── 动态上下文分配 ──────────────────────────────────────────
+    # v1 按文件大小静态分配 → v2 按任务类型动态分配
+    dynamic_allocation:
+      description: >
+        不再仅按文件大小决定压缩级别，而是结合:
+        - 任务阶段（启动/探索/执行/验证）
+        - 内容类型（治理配置/原始数据/历史报告/知识文档）
+        - 与当前场景的相关度
+      
+      task_phase_budget:
+        bootstrap:
+          description: "会话启动：加载治理文件"
+          max_files: 12
+          prefer: L0 (全量读，治理文件通常小)
+          budget_fraction: 0.15  # 启动阶段最多占 15% 上下文
+        
+        exploration:
+          description: "数据收集：关键词/广告/竞品查询"
+          max_files: 8
+          prefer: L1 (相关提取，只读需要的字段)
+          budget_fraction: 0.30
+        
+        execution:
+          description: "执行：生成报告/写入文件"
+          max_files: 5
+          prefer: L2 (结构化摘要，保留大图)
+          budget_fraction: 0.25
+        
+        verification:
+          description: "验证：交叉检查/门禁确认"
+          max_files: 5
+          prefer: L0-L1 (验证需要精确数据)
+          budget_fraction: 0.15
+        
+        synthesis:
+          description: "最终输出：汇总/回答"
+          budget_fraction: 0.15  # 留给最终回答和用户交互
+
+      content_type_priority:
+        governance:    {priority: critical, compression: L0}
+        raw_data:      {priority: high,     compression: L1}
+        reports:       {priority: medium,   compression: L2}
+        knowledge:     {priority: low,      compression: L3}
+        archive:       {priority: minimal,  compression: L4}
+
+    # ── 智能压缩选择器 ──────────────────────────────────────────
+    smart_compressor:
+      description: >
+        不只按文件大小，还考虑内容稠密度:
+        - 表格/数据: 行数 > 压缩阈值时保留表头+摘要行
+        - YAML 配置: 保留与当前场景相关的段
+        - Markdown 长文: 保留标题层级 + 当前场景段落
+        - 日志: 保留最晚 N 条 + 错误条目
+      
+      content_aware_rules:
+        - type: tabular
+          detect: ".csv, .xlsx, 飞书表格导出"
+          strategy: "保留表头 + 最近 30 行 + 汇总统计"
+        - type: config
+          detect: ".yaml, .toml, .json 配置"
+          strategy: "保留与 work.ws 中 active scenarios 相关的段"
+        - type: prose
+          detect: ".md, .txt 长文"
+          strategy: "保留标题层级 + first 200 chars of relevant sections"
+        - type: log
+          detect: ".log, run-traces/"
+          strategy: "保留 last 50 lines + 所有 ERROR/WARN 行"
+
+    # ── 深度模型适配 ──────────────────────────────────────────
+    deep_model_adaptation:
+      description: >
+        与 model-adapters.yaml 深度耦合，根据实际运行模型动态调整。
+        不同模型有不同的上下文退化曲线和压缩偏好。
+      
+      model_specific_policies:
+        deepseek-v4-pro:
+          context_window: 1000000
+          usable_ratio: 0.50
+          compression: staged          # 1M 窗口仍需分阶段摘要
+          summary_after_lines: 3000    # 上下文超过此值开始压缩
+          cache_strategy: "prefix_stable"  # 保持前缀稳定以利用缓存
+          note: "Pro 模式用 thinking tokens，预留 15% 给推理"
+
+        deepseek-v4-flash:
+          context_window: 1000000
+          usable_ratio: 0.55
+          compression: staged
+          summary_after_lines: 4000
+          cache_strategy: "prefix_stable"
+          note: "Flash 没有 thinking tokens，可用上下文更多"
+
+      fallback: "未知模型用 v1 的 conservative_defaults"
+
+    # ── 上下文预算实时监控 ──────────────────────────────────────
+    runtime_monitoring:
+      description: >
+        不再是事后的 "token 用量统计"，而是实时的上下文预算追踪。
+        Agent 在每个关键步骤后检查预算使用情况。
+      
+      checkpoints:
+        - after_bootstrap: "检查治理文件加载后的上下文占用"
+        - after_data_fetch: "检查数据提取后的占用，决定是否需要压缩"
+        - before_report_gen: "确保留有足够空间给报告生成"
+        - before_final_answer: "确保留有足够空间给最终输出"
+
+      budget_tracker_fields:
+        - estimated_tokens_used
+        - estimated_tokens_remaining
+        - safety_reserve_remaining
+        - compression_level_used
+        - files_in_context_count
+        - files_summarized_count
+        - warnings_triggered
+
+      auto_actions:
+        - if: "预算使用 > 60% 且还没到 exploration 阶段结束"
+          action: "将 non-critical 文件降级到 L3 压缩"
+        - if: "预算使用 > 80%"
+          action: "暂停加载新文件，先完成当前阶段的合成"
+        - if: "安全预留 < 5000 tokens"
+          action: "触发紧急压缩，输出当前状态摘要，停止新操作"
+
+    # ── 上下文策略进化 ──────────────────────────────────────────
+    context_evolution:
+      description: >
+        上下文策略本身也可以被改进（与 improvement-loop.yaml 联动）。
+        追踪哪些压缩策略产生了好的效果，哪些导致了问题。
+      
+      metrics_to_track:
+        - "压缩后是否仍需重新加载原始文件？（= 压缩太激进）"
+        - "压缩后 Agent 是否做出了错误判断？（= 丢失了关键信息）"
+        - "压缩节省了多少 tokens？（= 压缩效率）"
+      
+      feedback_to_improvement_loop:
+        trigger: "如果同一文件被重复重新加载 > 2 次"
+        action: "提高该文件的压缩级别保留度"
+        trigger: "如果压缩后 Agent 判断失误"
+        action: "标记该文件类型为 '需要更保守的压缩'"
+

@@ -1,11 +1,14 @@
 # workflow-index.yaml — Workflow 索引
-# 版本: v2.0 | 更新: 2026-06-23
+# 版本: v2.1 | 更新: 2026-07-08
+# 变更: 新增 loop_type 字段，关联 loop-engineering.yaml
 
 workflows:
   - id: daily_ad_report
     name: 每日广告运营日报
     scenario: ad_ops
     status: draft
+    loop_type: EVR                        # 🆕 v2.1: Execute→Verify→Refine
+    loop_source: loop-engineering.yaml
     definition: workflows/daily_ad_report.yaml
     template: templates/广告运营_日报模板.md
     default_output_path: "reports/{date}_广告运营_日报_{marketplace}_V{version}.md"
@@ -49,6 +52,19 @@ workflows:
     required_inputs:
       - asin
       - marketplace
+    optional_inputs:
+      - current_listing_copy
+      - current_title
+      - current_product_highlight_or_subtitle
+      - target_keywords
+      - conversion_keywords
+      - competitor_asins
+    required_data_sources:
+      - sif_mcp
+      - sorftime_mcp
+      - pangolinfo_mcp
+    required_rules:
+      - rules/amazon-listing-title-subtitle-2026.md
     forbidden_operations:
       - update_listing
       - upload_backend
@@ -86,6 +102,8 @@ workflows:
     name: 关键词巡检
     scenario: keyword_tracking
     status: active
+    loop_type: SDR                        # 🆕 v2.1: Scan→Doubt→Reconcile
+    loop_source: loop-engineering.yaml
     definition: workflows/keyword_rank_scan.yaml
     task_card: task-cards/keyword-monitoring.yaml
     template: templates/keyword-monitoring_template.md
@@ -98,6 +116,30 @@ workflows:
       - change_budget
       - write_back
 
+  - id: traffic_anomaly_diagnosis
+    name: 流量异常诊断
+    scenario: keyword_tracking
+    status: draft
+    definition: workflows/traffic_anomaly_diagnosis.yaml
+    task_card: task-cards/traffic-anomaly-diagnosis.yaml
+    template: templates/traffic-anomaly-diagnosis_template.md
+    default_output_path: "reports/{date}_流量异常诊断_{asin}_{marketplace}_V{version}.md"
+    required_inputs:
+      - asin
+      - marketplace
+    optional_inputs:
+      - keywords
+      - compare_window
+    required_data_sources:
+      - sorftime_mcp
+      - pangolinfo_mcp
+      - local_traffic_history
+    forbidden_operations:
+      - change_bid
+      - change_budget
+      - change_price
+      - write_back
+
   - id: product_discovery
     name: 新品机会探索
     scenario: product_selection
@@ -108,6 +150,25 @@ workflows:
     required_inputs:
       - product_concept_or_keyword
       - marketplace
+    optional_inputs:
+      - target_profit_rate
+      - budget
+      - supplier_cost
+      - product_dimensions_weight
+      - target_product_form
+      - competitor_asins
+      - excluded_adjacent_products
+      - sorftime_top_products_excel
+      - keyword_reverse_lookup_table
+    required_data_sources:
+      - pangolinfo_mcp
+      - sif_mcp
+      - sorftime_mcp
+    optional_local_modules:
+      - asin-classification-report-V2
+      - amazon-keyword-relevance
+    required_rules:
+      - rules/amazon-product-selection-human-plus.md
     forbidden_operations:
       - create_product
       - purchase_order
@@ -128,3 +189,140 @@ workflows:
     forbidden_operations:
       - write_external_truth
       - send_external
+  - id: keyword_demand_lifecycle_timing
+    name: 关键词三层需求 + 竞争格局
+    scenario: keyword_tracking
+    status: draft
+    definition: workflows/keyword_demand_lifecycle_timing.yaml
+    task_card: task-cards/keyword-demand-lifecycle-timing.yaml
+    template: templates/keyword-demand-lifecycle-timing_template.md
+    default_output_path: "reports/{date}_关键词需求生命周期_{country}_V{version}.md"
+    required_inputs:
+      - keywords
+      - country
+    optional_inputs:
+      - asin
+    forbidden_operations:
+      - change_bid
+      - change_budget
+      - change_price
+      - purchase_order
+      - write_back
+      - delete_data
+
+# ═══════════════════════════════════════════════════════════════
+# 全局治理规则（从 agent-skills 借鉴）
+# ═══════════════════════════════════════════════════════════════
+
+# ── Global Assumption Surfacing Policy ───────────────────────
+# 原则: "动手之前，先把你以为但没确认过的东西列出来，等用户点头。"
+# 来源: agent-skills 五铁律 #1 — Surface assumptions before building
+global_assumption_policy:
+  enabled: true
+  applies_to_all: true
+  applies_strictly_to:
+    - profit_check
+    - change_bid
+    - change_budget
+    - inventory_alert
+    - competitor_comparison
+    - listing_optimization
+
+  format: |
+    在执行前，Agent 必须在响应中显式列出以下假设区块，逐条等待用户确认。
+    确认格式:
+      ✅ 正确，直接用
+      ⚠️ 不对，正确的是 ___
+      ❓ 不确定，帮我确认
+
+  required_dimensions:
+    - dimension: 汇率
+      applies_when: "涉及 CNY/USD 换算"
+      example: "$1 = ¥7.25（来源：飞书自有产品清单最近记录，日期 6/20）"
+
+    - dimension: 费用率
+      applies_when: "涉及利润/成本测算"
+      example: "佣金 15% / FBA $5.42/unit / 广告占比 12%（来源：领星近 30 天均值）"
+
+    - dimension: 退货率
+      applies_when: "涉及净利润测算"
+      example: "3.2%（ASIN B0FY5677XC 近 30 天实际值，来源：领星）"
+
+    - dimension: 时间窗口
+      applies_when: "涉及数据查询/对比"
+      example: "数据覆盖 2026-06-23 ~ 07-01，对比窗口为前 7 天"
+
+    - dimension: 数据源
+      applies_when: "涉及任何数据查询"
+      example: "Sorftime MCP 为首选，Pangolinfo 为回退，Kimi WebBridge 为三源裁决"
+
+    - dimension: 库存/FBA 状态
+      applies_when: "涉及销量预测或补货建议"
+      example: "第 8 批 350 套到港未入仓；P80 Plasma 仅 17 套"
+
+  violation_response: "Agent 若跳过假设亮牌直接执行 → 用户追问后重新来过。高风险操作（调价/预算/写回）跳过亮牌 → 视为违反 risk-rules.yaml。"
+
+# ── Verification Gates ───────────────────────────────────────
+# 原则: "'Seems right' is never a passing grade."
+# 来源: agent-skills Non-Negotiable Verification
+verification_gates:
+
+  # 每日广告日报的出口条件
+  - workflow_id: daily_ad_report
+    gates:
+      - gate: data_freshness
+        description: "所有数据源的时间戳必须是今天"
+        evidence: "领星 ads 导出时间戳 + 飞书 Ad Daily 表写入时间戳（必须今日）"
+        blocker: true
+      - gate: row_completeness
+        description: "飞书 Ad Daily 表写入行数 ≥ 当日活跃广告组数"
+        evidence: "写入行数 vs work.ws 的 pd_active_campaigns 数量匹配"
+        blocker: true
+      - gate: cross_source_validation
+        description: "领星 spend vs 飞书 spend 偏差 < 5%"
+        evidence: "两源 spend 对比表；偏差 > 5% 时附差异说明"
+        blocker: false
+      - gate: keyword_coverage
+        description: "9 个核心词至少 7 个有今日排名数据"
+        evidence: "关键词排名表的覆盖率统计"
+        blocker: true
+      - gate: human_sign_off
+        description: "日报已展示给用户审阅，调价建议已获确认或拒绝"
+        evidence: "用户确认消息（文字/飞书/口头记录）"
+        blocker: true
+
+  # 关键词巡检的出口条件
+  - workflow_id: keyword_rank_scan
+    gates:
+      - gate: dual_source_coverage
+        description: "每个词至少有 1 个数据源覆盖，目标 2 个"
+        evidence: "排名表每行标注数据源（SF/PG/KW）；覆盖率 ≥ 78%（7/9）"
+        blocker: true
+      - gate: doubt_pass_cleared
+        description: "所有 doubt_pass triggers 已处理"
+        evidence: "无未处理的 '待验证' 标记；盲区词已列入 '待复查' 附录"
+        blocker: true
+      - gate: trend_annotation
+        description: "排名变动 > 5 位的词有趋势箭头和可能原因"
+        evidence: "每个大幅变动词有 ↑↓→ 标注 + 一句话原因（竞品广告/价格变动/自然波动）"
+        blocker: false
+      - gate: competitor_snapshot
+        description: "每个关键词 Top 4 的 ASIN 和广告/自然位标记"
+        evidence: "竞品快照表（ASIN + 品牌 + 位置类型 + 是否新面孔）"
+        blocker: false
+
+  # 利润测算的出口条件
+  - workflow_id: profit_check
+    gates:
+      - gate: assumption_confirmed
+        description: "所有假设维度已获用户确认"
+        evidence: "global_assumption_policy 要求的 6 个维度每项有 ✅/⚠️/❓ 标记"
+        blocker: true
+      - gate: fee_source_cited
+        description: "佣金、FBA 费、广告费必须标注来源"
+        evidence: "每项费用标注来源（领星/FBA Calculator/飞书表格）和取值日期"
+        blocker: true
+      - gate: sensitivity_labeled
+        description: "利润对关键变量的敏感度已标注"
+        evidence: "'如果退货率 +2%，净利润变为 ___' 等 3 个 what-if 场景"
+        blocker: false
