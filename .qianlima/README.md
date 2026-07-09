@@ -110,3 +110,7 @@ v2.6.3 起，成本状态卡有统一模板和生成脚本：`templates/realtime
 普通用户可以使用根目录 `启动千里马计划.ps1` 作为中文入口。Agent 和自动化工具优先使用 `start-qianlima.ps1`。
 
 DeepSeek 优先适配在 `model-adapters.yaml` 中维护。`deepseek-v4-flash` 用于低成本批量任务，`deepseek-v4-pro` 用于复杂推理和高价值分析。
+
+## 通义灵码 / Qoder CN 入口
+
+v2.6.4 起，通义灵码和 Qoder CN 优先读取根目录 `QODER.md` 与 `LINGMA.md`。这两个文件只用于 Git-safe 工程维护，不用于真实运营写回。
