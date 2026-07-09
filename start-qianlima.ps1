@@ -27,5 +27,10 @@ if (-not $SkipValidation) {
 
 Write-Host ''
 Write-Host 'Qianlima startup complete.'
-Write-Host 'Read first: .qianlima/WORKSPACE_INDEX.md'
+Write-Host 'Read for Claude Code: CLAUDE.md'
+Write-Host 'Read for Manus: MANUS.md'
+Write-Host 'Read for Manus boot: .qianlima/MANUS_BOOT.md'
+Write-Host 'Read for desktop agents: DESKTOP_AGENT_BRIEF.md'
+Write-Host 'Read first: .qianlima/CODEX_BOOT.md'
+Write-Host 'Then read: .qianlima/WORKSPACE_INDEX.md'
 Write-Host 'Machine index: .qianlima/workspace-index.json'
