@@ -25,8 +25,15 @@ jobs:
         shell: powershell
         run: |
           powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\invoke-runtime-check.ps1" -Phase SessionStart -WorkflowId competitor_comparison
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
           powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\invoke-runtime-check.ps1" -Phase BeforeToolUse -Action change_bid -Confirmed
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
           powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\invoke-runtime-check.ps1" -Phase BeforeToolUse -Action change_bid
           if ($LASTEXITCODE -eq 0) {
             throw "Unconfirmed high-risk action was not blocked."
           }
+
+          Write-Host "Unconfirmed high-risk action was blocked as expected."
+          $global:LASTEXITCODE = 0

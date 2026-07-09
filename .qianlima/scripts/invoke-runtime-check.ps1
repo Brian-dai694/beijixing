@@ -43,8 +43,11 @@ function Find-UsageLedgerByRunId([string]$RunIdValue) {
 
 switch ($Phase) {
   'SessionStart' {
-    foreach ($file in @('WORKSPACE_INDEX.md', 'work.ws', 'workflow-index.yaml', 'risk-rules.yaml', 'context-policy.yaml')) {
+    foreach ($file in @('WORKSPACE_INDEX.md', 'workflow-index.yaml', 'risk-rules.yaml', 'context-policy.yaml')) {
       if (-not (Test-Leaf $file)) { Add-Issue "SessionStart missing required file: $file" }
+    }
+    if ((-not (Test-Leaf 'work.ws')) -and (-not (Test-Leaf 'work.example.ws'))) {
+      Add-Issue 'SessionStart requires work.ws or public-safe work.example.ws'
     }
     if ($WorkflowId) {
       $workflowIndex = Join-Path $Root 'workflow-index.yaml'
