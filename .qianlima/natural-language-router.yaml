@@ -1,0 +1,429 @@
+# natural-language-router.yaml — 千里马自然语言触发路由
+# 版本: v1.2 | 创建: 2026-07-09 | 更新: 2026-07-09
+# 目的: 让用户不用记 skill / MCP 名称，用普通业务语言触发千里马能力。
+
+natural_language_router:
+  id: qianlima_nl_router
+  version: "1.2"
+  principle: >
+    用户只需要说明要做什么、数据在哪里、希望输出什么、是否允许写回。
+    Agent 负责把自然语言意图路由到 skill、workflow、MCP 或组合能力。
+    如果任务复杂，先自动规划技能路径，再执行。
+
+  auto_match_protocol:
+    mode: mandatory_for_every_user_task
+    goal: "用户用自然语言发布任务后，Agent 自动匹配最合适的 skill / workflow / MCP，不要求用户说出技能名。"
+    run_before:
+      - "读取具体 task-card"
+      - "执行 MCP / 浏览器 / OfficeCLI"
+      - "生成报告"
+      - "写入外部系统"
+
+    slot_extraction:
+      required_slots:
+        task_intent: "用户真正要完成的工作，如核账、排名扫描、广告日报、利润测算、选品、文档消化、技能管理。"
+        target_object: "目标对象，如 ASIN、关键词、文件/文件夹、网页链接、飞书链接、Excel、Amazon 报表、产品概念。"
+        output_expectation: "用户期望产出，如结论、Excel、Markdown、图表、执行路径、优先级表。"
+        permission_scope: "只读、可生成本地文件、可写回外部系统、可安装工具。默认只读 + 本地输出。"
+      optional_slots:
+        marketplace: "站点，如 US/CA/UK。"
+        date_range: "时间范围，如昨天、近 7 天、2026 年 1-5 月。"
+        data_source_hint: "用户提到的数据源，如领星、Sorftime、Pangolinfo、Amazon 后台、飞书。"
+        risk_action: "改价、调竞价、调预算、采购、删除、发群、提交、保存、写回、安装。"
+
+    scoring:
+      candidate_source_order:
+        - "本文件 routes"
+        - "skill-registry.yaml skills.triggers / scope / capabilities"
+        - "workflow-index.yaml workflows.required_inputs / scenario"
+        - "当前 work.ws active scenarios"
+      score_rules:
+        exact_trigger_match: 40
+        semantic_intent_match: 30
+        target_object_match: 15
+        data_source_match: 10
+        output_match: 5
+        active_scenario_bonus: 5
+        negative_signal_penalty: -30
+        missing_required_slot_penalty: -20
+        high_risk_without_permission_penalty: -40
+      confidence_thresholds:
+        auto_execute: "score >= 70 and top_score - second_score >= 15 and no blocking missing slot"
+        ask_one_clarifying_question: "score between 45 and 69, or top_score - second_score < 15, or one blocking missing slot"
+        route_to_skill_path_planning: "multi-step task, more than one business domain, or more than two tools needed"
+        refuse_or_confirm_first: "high-risk action without explicit permission"
+      tie_breakers:
+        - "业务 skill 优先于通用工具能力。"
+        - "带 Amazon 报表词时，核账优先于普通 Excel 处理。"
+        - "带 ASIN + 竞品/对手/benchmark 时，竞品对比优先于选品。"
+        - "带 ASIN + 标题/五点/Search Terms 时，Listing 优化优先于竞品对比。"
+        - "带 关键词 + 排名/卡位 时，关键词排名扫描优先于资料消化。"
+        - "带 技能/插件/MCP/安装/健康检查/分组 时，技能管理优先。"
+
+    execution_decision:
+      direct_execute_when:
+        - "匹配置信度达到 auto_execute。"
+        - "任务是只读分析或本地文件生成。"
+        - "必要数据位置、对象或可推断默认值足够。"
+      ask_before_execute_when:
+        - "缺少唯一关键对象，如没有 ASIN、文件路径、关键词或链接。"
+        - "候选技能分数接近，可能误触发。"
+        - "用户的输出要求不明确且会影响工作量或格式。"
+      must_confirm_when:
+        - "安装、删除、禁用、覆盖技能或插件。"
+        - "修改 Codex、MCP、浏览器、Amazon、ERP、飞书等外部配置。"
+        - "调价、调竞价、调预算、采购、删除、提交、保存、发送外部消息。"
+
+    match_record:
+      store_when_useful: ".qianlima/run-traces/nl-match-{date}.yaml"
+      fields:
+        - user_request
+        - extracted_slots
+        - candidate_routes
+        - selected_route
+        - confidence
+        - missing_slots
+        - risk_actions
+        - decision
+      do_not_store:
+        - "API key、token、cookie、密码、私有 headers"
+
+  required_interpretation_steps:
+    - "对每个用户任务强制运行 auto_match_protocol，不要求用户说出 skill 名称。"
+    - "识别用户任务意图: 诊断、核对、生成报告、数据处理、网页操作、文件整理、外部写回。"
+    - "抽取 task_intent、target_object、output_expectation、permission_scope。"
+    - "匹配 skill_registry.skills.triggers、workflow-index.yaml 和本文件 routes，并计算候选分数。"
+    - "按 confidence_thresholds 判断直接执行、追问一句、规划路径或先确认。"
+    - "复杂任务先触发 skill_path_planning，形成 skill/workflow/tool 执行路径。"
+    - "识别输入对象: ASIN、关键词、文件夹、Excel、网页链接、飞书链接、时间范围、站点。"
+    - "识别输出要求: 结论、Markdown 报告、Excel、飞书表格、图表、待办清单。"
+    - "识别风险动作: 改价、调竞价、调预算、采购、删除、发群、写回外部系统。"
+    - "如果是高风险动作，按 risk-rules.yaml 二次确认；如果只是只读分析，可直接执行。"
+
+  default_user_prompt_shape:
+    pattern: "帮我做【任务】，数据在【文件/文件夹/链接/系统】，输出【结论/报告/Excel/建议】，权限是【只读/可写回】。"
+    minimum_needed:
+      - task
+      - input_or_target
+      - output_preference
+    ask_only_when_missing:
+      - "没有任何数据位置或目标对象。"
+      - "候选 skill 分数接近，存在明显误触发风险。"
+      - "同一句话可能触发多个高风险动作。"
+      - "用户要求写回、删除、调价、调预算、采购或发送到外部。"
+
+  routes:
+    - route_id: skill_management
+      intent: "管理千里马技能、插件和 MCP 能力，包括查看、分组、健康检查、推荐、安装优先级和启停建议"
+      required_slots: [task_intent]
+      strong_signals: ["技能", "插件", "MCP", "安装", "健康检查", "分组", "优先级", "P0", "P1", "P2", "P3"]
+      negative_signals: ["ASIN", "关键词排名", "广告日报", "付款周期报告", "利润"]
+      triggers:
+        - "查看所有技能"
+        - "管理技能"
+        - "技能健康检查"
+        - "插件健康检查"
+        - "把技能分组"
+        - "哪些技能我能用"
+        - "安装推荐优先级"
+        - "这个工具要不要装"
+        - "P0 P1 P2 P3 排一下"
+        - "清理没用的技能"
+        - "检查 MCP"
+      use:
+        skill: skill_management
+        tools: [find-skills, skill-installer, skill-vetter, fff]
+      output_defaults:
+        - "技能/插件分组表"
+        - "P0/P1/P2/P3 推荐优先级"
+        - "可用/待配置/不建议安装 状态"
+        - "风险和待验证项"
+      risk: medium
+      confirmation_required_for:
+        - "安装外部 skill、插件、MCP 或 npm 包"
+        - "修改 Codex、MCP 或系统级配置"
+        - "删除、禁用、覆盖已有技能"
+      notes:
+        - "默认只做只读盘点和建议。"
+        - "安装前必须说明来源、用途、权限和回滚方式。"
+
+    - route_id: skill_path_planning
+      intent: "根据用户目标自动规划技能路径，决定先用哪个 skill、workflow、MCP、文件和验证门禁"
+      required_slots: [task_intent]
+      strong_signals: ["规划", "路径", "自动选择", "组合技能", "拆步骤", "先做什么", "后做什么"]
+      negative_signals: ["直接执行", "马上生成", "不用计划"]
+      triggers:
+        - "自动规划技能路径"
+        - "帮我规划怎么做"
+        - "这个任务该用哪些技能"
+        - "自动选择技能"
+        - "组合技能"
+        - "先做什么后做什么"
+        - "拆成步骤执行"
+        - "给我一条执行路径"
+      use:
+        skill: skill_path_planning
+        tools: [fff]
+      output_defaults:
+        - "目标识别"
+        - "技能路径"
+        - "数据来源清单"
+        - "风险门禁"
+        - "执行顺序"
+        - "预期输出"
+      risk: low
+      planning_rules:
+        - "单一明确任务直接路由到业务 skill，不额外输出长计划。"
+        - "跨文件、跨系统、跨技能或高风险任务，先输出技能路径，再执行。"
+        - "路径必须包含验证步骤和待确认项。"
+
+    - route_id: amazon_payment_reconciliation
+      intent: "核对亚马逊是否漏结算、付款周期和日期范围报告是否对得上"
+      required_slots: [task_intent, target_object]
+      strong_signals: ["亚马逊付款", "漏结算", "付款周期报告", "日期范围报告", "settlement", "Deferred", "Transfer", "发票订单", "标准订单"]
+      negative_signals: ["广告日报", "关键词排名", "Listing", "选品"]
+      triggers:
+        - "查亚马逊付款"
+        - "有没有漏结算"
+        - "日期范围报告和付款周期报告"
+        - "标准订单和发票订单"
+        - "Deferred 多久到账"
+        - "广告扣费能不能对上"
+        - "Transfer 回款是否一致"
+      use:
+        skill: amazon_payment_reconciliation
+        tools: [officecli]
+      output_defaults: ["summary.json", "csv 分表", "xlsx when requested"]
+      risk: low
+      notes:
+        - "不要把日期范围报告 total 直接和付款周期 total-amount 比。"
+        - "只提供标准订单付款报告时，未找到订单只能视为数据覆盖缺口。"
+
+    - route_id: keyword_rank_scan
+      intent: "查询关键词排名、卡位、排名变化"
+      required_slots: [task_intent, target_object]
+      strong_signals: ["关键词", "排名", "卡位", "扫描", "自然位", "广告位"]
+      negative_signals: ["利润", "付款周期", "Excel 合并", "标题优化"]
+      triggers:
+        - "跑关键词"
+        - "看看卡位"
+        - "扫描这些词"
+        - "今天排名"
+        - "关键词掉了没有"
+      use:
+        skill: keyword_rank_scan
+        workflow: keyword_rank_scan
+        tools: [sorftime, pangolinfo, kimi_webbridge]
+      output_defaults: ["kw-records/kw-rank-scan-{date}.md"]
+      risk: low
+
+    - route_id: daily_ad_report
+      intent: "生成广告日报、广告消耗分析、广告异常诊断"
+      required_slots: [task_intent]
+      strong_signals: ["广告日报", "广告消耗", "ACoS", "CPC", "CTR", "CVR", "广告表现", "广告异常"]
+      negative_signals: ["付款周期报告", "标题五点", "选品", "技能安装"]
+      triggers:
+        - "广告日报"
+        - "广告消耗"
+        - "昨天广告表现"
+        - "ACoS 怎么样"
+        - "哪些广告异常"
+      use:
+        skill: daily_ad_report
+        workflow: daily_ad_report
+        tools: [lingsing_ad_daily, lark_sheets]
+      output_defaults: ["reports/{date}_广告运营_日报_{marketplace}_V{version}.md"]
+      risk: low
+      forbidden_without_confirmation: [change_bid, change_budget, write_back]
+
+    - route_id: profit_check
+      intent: "测算利润、盈亏、净利润率、敏感度"
+      required_slots: [task_intent, target_object]
+      strong_signals: ["利润", "赚不赚钱", "毛利", "净利润", "盈亏", "FBA", "佣金", "退货率"]
+      negative_signals: ["排名", "卡位", "付款周期", "流程图"]
+      triggers:
+        - "算利润"
+        - "赚不赚钱"
+        - "毛利"
+        - "净利润"
+        - "盈亏平衡"
+      use:
+        skill: profit_check
+        workflow: profit_check
+      output_defaults: ["reports/{date}_利润测算_{marketplace}_V{version}.md"]
+      risk: medium
+      confirmation_required_for:
+        - "汇率、佣金、FBA、退货率、广告占比等假设"
+
+    - route_id: competitor_comparison
+      intent: "竞品对比、ASIN benchmark、差距分析"
+      required_slots: [task_intent, target_object]
+      strong_signals: ["竞品", "对手", "ASIN 对比", "benchmark", "为什么卖得好", "差距"]
+      negative_signals: ["利润测算", "付款核账", "技能管理"]
+      triggers:
+        - "竞品对比"
+        - "看看对手"
+        - "和这个 ASIN 比"
+        - "benchmark"
+        - "对手为什么卖得好"
+      use:
+        skill: competitor_comparison
+        workflow: competitor_comparison
+        tools: [pangolinfo, sorftime]
+      output_defaults: ["reports/{date}_竞品对比_{marketplace}_V{version}.md"]
+      risk: low
+
+    - route_id: listing_optimization
+      intent: "优化 Listing、标题、五点、Search Terms、关键词覆盖"
+      required_slots: [task_intent, target_object]
+      strong_signals: ["Listing", "标题", "五点", "Search Terms", "埋词", "文案优化", "关键词覆盖"]
+      negative_signals: ["付款周期", "结算", "安装插件", "广告日报"]
+      triggers:
+        - "优化 Listing"
+        - "标题怎么改"
+        - "五点描述"
+        - "Search Terms"
+        - "埋词"
+      use:
+        skill: listing_optimization
+        workflow: listing_optimization
+        tools: [pangolinfo, sorftime]
+      output_defaults: ["reports/{date}_Listing优化_{asin}_{marketplace}_V{version}.md"]
+      risk: low
+      forbidden_without_confirmation: [update_listing, write_back]
+
+    - route_id: product_discovery
+      intent: "选品、品类可行性、市场容量、竞争和利润空间"
+      required_slots: [task_intent, target_object]
+      strong_signals: ["选品", "品类", "能不能做", "新品机会", "市场容量", "竞争格局", "市场分析"]
+      negative_signals: ["已有 ASIN 的标题优化", "付款报告", "技能健康检查"]
+      triggers:
+        - "选品"
+        - "这个品类能不能做"
+        - "新品机会"
+        - "市场容量"
+        - "竞争格局"
+      use:
+        skill: product_discovery
+        workflow: product_discovery
+        tools: [pangolinfo, sorftime]
+      output_defaults: ["reports/{date}_新品机会_{marketplace}_V{version}.md"]
+      risk: medium
+      forbidden_without_confirmation: [purchase_order, create_product]
+
+    - route_id: traffic_anomaly_diagnosis
+      intent: "流量、排名、订单突然异常的根因诊断"
+      required_slots: [task_intent, target_object]
+      strong_signals: ["流量异常", "排名掉", "突然没单", "转化变差", "花了没单", "崩盘"]
+      negative_signals: ["选品", "技能安装", "付款周期"]
+      triggers:
+        - "流量异常"
+        - "排名掉了"
+        - "突然没单"
+        - "转化变差"
+        - "广告花了没单"
+      use:
+        skill: traffic_anomaly_diagnosis
+        workflow: traffic_anomaly_diagnosis
+        tools: [sorftime, pangolinfo, kimi_webbridge]
+      output_defaults: ["reports/{date}_流量异常诊断_{asin}_{marketplace}_V{version}.md"]
+      risk: low
+      forbidden_without_confirmation: [change_bid, change_budget, change_price, write_back]
+
+    - route_id: knowledge_digest
+      intent: "消化文章、文档、网页、课程资料并提炼行动项"
+      required_slots: [task_intent, target_object]
+      strong_signals: ["消化资料", "总结", "提炼要点", "看看这个文档", "文章", "课程", "行动项"]
+      negative_signals: ["付款周期报告", "广告日报", "调竞价"]
+      triggers:
+        - "消化资料"
+        - "总结这篇"
+        - "提炼要点"
+        - "帮我看看这个文档"
+        - "转成行动项"
+      use:
+        skill: knowledge_digest
+        workflow: knowledge_digest
+        tools: [summarize, officecli]
+      output_defaults: ["reports/{date}_资料消化_{topic}_V{version}.md"]
+      risk: low
+
+    - route_id: office_file_work
+      intent: "处理 Excel、Word、PPT、CSV、报表生成和分 sheet 输出"
+      required_slots: [task_intent, target_object]
+      strong_signals: ["Excel", "Word", "PPT", "CSV", "合并表格", "分 sheet", "报表生成"]
+      negative_signals: ["亚马逊漏结算", "日期范围报告", "付款周期报告"]
+      triggers:
+        - "处理这个 Excel"
+        - "合并表格"
+        - "生成 Excel"
+        - "分 sheet"
+        - "整理 Word"
+        - "做 PPT"
+      use:
+        tools: [officecli]
+      output_defaults: ["working/ 中间文件", "reports/ 最终文件"]
+      risk: low
+
+    - route_id: browser_or_web_work
+      intent: "打开网页、读取后台、网页自动化、页面检查"
+      required_slots: [task_intent, target_object]
+      strong_signals: ["打开网页", "后台", "点一下", "读取页面", "检查页面", "登录后", "浏览器"]
+      negative_signals: ["本地 Excel", "生成图", "技能分组"]
+      triggers:
+        - "打开这个网页"
+        - "进后台看看"
+        - "点一下"
+        - "读取页面数据"
+        - "检查这个页面"
+      use:
+        tools: [chrome-devtools, kimi_webbridge, agent_browser]
+      output_defaults: ["页面观察摘要", "截图或导出数据 when needed"]
+      risk: medium
+      confirmation_required_for:
+        - "任何提交、保存、发布、删除、改价、调预算、发消息动作"
+
+    - route_id: diagram_work
+      intent: "画流程图、架构图、Agent 图、技术图"
+      required_slots: [task_intent]
+      strong_signals: ["流程图", "架构图", "技术图", "Agent 图", "数据流图", "画图"]
+      negative_signals: ["Excel 核账", "广告日报", "调价"]
+      triggers:
+        - "画个流程图"
+        - "画架构图"
+        - "技术图"
+        - "Agent 图"
+        - "数据流图"
+      use:
+        skill: fireworks-tech-graph
+      output_defaults: ["Mermaid 图", "可转图片 when requested"]
+      risk: low
+
+  ambiguity_policy:
+    - "不得只因为出现 Excel 就选择 office_file_work；如果同时出现 Amazon 付款/结算/日期范围/付款周期，优先 amazon_payment_reconciliation。"
+    - "不得只因为出现 关键词 就选择 keyword_rank_scan；如果上下文是 Listing 文案，优先 listing_optimization。"
+    - "不得只因为出现 ASIN 就选择竞品对比；要看用户动词是对比、优化、算利润、查排名还是诊断异常。"
+    - "低于 auto_execute 置信度时，只问一个最关键问题，不连续追问。"
+    - "用户询问技能、插件、MCP、安装、分组、健康检查、优先级时，优先 skill_management。"
+    - "用户要求'规划路径/自动选择/组合技能/拆步骤'时，先触发 skill_path_planning。"
+    - "用户既要求规划又要求执行时，先给短路径；低风险任务可继续执行，高风险任务等待确认。"
+    - "同时命中业务 skill 和工具能力时，优先业务 skill，工具作为执行手段。"
+    - "用户说'核对/结算/回款'且出现 Amazon 报表词，优先 amazon_payment_reconciliation。"
+    - "用户说'打开后台/点/保存/提交'，必须先判断是否高风险。"
+    - "用户只说'测试'或'可以'时，延续上一轮明确任务；若上一轮没有任务，询问目标。"
+    - "用户说'只读'时，禁止写回外部系统，即使工具支持写入。"
+
+  response_contract:
+    pre_execution_status_card_required: true
+    status_card:
+      - "工作区"
+      - "当前场景"
+      - "已加载来源"
+      - "将使用 workflow/skill/tool"
+      - "匹配置信度"
+      - "高风险/待验证"
+    final_answer_must_include:
+      - "实际使用的数据来源或文件路径"
+      - "输出文件路径 when created"
+      - "待验证项"
+      - "是否触发高风险动作"
