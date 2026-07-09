@@ -23,6 +23,7 @@ Agent 负责维护这些配置文件。
 | `data-sources.yaml` | 数据源注册表 |
 | `naming-rules.yaml` | 文件命名规则 |
 | `workflow-index.yaml` | 工作流索引 |
+| `natural-language-router.yaml` | 自然语言触发路由：把普通业务说法映射到 skill、workflow 和 MCP |
 | `user-preferences.yaml` | 用户偏好 |
 | `risk-rules.yaml` | 权限和风险规则 |
 | `observability.yaml` | 工作流、经验、决策、文件和成本观测指标 |
@@ -64,12 +65,17 @@ Agent 负责维护这些配置文件。
 
 可以直接这样说：
 
+- 帮我做【任务】，数据在【文件/文件夹/链接/系统】，输出【结论/报告/Excel/建议】，权限是【只读/可写回】
+- 管理技能，健康检查并分组，按 P0/P1/P2/P3 给我安装优先级
+- 自动规划技能路径，告诉我这个任务该先用哪些 skill、workflow 和 MCP
 - 我要做竞品对比
 - 帮我优化这个 Listing
 - 算一下这个产品赚不赚钱
 - 跑一下这些关键词排名
 - 帮我判断这个品类能不能做
 - 先帮我整理这批资料
+
+Agent 必须先用 `natural-language-router.yaml` 的 `auto_match_protocol` 自动匹配用户任务，再路由到对应 skill、workflow 或 MCP。用户不需要说技能名。业务 skill 优先，OfficeCLI、Chrome DevTools、Pangolinfo、Sorftime 等工具作为执行手段；低置信度或高风险动作必须先问一句或二次确认。
 
 ## 借鉴 AHE 的三项能力
 

@@ -1,5 +1,5 @@
 # skill-registry.yaml — 千里马 Skill 注册表
-# 版本: v1.0 | 创建: 2026-07-08
+# 版本: v1.1 | 创建: 2026-07-08 | 更新: 2026-07-09
 # 来源: nemo-skills — 借鉴 NeMo Skills 的技能管理体系
 # 理念: "Every task-card is a skill. Skills have triggers, scope, capabilities, and quality gates.
 #         Skills can be composed. Skills can be audited."
@@ -11,6 +11,20 @@ skill_registry:
     Task-card 不只是"用户说了什么就做什么"的映射表——
     它是技能的完整定义：触发条件、能力边界、输入输出、约束和质量门禁。
     每个 skill 都可以被独立测试、审计和进化。
+
+  natural_language_entry:
+    source: ".qianlima/natural-language-router.yaml"
+    principle: >
+      普通用户不需要记 skill_id、workflow_id 或 MCP 名称。
+      Agent 先用自然语言路由识别任务意图、输入对象、输出要求和风险动作，
+      再选择本注册表中的 skill 或组合能力执行。
+      每个用户任务默认先运行 auto_match_protocol：候选技能打分、置信度判断、
+      必要参数检查、风险判断，然后决定直接执行、追问一句、规划路径或先确认。
+    priority:
+      - "业务 skill 优先于底层工具。"
+      - "同一句话命中多个能力时，选择最贴近业务结果的 skill，工具只作为执行手段。"
+      - "涉及写回、删除、调价、调预算、采购、发送外部消息时，必须按 risk-rules.yaml 确认。"
+      - "低置信度匹配不得盲目执行；必须提出一个最关键澄清问题。"
 
   # ── Skill 定义标准 ──────────────────────────────────────────
 
@@ -37,6 +51,90 @@ skill_registry:
   # ── 已注册 Skill ────────────────────────────────────────────
 
   skills:
+
+    - skill_id: skill_management
+      name: "技能管理"
+      description: "盘点、分组、健康检查和治理千里马可用的 skill、插件、MCP 与工具能力，并给出安装优先级"
+      triggers:
+        - "查看所有技能"
+        - "管理技能"
+        - "健康检查并分组"
+        - "插件健康检查"
+        - "哪些我能用"
+        - "安装推荐优先级"
+        - "P0 P1 P2 P3"
+        - "这个工具要不要装"
+      scope:
+        does:
+          - "读取千里马 skill-registry、natural-language-router、workflow-index 和必要启动文件"
+          - "按业务价值、安装状态、风险、依赖和触发词分组"
+          - "输出 P0/P1/P2/P3 安装或启用建议"
+          - "区分 skill、workflow、MCP、插件、脚本和研究借鉴"
+        does_not:
+          - "未经确认安装外部包"
+          - "未经确认修改 Codex/MCP 全局配置"
+          - "删除或覆盖已有技能"
+      capabilities:
+        - "技能资产盘点"
+        - "健康检查: 可用 / 待配置 / 不建议 / 研究观察"
+        - "优先级排序: P0 必装实用, P1 高频增强, P2 可借鉴, P3 研究 backlog"
+        - "自然语言触发词维护"
+      outputs:
+        - format: markdown
+          path: "reports/{date}_技能管理盘点_V{version}.md when requested"
+        - format: yaml
+          path: ".qianlima/skill-registry.yaml when updating registry"
+      constraints:
+        - "只读盘点默认可直接执行；安装、删除、禁用、覆盖必须二次确认"
+        - "不得输出或暴露 MCP 配置中的 API key、token、headers、私有 URL"
+      quality_gates:
+        - "技能和工具必须分类型列出"
+        - "每项建议必须有用途、状态、优先级和风险说明"
+        - "安装建议必须说明来源和回滚方式"
+      estimated_tokens: 6000
+      estimated_duration_min: 5
+
+    - skill_id: skill_path_planning
+      name: "技能路径自动规划"
+      description: "把用户自然语言目标拆成可执行路径，自动选择 skill、workflow、MCP、数据源、验证门禁和输出格式"
+      triggers:
+        - "自动规划技能路径"
+        - "这个任务该用哪些技能"
+        - "帮我规划怎么做"
+        - "自动选择技能"
+        - "组合技能"
+        - "拆成步骤执行"
+        - "先做什么后做什么"
+      scope:
+        does:
+          - "识别用户目标、输入对象、输出要求和风险动作"
+          - "从 natural-language-router、skill-registry 和 workflow-index 中选择路径"
+          - "规划 skill / workflow / MCP / 文件读取 / 验证门禁的执行顺序"
+          - "低风险任务可在路径确认后直接执行"
+        does_not:
+          - "绕过业务 skill 直接调用底层工具做高风险动作"
+          - "在缺少关键数据源时假装已完成验证"
+          - "把研究 backlog 当作生产 workflow"
+      capabilities:
+        - "目标 → 技能路径映射"
+        - "多技能组合编排"
+        - "风险门禁插入"
+        - "上下文读取计划: 启动包 → task-card/workflow → 数据源 → 验证"
+      outputs:
+        - format: markdown
+          path: "reports/{date}_技能路径规划_{topic}_V{version}.md when requested"
+        - format: inline_plan
+          path: "conversation when short"
+      constraints:
+        - "单一明确任务不要过度规划，直接路由到业务 skill"
+        - "跨系统、跨文件、跨技能、高风险任务必须先亮路径和假设"
+        - "路径必须包含验证步骤和待确认项"
+      quality_gates:
+        - "路径中每个 skill/tool 都有用途"
+        - "高风险动作已标注确认点"
+        - "最终输出格式和位置明确"
+      estimated_tokens: 5000
+      estimated_duration_min: 3
 
     - skill_id: keyword_rank_scan
       name: "关键词排名扫描"
@@ -158,6 +256,56 @@ skill_registry:
       estimated_tokens: 6000
       estimated_duration_min: 3
 
+    - skill_id: amazon_payment_reconciliation
+      name: "亚马逊付款核账"
+      description: "核对日期范围报告与付款周期报告，判断订单、Deferred、广告扣费和 Transfer 回款是否进入结算"
+      triggers:
+        - "亚马逊有没有漏结算"
+        - "查亚马逊付款"
+        - "日期范围报告和付款周期报告"
+        - "标准订单和发票订单"
+        - "Deferred 订单多久到账"
+        - "广告扣费是否一致"
+        - "Transfer 回款是否一致"
+      scope:
+        does:
+          - "读取日期范围报告、标准订单付款周期报告、发票订单付款周期报告"
+          - "按 月份 + order id 核对订单是否进入付款周期"
+          - "统计 Deferred 订单从交易发生到 deposit-date 的延迟"
+          - "按 settlement id + 日期 + 金额 核对 Cost of Advertising"
+          - "按 Date Range Transfer 对 Payment Cycle total-amount 核对回款"
+          - "输出 summary、missing_orders、deferred_delay、advertising_fee_audit、transfer_audit"
+        does_not:
+          - "把日期范围报告 total 和付款周期 total-amount 直接对比"
+          - "在只提供标准订单付款报告时断言 Amazon 漏付款"
+          - "写回 Amazon、ERP、银行或会计系统"
+      capabilities:
+        - "订单层核对: Date Range Order → Payment Cycle Order"
+        - "发票订单覆盖: standard_order + invoiced_order 双来源"
+        - "Deferred 延迟分析"
+        - "广告扣费边界核对"
+        - "Transfer 回款核对"
+      outputs:
+        - format: json
+          path: "reports/amazon-payment-audit-{date}/summary.json"
+        - format: csv
+          path: "reports/amazon-payment-audit-{date}/*.csv"
+        - format: xlsx
+          path: "reports/amazon-payment-audit-{date}.xlsx when requested"
+      constraints:
+        - "不同报表口径必须先解释清楚：发生口径 vs 结算口径"
+        - "未找到订单只作为数据覆盖缺口，不直接等同于未付款"
+        - "必须说明是否包含发票订单付款周期报告"
+        - "回款核对必须使用 Date Range 的 Transfer，不得使用普通 total 汇总"
+      quality_gates:
+        - "所有输入文件来源和日期范围已列出"
+        - "订单、Deferred、广告费、Transfer 分表输出"
+        - "remaining missing items 有原因和下一步检查建议"
+      sub_skills:
+        - "amazon-settlement"
+      estimated_tokens: 9000
+      estimated_duration_min: 20
+
     - skill_id: listing_optimization
       name: "Listing 优化诊断"
       description: "诊断 Listing 的标题/五点/搜索词/图片问题，给出符合 Amazon 规则的优化建议"
@@ -249,6 +397,13 @@ skill_registry:
 
   compositions:
     # 多个 skill 可以组合成复合能力
+    - id: skill_ops
+      name: "技能运营"
+      description: "技能管理 + 技能路径规划 → 维护千里马能力地图并自动选择执行路线"
+      skills: [skill_management, skill_path_planning]
+      estimated_tokens: 9000
+      estimated_duration_min: 8
+
     - id: daily_patrol
       name: "每日运营巡检"
       description: "关键词扫描 + 广告日报 + 销量台账 → 一次输出"
