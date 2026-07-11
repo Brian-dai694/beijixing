@@ -1,6 +1,6 @@
 # workflow-index.yaml — Workflow 索引
-# 版本: v2.6.8 | 更新: 2026-07-10
-# 变更: 新增 Browser Task Space 治理层，吸收 ego-lite Space / Snapshot / Skills 设计理念
+# 版本: v2.6.9 | 更新: 2026-07-11
+# 变更: 新增 L0-L4 快速判级、阶段成果交付、证据等级和热状态复用
 
 workflows:
   - id: daily_ad_report
@@ -380,6 +380,19 @@ workflows:
 # ── Global Assumption Surfacing Policy ───────────────────────
 # 原则: "动手之前，先把你以为但没确认过的东西列出来，等用户点头。"
 # 来源: agent-skills 五铁律 #1 — Surface assumptions before building
+response_experience:
+  policy: response-policy.yaml
+  required_before_business_workflow:
+    - "Run scripts/new-staged-response.ps1 to classify L0-L4."
+    - "Deliver a route, known fact, exclusion, or actionable judgment within 3 seconds."
+    - "Label initial claims with A=live, B=fresh cache, or C=history/assumption."
+    - "Use hot state only when fresh and not before a high-risk action."
+  audit_escalation:
+    - "L0: no trace"
+    - "L1-L2: minimal trace"
+    - "L3: staged evidence trace"
+    - "L4: full trace and explicit confirmation"
+
 global_assumption_policy:
   enabled: true
   applies_to_all: true

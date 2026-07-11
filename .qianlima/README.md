@@ -36,6 +36,7 @@ Agent 负责维护这些配置文件。
 | `context-policy.yaml` | 自动上下文压缩、文件读取上限和安全冗余 |
 | `model-adapters.yaml` | 面向 DeepSeek、OpenAI、Anthropic、Google、本地模型的适配策略 |
 | `model-pricing.json` | 官方模型价格目录：输入、缓存命中和输出按百万 Token 独立计价 |
+| `response-policy.yaml` | L0-L4 快速判级、3 秒阶段成果、证据等级、热状态和审计升级规则 |
 | `world-model.yaml` | 轻量世界模型层：预测数据需求、风险点和下一步动作 |
 
 ## 固定目录
@@ -81,6 +82,12 @@ Agent 负责维护这些配置文件。
 - 先帮我整理这批资料
 
 Agent 必须先用 `natural-language-router.yaml` 的 `auto_match_protocol` 自动匹配用户任务，再路由到对应 skill、workflow 或 MCP。用户不需要说技能名。业务 skill 优先，OfficeCLI、Chrome DevTools、Pangolinfo、Sorftime 等工具作为执行手段；低置信度或高风险动作必须先问一句或二次确认。
+
+## 体验优先响应
+
+v2.6.9 起，每个任务先按 `response-policy.yaml` 判定 `L0-L4`，并在 3 秒内给出路线、已知事实、排除项或可操作判断。首轮结论必须标注证据等级：`A=实时数据`、`B=近期缓存`、`C=历史记录或假设`。只有任务升级为决策、报告、跨源证据或高风险执行时，才补齐完整 trace 和评估包。
+
+会话内可以复用脱敏热状态和任务记忆卡；来源过期、规则变更或高风险执行前必须刷新。执行环境应先过滤和聚合数据，再将必要摘要交给模型。
 
 ## 借鉴 AHE 的三项能力
 

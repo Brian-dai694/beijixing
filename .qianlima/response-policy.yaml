@@ -1,0 +1,123 @@
+# Qianlima staged response policy
+# Version: v2.6.9 | Updated: 2026-07-11
+# Purpose: Deliver useful stage results quickly without weakening evidence or confirmation gates.
+
+response_policy:
+  version: "2.6.9"
+  principle: >
+    Every user-visible stage must add a fact, an exclusion, or an actionable judgment.
+    Progress-only messages are not stage delivery. Fast answers must expose their evidence grade.
+
+  service_levels:
+    - id: L0
+      name: direct_answer
+      applies_to: "Greeting, explanation, simple instruction, or non-business chat."
+      first_delivery: "Direct answer. Do not load the operations workspace or create a trace."
+      evidence_default: C
+      audit: none
+
+    - id: L1
+      name: known_context_answer
+      applies_to: "A low-risk question answerable from the current session state or a task memory card."
+      first_delivery: "State the known fact, its freshness, and the next check only if needed."
+      evidence_default: B
+      audit: minimal
+
+    - id: L2
+      name: routed_low_risk_task
+      applies_to: "A clearly routed read-only analysis or local draft."
+      first_delivery: "Name the route, the current working judgment, and the missing evidence."
+      evidence_default: C
+      audit: minimal
+
+    - id: L3
+      name: evidence_task
+      applies_to: "A task that needs external data, multiple sources, or a decision-quality recommendation."
+      first_delivery: "Name the route, the most relevant existing signal, and the evidence being collected."
+      evidence_default: C
+      audit: staged
+
+    - id: L4
+      name: controlled_action
+      applies_to: "Any price, bid, budget, purchase, deletion, external write, send, publish, or permission action."
+      first_delivery: "State that execution is blocked pending explicit confirmation; provide the proposed action and evidence needed."
+      evidence_default: A
+      audit: full
+      confirmation_required: true
+
+  time_budgets:
+    first_delivery_target_ms: 3000
+    route_target_ms: 1000
+    hot_state_lookup_target_ms: 500
+    data_fetch_timeout_ms: 10000
+    rule: "If evidence collection exceeds its budget, deliver a provisional judgment with evidence grade and pending checks."
+
+  evidence_grades:
+    A:
+      label: "实时数据"
+      meaning: "The source was read or verified during the current task."
+    B:
+      label: "近期缓存"
+      meaning: "A dated session state, task memory card, or daily snapshot was reused within its freshness policy."
+    C:
+      label: "历史记录或假设"
+      meaning: "The result is a route, prior context, historical record, or assumption and is not decision-final."
+
+  staged_delivery:
+    stage_0:
+      name: quick_classification
+      required_fields: [service_level, route, risk_status, next_action]
+    stage_1:
+      name: initial_judgment
+      required_fields: [known_fact_or_exclusion, evidence_grade, freshness, missing_evidence]
+    stage_2:
+      name: evidence_update
+      required_fields: [new_evidence, changed_judgment, sources, pending_checks]
+    stage_3:
+      name: decision_delivery
+      required_fields: [conclusion, evidence, risk, next_action]
+    stage_4:
+      name: execution_gate
+      required_fields: [proposed_action, confirmation_required, execution_status]
+
+  hot_state:
+    storage: "working/session-state-{session_id}.json"
+    task_memory_storage: "working/task-memory-{object_id}.json"
+    store_only:
+      - selected_route
+      - service_level
+      - evidence_grade
+      - source_refs
+      - freshness
+      - pending_checks
+      - last_action_summary
+    never_store:
+      - user_request_raw
+      - token
+      - cookie
+      - password
+      - private_url
+      - account_id
+      - customer_data
+    refresh_when:
+      - "session starts"
+      - "router or governance configuration changes"
+      - "a high-risk action reaches confirmation"
+      - "the referenced source is stale"
+
+  audit_escalation:
+    minimal_trace_for: [L1, L2]
+    staged_trace_for: [L3]
+    full_trace_for: [L4]
+    upgrade_when:
+      - "User requests a report, export, or decision package."
+      - "A result changes a business decision."
+      - "The task needs external data or multiple sources."
+      - "The task contains a high-risk action."
+
+  data_execution:
+    rules:
+      - "Filter, aggregate, and summarize in the execution environment before returning data to the model."
+      - "Load only the selected route and its required tools; do not preload every tool definition."
+      - "Reuse fresh snapshots before querying external systems."
+      - "Run independent read-only data fetches in parallel when tools allow it."

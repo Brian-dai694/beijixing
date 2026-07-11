@@ -14,7 +14,7 @@ function Add-Warning([string]$Message) { $Warnings.Add($Message) }
 function Test-Leaf([string]$RelativePath) { Test-Path -LiteralPath (Join-Path $Root $RelativePath) -PathType Leaf }
 function Test-ProjectLeaf([string]$RelativePath) { Test-Path -LiteralPath (Join-Path $ProjectRoot $RelativePath) -PathType Leaf }
 
-foreach ($file in @('WORKSPACE_INDEX.md', 'workspace-index.json', 'CODEX_BOOT.md', 'workflow-index.yaml', 'risk-rules.yaml', 'context-policy.yaml', 'model-adapters.yaml', 'model-pricing.json', 'skill-evolution.yaml', 'world-model.yaml', 'data-sources.example.yaml', 'work.example.ws', 'scripts/get-model-cost.ps1', 'scripts/new-skill-feedback-record.ps1', 'scripts/new-skill-patch-proposal.ps1', 'workflows/skill_evolution.yaml', 'task-cards/skill-evolution.yaml', 'templates/token-usage-record_template.yaml')) {
+foreach ($file in @('WORKSPACE_INDEX.md', 'workspace-index.json', 'CODEX_BOOT.md', 'workflow-index.yaml', 'risk-rules.yaml', 'context-policy.yaml', 'model-adapters.yaml', 'model-pricing.json', 'skill-evolution.yaml', 'response-policy.yaml', 'world-model.yaml', 'data-sources.example.yaml', 'work.example.ws', 'scripts/get-model-cost.ps1', 'scripts/new-staged-response.ps1', 'scripts/save-hot-state.ps1', 'scripts/new-skill-feedback-record.ps1', 'scripts/new-skill-patch-proposal.ps1', 'workflows/skill_evolution.yaml', 'task-cards/skill-evolution.yaml', 'templates/token-usage-record_template.yaml')) {
   if (-not (Test-Leaf $file)) { Add-Issue "Missing required public-safe Qianlima file: $file" }
 }
 foreach ($dir in @('logs', 'usage-ledger')) {

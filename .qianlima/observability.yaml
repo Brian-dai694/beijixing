@@ -142,6 +142,20 @@ dimensions:
       - reusable_browser_path_extracted
       - browser_cost_savings_estimate_usd
 
+  response_experience_observability:
+    description: Track whether users receive decision-relevant stage results quickly.
+    metrics:
+      - service_level
+      - route_latency_ms
+      - first_delivery_latency_ms
+      - first_delivery_within_3s
+      - evidence_grade_at_first_delivery
+      - provisional_delivery_count
+      - hot_state_hit
+      - hot_state_freshness
+      - audit_escalation_level
+      - parallel_read_fanout_count
+
 default_trace_fields:
   - run_id
   - workflow_id
@@ -160,4 +174,5 @@ default_trace_fields:
   - model_adapter_summary
   - qianlima_eval_summary
   - browser_space_summary
+  - response_experience_summary
   - status
