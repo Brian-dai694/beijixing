@@ -1,5 +1,5 @@
 observability:
-  version: "v2.6.8"
+  version: "v2.7.0"
   purpose: Track workflow components, experience, decisions, files, cost, and savings.
   principle: Cost visibility and savings are central runtime signals, not after-run bookkeeping.
 
@@ -155,6 +155,15 @@ dimensions:
       - hot_state_freshness
       - audit_escalation_level
       - parallel_read_fanout_count
+      - first_useful_output_ms
+      - final_delivery_ms
+      - evidence_completeness_rate
+      - user_adoption_rate
+      - snapshot_hit_rate
+      - tool_health_tier
+      - latency_by_component
+      - task_contract_state
+      - task_interrupted_or_frozen
 
 default_trace_fields:
   - run_id

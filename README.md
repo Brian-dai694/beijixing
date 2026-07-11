@@ -1,5 +1,5 @@
 # 千里马 — 亚马逊运营 AI Agent Harness
-# 版本: v2.6.9 | 2026-07-11
+# 版本: v2.7.0 | 2026-07-11
 
 千里马计划是一个面向亚马逊卖家的 AI Agent Harness 系统。它不是另一个“关键词工具”或“广告管理面板”，而是 **Agent 治理层**：让 LLM 能可靠、安全、可追溯地执行亚马逊运营任务。
 
@@ -8,15 +8,16 @@
 > Harness 不是 prompt 模板，而是运行时系统。
 > 它观察自己、诊断问题、积累经验，并持续自我改进。
 
-本项目借鉴了 [Lilian Weng — Harness Engineering for Self-Improvement (2026)](https://lilianweng.github.io/posts/2026-07-04-harness/) 以及多个 SOTA 项目的设计理念。v2.6.8 新增 Browser Task Space 治理层，吸收 ego-lite 的 Space / Snapshot / Skills 思想：浏览器任务必须有独立任务空间、语义快照、用户接管路径、确认门禁和成本节约记录。v2.6.9 新增体验优先响应层：启动入口使用指纹缓存和轻量路由；任务以阶段成果而不是空进度播报交付。
+本项目借鉴了 [Lilian Weng — Harness Engineering for Self-Improvement (2026)](https://lilianweng.github.io/posts/2026-07-04-harness/) 以及多个 SOTA 项目的设计理念。v2.6.8 新增 Browser Task Space 治理层，吸收 ego-lite 的 Space / Snapshot / Skills 思想：浏览器任务必须有独立任务空间、语义快照、用户接管路径、确认门禁和成本节约记录。v2.6.9 新增体验优先响应层：启动入口使用指纹缓存和轻量路由；任务以阶段成果而不是空进度播报交付。v2.7.0 新增轻量任务运行内核：快照优先、SWR、可中断检查点、本地聚合、工具健康和质量仪表盘。
 
 ## 架构
 
 ```text
-千里马 Harness v2.6.8
+千里马 Harness v2.7.0
 ├── 场景智能路由      → 按场景精准加载，减少不必要上下文
 ├── 热启动与快速路由  → 配置未变时复用校验结果，低风险任务只查紧凑路由索引
 ├── 体验优先响应      → L0-L4 判级、3 秒阶段成果、A/B/C 证据等级与热状态复用
+├── 轻量任务运行内核  → 快照/SWR、任务合同、检查点、中断控制、本地聚合与健康降级
 ├── 健康自检          → 启动时自动检查骨架、索引和引用
 ├── Loop Engineering  → SDR / EVR / PBV / EDA 执行循环
 ├── QianlimaEval      → Intent / Evidence / Dynamic / Cost / Risk 多维评分
@@ -77,6 +78,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\start-qianlima.ps1"
 首次启动、配置变更或 `-Force` 会完整重建和校验；其他启动复用指纹缓存。普通聊天不加载运营配置，高风险和歧义任务仍回读完整风险规则与任务卡。
 
 每个业务请求先用 `new-staged-response.ps1` 做 `L0-L4` 判级：3 秒内给出路线、已知事实或排除项，并用 `A=实时数据 / B=近期缓存 / C=历史记录或假设` 明确第一轮结论的可信度。需要决策、报告、跨源证据或高风险执行时才升级完整审计。
+
+### 5. 快照、预算与中断
+
+`v2.7.0` 让长任务不再是不可控黑盒：先用合格快照给初判，SWR 刷新只在可能改变结论时补发；长任务用任务合同保存检查点，用户可以切换为“只给结论 / 停止深查 / 报告 / 取消”。原始 CSV 先在本地聚合，模型只读取汇总和异常项。工具健康与体验事件会生成本地质量仪表盘，持续监控首次有用输出、最终交付、证据完整率和采纳率。
+
+这套内核只借鉴以下项目的设计，不安装其大型运行时：
+
+- LangGraph：状态机、检查点、人工中断。
+- Mem0：按需检索任务记忆，而非全量加载。
+- Langfuse：延迟归因、trace 与反馈指标。
+- LiteLLM：确定性路径优先，冲突或高风险时再升级推理。
 
 Agent 进入本仓库后，应先读取 `.qianlima/WORKSPACE_INDEX.md`、`.qianlima/CODEX_BOOT.md` 和 `.qianlima/risk-rules.yaml`，再选择任务卡并按需加载 workflow、模板、数据和治理文件。不要在启动阶段读取完整工作区。
 
@@ -214,6 +226,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\new-dec
 
 | 版本 | 日期 | 变更 |
 |:--:|------|------|
+| v2.7.0 | 2026-07-11 | 新增轻量任务运行内核：快照优先/SWR、可中断任务合同、检查点、最小证据集、本地 CSV 聚合、工具健康分、延迟归因和质量仪表盘；高风险门禁不下沉 |
 | v2.6.9 | 2026-07-11 | 新增体验优先响应：L0-L4 快速判级、3 秒阶段成果、A/B/C 证据等级、脱敏热状态、最小 trace 到完整审计的升级规则 |
 | v2.6.8 | 2026-07-11 | 强化成本节约中心：新增官方模型价格目录、自动计费、零/未知用量阻断、成本超基线确认门禁、QianlimaEval 证据一致性检查、Skill 自进化第一步和 Browser Task Space；新增启动指纹缓存与低风险快速路由 |
 | v2.6.7 | 2026-07-10 | 新增 QianlimaEval 运行质量评估层：多维评分、硬阻断、成本节约评分和评估报告脚本 |

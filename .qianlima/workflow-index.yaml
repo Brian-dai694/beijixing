@@ -1,6 +1,6 @@
 # workflow-index.yaml — Workflow 索引
-# 版本: v2.6.9 | 更新: 2026-07-11
-# 变更: 新增 L0-L4 快速判级、阶段成果交付、证据等级和热状态复用
+# 版本: v2.7.0 | 更新: 2026-07-11
+# 变更: 新增快照优先/SWR、可中断任务合同、本地聚合、工具健康与质量仪表盘
 
 workflows:
   - id: daily_ad_report
@@ -392,6 +392,13 @@ response_experience:
     - "L1-L2: minimal trace"
     - "L3: staged evidence trace"
     - "L4: full trace and explicit confirmation"
+  runtime: task-runtime.yaml
+  performance_rules:
+    - "Use a fresh qualified snapshot for initial judgment, then refresh only when it can change the conclusion."
+    - "Create a task contract before long or external-data work and check it before each new external read."
+    - "Filter and aggregate raw tables locally before model review."
+    - "Use tool-health tier to select primary or fallback sources."
+    - "Record latency components and quality outcomes; do not call a faster path successful if evidence completeness regresses."
 
 global_assumption_policy:
   enabled: true
