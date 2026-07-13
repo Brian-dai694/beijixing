@@ -37,3 +37,14 @@ jobs:
 
           Write-Host "Unconfirmed high-risk action was blocked as expected."
           $global:LASTEXITCODE = 0
+
+      - name: Pester unit tests
+        shell: powershell
+        run: |
+          Import-Module Pester -MinimumVersion 5.0 -ErrorAction Stop
+          Write-Host ("Pester " + (Get-Module Pester).Version)
+          $cfg = New-PesterConfiguration
+          $cfg.Run.Path = '.\tests'
+          $cfg.Run.Exit = $true
+          $cfg.Output.Verbosity = 'Detailed'
+          Invoke-Pester -Configuration $cfg
