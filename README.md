@@ -1,5 +1,7 @@
 # 千里马 — 亚马逊运营 AI Agent Harness
 
+[中文](README.md) · **English** → [README.en.md](README.en.md)
+
 [![CI](https://github.com/Brian-dai694/qianlima/actions/workflows/qianlima-verify.yml/badge.svg)](https://github.com/Brian-dai694/qianlima/actions/workflows/qianlima-verify.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-v2.7.1-blue.svg)](CHANGELOG.md)
