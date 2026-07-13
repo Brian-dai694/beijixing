@@ -1,6 +1,6 @@
 # workflow-index.yaml — Workflow 索引
 # 版本: v2.7.0 | 更新: 2026-07-11
-# 变更: 新增快照优先/SWR、可中断任务合同、本地聚合、工具健康与质量仪表盘
+# 变更: 每个 workflow 新增 cost_baseline_usd + model_tier 字段，verification_gates 补充 cost vs baseline 检查
 
 workflows:
   - id: daily_ad_report
@@ -12,6 +12,8 @@ workflows:
     definition: workflows/daily_ad_report.yaml
     template: templates/广告运营_日报模板.md
     default_output_path: "reports/{date}_广告运营_日报_{marketplace}_V{version}.md"
+    cost_baseline_usd: 1.32              # 🆕 v2.7.0: 参考 rules/cost-baselines.yaml
+    model_tier: L2                       # 🆕 v2.7.0: 参考 rules/model-routing-rules.yaml
     required_data_sources:
       - lark_ads_daily
       - lingsing_ads
@@ -32,6 +34,8 @@ workflows:
     scenario: ad_ops
     status: draft
     default_output_path: "reports/{date}_广告竞价建议_{marketplace}_V{version}.md"
+    cost_baseline_usd: 0.50              # 🆕 v2.7.0
+    model_tier: L2                       # 🆕 v2.7.0
     required_inputs:
       - marketplace
       - campaign_or_ad_group
@@ -52,6 +56,8 @@ workflows:
     scenario: sales_tracking
     status: draft
     default_output_path: "reports/{date}_ASIN销量台账_{marketplace}_V{version}.md"
+    cost_baseline_usd: 0.10              # 🆕 v2.7.0
+    model_tier: L1                       # 🆕 v2.7.0
     required_inputs:
       - marketplace
       - date
@@ -70,6 +76,8 @@ workflows:
     scenario: inventory_monitor
     status: draft
     default_output_path: "reports/{date}_库存预警_{marketplace}_V{version}.md"
+    cost_baseline_usd: 0.08              # 🆕 v2.7.0
+    model_tier: L1                       # 🆕 v2.7.0
     required_inputs:
       - marketplace
       - products
@@ -88,6 +96,8 @@ workflows:
     scenario: profit_review
     status: draft
     default_output_path: "reports/{date}_利润复盘_{marketplace}_V{version}.md"
+    cost_baseline_usd: 0.40              # 🆕 v2.7.0
+    model_tier: L2                       # 🆕 v2.7.0
     required_inputs:
       - marketplace
       - compare_window
@@ -111,6 +121,8 @@ workflows:
     task_card: task-cards/competitor-comparison.yaml
     template: templates/competitor-comparison_template.md
     default_output_path: "reports/{date}_竞品对比_{marketplace}_V{version}.md"
+    cost_baseline_usd: 2.50              # 🆕 v2.7.0
+    model_tier: L3                       # 🆕 v2.7.0
     required_inputs:
       - asins
       - marketplace
@@ -127,6 +139,8 @@ workflows:
     task_card: task-cards/listing-optimization.yaml
     template: templates/listing-optimization_template.md
     default_output_path: "reports/{date}_Listing优化_{asin}_{marketplace}_V{version}.md"
+    cost_baseline_usd: 0.90              # 🆕 v2.7.0
+    model_tier: L2                       # 🆕 v2.7.0
     required_inputs:
       - asin
       - marketplace
@@ -155,6 +169,8 @@ workflows:
     task_card: task-cards/profit-check.yaml
     template: templates/profit-check_template.md
     default_output_path: "reports/{date}_利润测算_{marketplace}_V{version}.md"
+    cost_baseline_usd: 0.15              # 🆕 v2.7.0
+    model_tier: L1                       # 🆕 v2.7.0
     required_inputs:
       - product_or_asin
       - marketplace
@@ -170,6 +186,8 @@ workflows:
     task_card: task-cards/keyword-monitoring.yaml
     template: templates/keyword-monitoring_template.md
     default_output_path: "reports/{date}_关键词监控_{asin}_{marketplace}_V{version}.md"
+    cost_baseline_usd: 0.60              # 🆕 v2.7.0
+    model_tier: L2                       # 🆕 v2.7.0
     required_inputs:
       - asin
       - marketplace
@@ -188,6 +206,8 @@ workflows:
     task_card: task-cards/keyword-monitoring.yaml
     template: templates/keyword-monitoring_template.md
     default_output_path: "kw-records/pd-rank-log-{date}.md"
+    cost_baseline_usd: 0.80              # 🆕 v2.7.0
+    model_tier: L2                       # 🆕 v2.7.0
     required_inputs:
       - marketplace
       - keywords
@@ -204,6 +224,8 @@ workflows:
     task_card: task-cards/traffic-anomaly-diagnosis.yaml
     template: templates/traffic-anomaly-diagnosis_template.md
     default_output_path: "reports/{date}_流量异常诊断_{asin}_{marketplace}_V{version}.md"
+    cost_baseline_usd: 0.70              # 🆕 v2.7.0
+    model_tier: L2                       # 🆕 v2.7.0
     required_inputs:
       - asin
       - marketplace
@@ -228,6 +250,8 @@ workflows:
     task_card: task-cards/product-discovery.yaml
     template: templates/product-discovery_template.md
     default_output_path: "reports/{date}_新品机会_{marketplace}_V{version}.md"
+    cost_baseline_usd: 3.00              # 🆕 v2.7.0
+    model_tier: L3                       # 🆕 v2.7.0
     required_inputs:
       - product_concept_or_keyword
       - marketplace
@@ -261,6 +285,8 @@ workflows:
     task_card: task-cards/knowledge-digest.yaml
     template: templates/knowledge-digest_template.md
     default_output_path: "reports/{date}_资料消化_{topic}_V{version}.md"
+    cost_baseline_usd: 0.50              # 🆕 v2.7.0
+    model_tier: L2                       # 🆕 v2.7.0
     required_inputs:
       - materials
     evaluation_tasks:
@@ -270,88 +296,6 @@ workflows:
     forbidden_operations:
       - write_external_truth
       - send_external
-
-  - id: qianlima_eval
-    name: QianlimaEval 运行质量评估
-    scenario: agent_evolution
-    status: active
-    definition: workflows/qianlima_eval.yaml
-    template: templates/qianlima-eval-report_template.md
-    default_output_path: "reports/eval-{workflow_id}-{date}.md"
-    required_inputs:
-      - workflow_id
-      - report_path
-    optional_inputs:
-      - user_goal
-      - trace_path
-      - usage_path
-      - estimated_cost_usd
-      - baseline_cost_usd
-      - cost_limit_usd
-    evaluation_tasks:
-      - eval_qianlima_eval_core
-      - eval_private_shadow_cases
-    forbidden_operations:
-      - write_back
-      - delete_data
-      - change_bid
-      - change_budget
-      - send_external
-
-  - id: browser_task_space
-    name: Browser Task Space 浏览器任务空间
-    scenario: agent_evolution
-    status: active
-    definition: workflows/browser_task_space.yaml
-    required_rules:
-      - rules/browser-space-policy.md
-      - risk-rules.yaml
-      - rules/cost-savings-principle.md
-    required_inputs:
-      - task_space_name
-      - target_site
-      - user_goal
-      - allowed_actions
-      - forbidden_actions
-    optional_inputs:
-      - browser_tool
-      - login_state
-      - takeover_instruction
-      - cost_limit_usd
-    evaluation_tasks:
-      - eval_browser_space_safety
-      - eval_realtime_cost_savings
-    forbidden_operations:
-      - unconfirmed_submit_or_publish
-      - unconfirmed_financial_or_order_action
-      - account_or_permission_change_without_manual_owner
-      - private_export_committed_to_public_repo
-      - action_from_stale_snapshot
-
-  - id: skill_evolution
-    name: Skill 自进化学习
-    scenario: agent_evolution
-    status: active
-    definition: workflows/skill_evolution.yaml
-    task_card: task-cards/skill-evolution.yaml
-    required_rules:
-      - skill-evolution.yaml
-      - risk-rules.yaml
-    required_inputs:
-      - skill_id
-      - feedback_summary
-    optional_inputs:
-      - source_run_id
-      - evidence_paths
-      - baseline_metrics
-    evaluation_tasks:
-      - eval_skill_evolution_observe
-    forbidden_operations:
-      - automatic_production_skill_edit
-      - automatic_router_expansion
-      - automatic_permission_change
-      - commit_private_feedback_to_public_repo
-
   - id: keyword_demand_lifecycle_timing
     name: 关键词三层需求 + 竞争格局
     scenario: keyword_tracking
@@ -360,6 +304,8 @@ workflows:
     task_card: task-cards/keyword-demand-lifecycle-timing.yaml
     template: templates/keyword-demand-lifecycle-timing_template.md
     default_output_path: "reports/{date}_关键词需求生命周期_{country}_V{version}.md"
+    cost_baseline_usd: 0.50              # 🆕 v2.7.0
+    model_tier: L2                       # 🆕 v2.7.0
     required_inputs:
       - keywords
       - country
@@ -380,26 +326,6 @@ workflows:
 # ── Global Assumption Surfacing Policy ───────────────────────
 # 原则: "动手之前，先把你以为但没确认过的东西列出来，等用户点头。"
 # 来源: agent-skills 五铁律 #1 — Surface assumptions before building
-response_experience:
-  policy: response-policy.yaml
-  required_before_business_workflow:
-    - "Run scripts/new-staged-response.ps1 to classify L0-L4."
-    - "Deliver a route, known fact, exclusion, or actionable judgment within 3 seconds."
-    - "Label initial claims with A=live, B=fresh cache, or C=history/assumption."
-    - "Use hot state only when fresh and not before a high-risk action."
-  audit_escalation:
-    - "L0: no trace"
-    - "L1-L2: minimal trace"
-    - "L3: staged evidence trace"
-    - "L4: full trace and explicit confirmation"
-  runtime: task-runtime.yaml
-  performance_rules:
-    - "Use a fresh qualified snapshot for initial judgment, then refresh only when it can change the conclusion."
-    - "Create a task contract before long or external-data work and check it before each new external read."
-    - "Filter and aggregate raw tables locally before model review."
-    - "Use tool-health tier to select primary or fallback sources."
-    - "Record latency components and quality outcomes; do not call a faster path successful if evidence completeness regresses."
-
 global_assumption_policy:
   enabled: true
   applies_to_all: true
@@ -510,6 +436,28 @@ verification_gates:
         evidence: "'如果退货率 +2%，净利润变为 ___' 等 3 个 what-if 场景"
         blocker: false
 
+  # ── 🆕 v2.7.0: 全局成本门禁 ──────────────────────────────
+
+  - workflow_id: all
+    name: "全局成本 vs 基线门禁"
+    gates:
+      - gate: cost_card_output
+        description: "每个非 trivial workflow 完成时输出成本卡"
+        evidence: "成本卡字段完整（estimated_cost / baseline / savings / tier / method / continue_or_stop）"
+        blocker: true
+      - gate: usage_ledger_written
+        description: "usage-ledger/ 中存在本次运行记录"
+        evidence: "记录文件存在且 baseline_cost_usd 和 tier 已填写"
+        blocker: true
+      - gate: cost_not_2x_baseline
+        description: "estimated_cost 未超过 baseline_cost × 2.0（或已获用户确认）"
+        evidence: "成本卡中 cost_vs_baseline_pct < 200% 或用户确认消息"
+        blocker: true
+      - gate: tier_matches_workflow
+        description: "使用的模型 tier 与 model-routing-rules.yaml 中的默认值匹配（或已标注升级/降级原因）"
+        evidence: "成本卡中 tier 字段 + ledger note 中升级/降级原因"
+        blocker: false
+
   # ── Exploration Engine workflow ─────────────────────
   - id: strategy_exploration
     name: 策略探索优化
@@ -522,6 +470,8 @@ verification_gates:
     description: >
       在安全边界内自动探索最优运营策略。
       Shadow Mode 评估不执行实际操作，发现最优策略后注册为 Smart Library 组件。
+    cost_baseline_usd: 1.50              # 🆕 v2.7.0
+    model_tier: L3                       # 🆕 v2.7.0
     domains:
       - advertising     # 竞价/预算/关键词策略探索
       - inventory       # 安全库存/补货策略探索

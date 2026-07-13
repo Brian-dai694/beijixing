@@ -1,37 +1,44 @@
-# CODEX_BOOT — 千里马 Git-safe 公开模板短启动协议
+# CODEX_BOOT — 千里马私有工作区短启动协议
 
-你现在在千里马 Git-safe 公开模板仓。这里不得包含真实 token、账号、客户数据、ASIN 运营数据、成本台账、运行报告或本地路径。
+你现在在千里马私有运营工作区。这里可以包含真实 `work.ws`、`data-sources.yaml`、业务记录和本地报告；不要把这些内容复制到 Git-safe 公开仓。
 
 启动顺序：
-1. 运行 `powershell -NoProfile -ExecutionPolicy Bypass -File ".\start-qianlima.ps1"`。
-2. 缓存命中且任务低风险时，先读取 `.qianlima/codex-router.json` 和 `.qianlima/response-policy.yaml`；否则读取 `.qianlima/WORKSPACE_INDEX.md`。
-3. 当前仓只做模板、治理、校验、文档和公开示例；不要写入真实业务数据。
+1. 先判定 L0-L4。L0 普通聊天直接回答，不运行任何千里马脚本。
+2. L1 先运行 `.qianlima/scripts/qianlima-status-fast.ps1`；状态为 `ready` 时只读取本文件和 `codex-router.json`。
+3. L2/L3 运行快速状态时传入本次 task-card、workflow 和 template 的相对路径（用分号分隔）；状态为 `ready` 时按任务读取最小文件，状态为 `needs_startup` 时运行 `powershell -NoProfile -ExecutionPolicy Bypass -File ".\start-qianlima.ps1"`。
+4. L4 或规则/目录变更时运行 `powershell -NoProfile -ExecutionPolicy Bypass -File ".\start-qianlima.ps1" -Force`，再读取完整启动包和原始数据。
+
+L0-L4 加载规则：
+- L0 普通聊天、简单事实：直接答，不加载运营文件。
+- L1 明确低风险任务：只读本文件和 `codex-router.json`。
+- L2 本地结构化分析：再读对应 task-card、workflow、template。
+- L3 多来源或外部数据分析：先输出状态卡和初步判断，再按需取证。
+- L4 改价、竞价、预算、采购、删除、写回：回读风险规则和原始数据，二次确认后才执行。
 
 任务路由：
-- README / 文档 / 翻译 → 编辑公开文档，并保持隐私边界
-- 隐私剔除 / Git-safe → 跑 `.qianlima/scripts/verify-qianlima.ps1`
-- 校验失败 / 红叉 → 本地复现 GitHub Actions 步骤
-- 补 workflow / task-card → 只写 public-safe 模板定义
-- 提交推送 → 先确认 `git status`、跑校验，再 commit/push
+- 跑排名 / 卡位 / 关键词 → `keyword_rank_scan` 或 `keyword_monitoring`
+- 广告日报 / 广告花费 → `daily_ad_report`
+- 调竞价 / 调预算 → 先亮假设，再走高风险确认
+- 算利润 / 赚不赚钱 → `profit_check`
+- 优化 Listing / 标题五点 → `listing_optimization`
+- 竞品对比 / 对比 ASIN → `competitor_comparison`
+- 选品 / 品类能不能做 → `product_discovery`
+- 整理资料 / 总结文档 → `knowledge_digest`
 
 每次开始任务先输出状态卡：
-- 工作区：Git-safe 公开模板
+- 工作区：私有运营
 - 当前场景：___
 - 已加载来源：___
-- 将使用 workflow/脚本：___
-- 隐私风险/待验证：___
-
-体验规则：
-- 先用 `scripts/new-staged-response.ps1` 判定 `L0-L4`，3 秒内交付路线、已知事实或明确排除项；不要只说“正在处理”。
-- 用 `A=实时数据 / B=近期缓存 / C=历史记录或假设` 标识第一轮结论。
-- 低风险任务可复用 `.qianlima/working/` 中的脱敏热状态；高风险、配置变更或来源过期时必须刷新。
-- 只有任务升级为决策、报告、跨源证据或高风险执行时，才补齐完整 trace 和评估包。
-- 长任务用 `scripts/new-task-contract.ps1` 创建可恢复检查点；用户要求“只给结论 / 停止深查 / 报告 / 取消”时，用 `scripts/set-task-control.ps1` 更新控制状态。
-- 快照只用于初判：用 `scripts/get-snapshot-decision.ps1` 判断新鲜、SWR 或必须实时取证；高风险动作前不得使用快照代替实时来源。
-- 数据源每次调用后用 `scripts/update-tool-health.ps1` 记录成功率、耗时和完整度；慢或不完整的源降为回退。
-- 用 `scripts/write-experience-event.ps1` 记录首轮交付、工具耗时和最终交付；用 `scripts/get-quality-dashboard.ps1` 生成本地质量仪表盘。
+- 将使用 workflow：___
+- 高风险/待验证：___
 
 硬规则：
-- 不提交真实 `work.ws`、`data-sources.yaml`、usage ledger、decision log、报告、截图、token 或本地路径。
-- 公开仓只能保留 `.example`、模板、治理规则、脚本和脱敏说明。
-- 发布前必须运行 `verify-qianlima.ps1`。
+- 高风险动作：改价、调竞价、调预算、采购、删除、写回外部系统，必须二次确认。
+- 结论必须标注数据来源和待验证项。
+- 长文件先摘要，关键决策前重新读取源文件。
+- 每个 workflow 完成前必须调用 `.qianlima/scripts/record-qianlima-usage.ps1` 追加到 `.qianlima/usage-ledger/runs.jsonl`；没有成功入账的 workflow 只能标为 `partial`。
+- 仅记录可验证的模型、token、工具和成本数据；未知 token 或成本填 `0` 并说明原因，不得编造。
+- L3/L4 先交付状态卡，随后补证据；账本记录 `startup_ms`、`routing_ms`、`context_load_ms`、`tool_ms`、`model_ms` 和 `first_useful_output_ms`。
+- L0-L4 的上下文、预算、沙箱和状态转换以 `agent-runtime-policy.yaml` 为准；预算耗尽时冻结当前结果，说明待验证项，不得无限继续查找或调用工具。
+- 删除、覆盖、格式化、递归移动前必须运行 `.qianlima/scripts/check-command-safety.ps1`。其结果为 `deny` 时不得执行；为 `confirmation_required` 时先列出绝对路径和影响范围，等待明确二次确认。
+- L2+ 涉及 ASIN、SKU、广告活动或关键词时，可读取匹配的本地 Memory Card；卡片过期、冲突或 L4 决策时必须回读原始数据，不能把记忆当作事实。

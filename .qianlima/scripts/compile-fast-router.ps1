@@ -12,7 +12,9 @@ if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
 }
 
 function ConvertTo-StringList([string]$Value) {
-  if ([string]::IsNullOrWhiteSpace($Value)) { return @() }
+  if ([string]::IsNullOrWhiteSpace($Value)) {
+    return @()
+  }
   return @($Value -split ',' | ForEach-Object {
     $_.Trim().Trim('"').Trim("'")
   } | Where-Object { $_ })
@@ -24,7 +26,9 @@ $inUseBlock = $false
 
 foreach ($line in (Get-Content -LiteralPath $sourcePath -Encoding UTF8)) {
   if ($line -match '^    - route_id:\s*(\S+)\s*$') {
-    if ($null -ne $current) { $routes.Add([PSCustomObject]$current) }
+    if ($null -ne $current) {
+      $routes.Add([PSCustomObject]$current)
+    }
     $current = [ordered]@{
       route_id = $Matches[1].Trim('"').Trim("'")
       intent = ''
@@ -38,7 +42,9 @@ foreach ($line in (Get-Content -LiteralPath $sourcePath -Encoding UTF8)) {
     continue
   }
 
-  if ($null -eq $current) { continue }
+  if ($null -eq $current) {
+    continue
+  }
   if ($line -match '^      intent:\s*(.+?)\s*$') {
     $current.intent = $Matches[1].Trim().Trim('"').Trim("'")
     continue
@@ -67,27 +73,39 @@ foreach ($line in (Get-Content -LiteralPath $sourcePath -Encoding UTF8)) {
     $current.tools = ConvertTo-StringList $Matches[1]
     continue
   }
-  if ($line -match '^      [A-Za-z_][A-Za-z_ ]*:\s*') { $inUseBlock = $false }
+  if ($line -match '^      [A-Za-z_][A-Za-z_ ]*:\s*') {
+    $inUseBlock = $false
+  }
 }
 
-if ($null -ne $current) { $routes.Add([PSCustomObject]$current) }
-if ($routes.Count -eq 0) { throw 'No routes were compiled from natural-language-router.yaml' }
+if ($null -ne $current) {
+  $routes.Add([PSCustomObject]$current)
+}
+
+if ($routes.Count -eq 0) {
+  throw 'No routes were compiled from natural-language-router.yaml'
+}
 
 $triggerMap = [ordered]@{}
 foreach ($route in $routes) {
   foreach ($signal in $route.strong_signals) {
-    if (-not $triggerMap.Contains($signal)) { $triggerMap[$signal] = @() }
+    if (-not $triggerMap.Contains($signal)) {
+      $triggerMap[$signal] = @()
+    }
     $triggerMap[$signal] += $route.route_id
   }
 }
+
+$compiledRoutes = @($routes.ToArray())
+$compiledTriggerMap = [PSCustomObject]$triggerMap
 
 [PSCustomObject]@{
   schema_version = 1
   generated_at = (Get-Date).ToString('o')
   source = '.qianlima/natural-language-router.yaml'
   routing_note = 'Use this compact index for low-risk direct routing. Read the source YAML for ambiguous, cross-domain, or high-risk tasks.'
-  routes = @($routes.ToArray())
-  trigger_map = [PSCustomObject]$triggerMap
+  routes = $compiledRoutes
+  trigger_map = $compiledTriggerMap
 } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $outputPath -Encoding UTF8
 
 Write-Host "Fast router generated: $outputPath ($($routes.Count) routes)"

@@ -5,6 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$startupStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 $ProjectRoot = $PSScriptRoot
 $QianlimaRoot = Join-Path $ProjectRoot '.qianlima'
@@ -16,17 +17,29 @@ $IndexPath = Join-Path $QianlimaRoot 'WORKSPACE_INDEX.md'
 $MachineIndexPath = Join-Path $QianlimaRoot 'workspace-index.json'
 $RouterIndexPath = Join-Path $QianlimaRoot 'codex-router.json'
 
-function Get-QianlimaStartupFingerprint {
+function Get-QianlimaStartupSourceState {
   $excludedDirectories = @(
-    'archive', 'context-summaries', 'evaluations', 'exports', 'feedback',
-    'inbox', 'local-data', 'logs', 'run-traces', 'usage-ledger', 'working'
+    'archive',
+    'context-summaries',
+    'evaluations',
+    'exports',
+    'feedback',
+    'inbox',
+    'local-data',
+    'logs',
+    'run-traces',
+    'usage-ledger',
+    'working'
   )
   $generatedFiles = @(
-    'WORKSPACE_INDEX.md', 'workspace-index.json',
-    'startup-cache.json', 'codex-router.json'
+    'WORKSPACE_INDEX.md',
+    'workspace-index.json',
+    'startup-cache.json',
+    'codex-router.json'
   )
   $sourceExtensions = @('.md', '.ps1', '.ws', '.yaml', '.yml', '.csv')
   $files = New-Object System.Collections.Generic.List[System.IO.FileInfo]
+  $directories = New-Object System.Collections.Generic.List[System.IO.DirectoryInfo]
 
   foreach ($file in @(
     (Join-Path $ProjectRoot 'README.md'),
@@ -39,32 +52,112 @@ function Get-QianlimaStartupFingerprint {
     }
   }
 
-  Get-ChildItem -LiteralPath $QianlimaRoot -Recurse -File | ForEach-Object {
+  $directories.Add((Get-Item -LiteralPath $QianlimaRoot))
+  Get-ChildItem -LiteralPath $QianlimaRoot -Recurse | ForEach-Object {
     $relativePath = $_.FullName.Substring($QianlimaRoot.Length).TrimStart('\', '/')
     $pathParts = $relativePath -split '[\\/]'
-    if ($pathParts | Where-Object { $_ -in $excludedDirectories }) { return }
-    if ($relativePath -in $generatedFiles) { return }
-    if ($_.Extension -in $sourceExtensions) { $files.Add($_) }
+    if ($pathParts | Where-Object { $_ -in $excludedDirectories }) {
+      return
+    }
+    if ($_.PSIsContainer) {
+      $directories.Add($_)
+      return
+    }
+    if ($relativePath -in $generatedFiles) {
+      return
+    }
+    if ($_.Extension -in $sourceExtensions) {
+      $files.Add($_)
+    }
   }
 
-  $entries = $files | Sort-Object FullName -Unique | ForEach-Object {
+  $fileManifest = @($files | Sort-Object FullName -Unique | ForEach-Object {
     $relativePath = $_.FullName.Substring($ProjectRoot.Length).TrimStart('\', '/')
-    "$relativePath|$($_.Length)|$($_.LastWriteTimeUtc.Ticks)"
+    [PSCustomObject]@{
+      path = $relativePath
+      length = $_.Length
+      last_write_ticks = $_.LastWriteTimeUtc.Ticks
+    }
+  })
+  function Get-ManagedChildrenFingerprint([string]$DirectoryPath) {
+    $names = @(Get-ChildItem -LiteralPath $DirectoryPath -Force | Where-Object {
+      $relativePath = $_.FullName.Substring($QianlimaRoot.Length).TrimStart('\', '/')
+      $pathParts = $relativePath -split '[\\/]'
+      if ($pathParts | Where-Object { $_ -in $excludedDirectories }) { return $false }
+      if (-not $_.PSIsContainer -and $relativePath -in $generatedFiles) { return $false }
+      return $true
+    } | Sort-Object Name | ForEach-Object {
+      if ($_.PSIsContainer) { "D:$($_.Name)" } else { "F:$($_.Name)" }
+    })
+    $payload = [Text.Encoding]::UTF8.GetBytes(($names -join "`n"))
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+      return ([BitConverter]::ToString($sha.ComputeHash($payload))).Replace('-', '').ToLowerInvariant()
+    } finally {
+      $sha.Dispose()
+    }
   }
-  $payload = [Text.Encoding]::UTF8.GetBytes(($entries -join [Environment]::NewLine))
+
+  $directoryManifest = @($directories | Sort-Object FullName -Unique | ForEach-Object {
+    $relativePath = $_.FullName.Substring($ProjectRoot.Length).TrimStart('\', '/')
+    [PSCustomObject]@{
+      path = if ([string]::IsNullOrWhiteSpace($relativePath)) { '.' } else { $relativePath }
+      children_fingerprint = Get-ManagedChildrenFingerprint $_.FullName
+    }
+  })
+  $entries = $fileManifest | ForEach-Object {
+    "$($_.path)|$($_.length)|$($_.last_write_ticks)"
+  }
+  $payload = [Text.Encoding]::UTF8.GetBytes(($entries -join "`n"))
   $sha256 = [Security.Cryptography.SHA256]::Create()
   try {
-    return ([BitConverter]::ToString($sha256.ComputeHash($payload))).Replace('-', '').ToLowerInvariant()
+    return [PSCustomObject]@{
+      fingerprint = ([BitConverter]::ToString($sha256.ComputeHash($payload))).Replace('-', '').ToLowerInvariant()
+      source_manifest = $fileManifest
+      directory_manifest = $directoryManifest
+    }
   } finally {
     $sha256.Dispose()
   }
 }
 
-if (-not (Test-Path -LiteralPath $BootstrapScript -PathType Leaf)) {
-  throw "Missing bootstrap script: $BootstrapScript"
+function Test-QianlimaStartupCache([object]$Cache) {
+  if (-not $Cache -or $Cache.schema_version -ne 2 -or -not $Cache.source_manifest -or -not $Cache.directory_manifest) {
+    return $false
+  }
+  foreach ($entry in @($Cache.source_manifest)) {
+    $path = Join-Path $ProjectRoot $entry.path
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return $false }
+    $item = Get-Item -LiteralPath $path
+    if ($item.Length -ne [int64]$entry.length -or $item.LastWriteTimeUtc.Ticks -ne [int64]$entry.last_write_ticks) { return $false }
+  }
+  foreach ($entry in @($Cache.directory_manifest)) {
+    $path = if ($entry.path -eq '.') { $ProjectRoot } else { Join-Path $ProjectRoot $entry.path }
+    if (-not (Test-Path -LiteralPath $path -PathType Container)) { return $false }
+    $names = @(Get-ChildItem -LiteralPath $path -Force | Where-Object {
+      $relativePath = $_.FullName.Substring($QianlimaRoot.Length).TrimStart('\', '/')
+      $pathParts = $relativePath -split '[\\/]'
+      if ($pathParts | Where-Object { $_ -in @('archive', 'context-summaries', 'evaluations', 'exports', 'feedback', 'inbox', 'local-data', 'logs', 'run-traces', 'usage-ledger', 'working') }) { return $false }
+      if (-not $_.PSIsContainer -and $relativePath -in @('WORKSPACE_INDEX.md', 'workspace-index.json', 'startup-cache.json', 'codex-router.json')) { return $false }
+      return $true
+    } | Sort-Object Name | ForEach-Object {
+      if ($_.PSIsContainer) { "D:$($_.Name)" } else { "F:$($_.Name)" }
+    })
+    $payload = [Text.Encoding]::UTF8.GetBytes(($names -join "`n"))
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+      $currentFingerprint = ([BitConverter]::ToString($sha.ComputeHash($payload))).Replace('-', '').ToLowerInvariant()
+    } finally {
+      $sha.Dispose()
+    }
+    if ($currentFingerprint -ne $entry.children_fingerprint) { return $false }
+  }
+  return $true
 }
 
-function Invoke-QianlimaScript([string]$Path) {
+function Invoke-QianlimaScript {
+  param([string]$Path)
+
   $global:LASTEXITCODE = 0
   & $Path
   if ($LASTEXITCODE -ne 0) {
@@ -72,7 +165,10 @@ function Invoke-QianlimaScript([string]$Path) {
   }
 }
 
-$fingerprint = Get-QianlimaStartupFingerprint
+if (-not (Test-Path -LiteralPath $BootstrapScript -PathType Leaf)) {
+  throw "Missing bootstrap script: $BootstrapScript"
+}
+
 $cache = $null
 if (Test-Path -LiteralPath $CachePath -PathType Leaf) {
   try {
@@ -83,21 +179,23 @@ if (Test-Path -LiteralPath $CachePath -PathType Leaf) {
 }
 
 $isCacheFresh = -not $Force -and
-  $cache -and
-  $cache.schema_version -eq 1 -and
-  $cache.fingerprint -eq $fingerprint -and
+  (Test-QianlimaStartupCache $cache) -and
   (Test-Path -LiteralPath $IndexPath -PathType Leaf) -and
   (Test-Path -LiteralPath $MachineIndexPath -PathType Leaf) -and
   (Test-Path -LiteralPath $RouterIndexPath -PathType Leaf)
 
 if ($isCacheFresh) {
+  $startupStopwatch.Stop()
   if (-not $Quiet) {
     Write-Host 'Qianlima startup: cache hit. Reusing validated index and fast router.'
     Write-Host "Startup mode: cached (generated $($cache.generated_at))"
+    Write-Host "Startup elapsed: $([math]::Round($startupStopwatch.Elapsed.TotalMilliseconds, 1)) ms"
     Write-Host 'For direct low-risk routing, read .qianlima/codex-router.json and the short boot file.'
   }
   exit 0
 }
+
+$sourceState = Get-QianlimaStartupSourceState
 
 if (-not $Quiet) {
   Write-Host 'Qianlima startup: rebuilding index and fast router...'
@@ -121,8 +219,10 @@ if (-not (Test-Path -LiteralPath $CompileRouterScript -PathType Leaf)) {
 Invoke-QianlimaScript $CompileRouterScript
 
 [PSCustomObject]@{
-  schema_version = 1
-  fingerprint = $fingerprint
+  schema_version = 2
+  fingerprint = $sourceState.fingerprint
+  source_manifest = $sourceState.source_manifest
+  directory_manifest = $sourceState.directory_manifest
   generated_at = (Get-Date).ToString('o')
   validation_skipped = [bool]$SkipValidation
   workspace_index = '.qianlima/WORKSPACE_INDEX.md'
@@ -130,10 +230,16 @@ Invoke-QianlimaScript $CompileRouterScript
 } | ConvertTo-Json | Set-Content -LiteralPath $CachePath -Encoding UTF8
 
 if (-not $Quiet) {
+  $startupStopwatch.Stop()
   Write-Host ''
   Write-Host 'Qianlima startup complete (mode: refreshed).'
-  Write-Host 'Read core: .qianlima/CODEX_BOOT.md, .qianlima/codex-router.json, .qianlima/risk-rules.yaml'
-  Write-Host 'Then select one task-card and load only its workflow, template, data, and deferred governance.'
-  Write-Host 'Platform adapters and evaluation config are optional; load them only when the selected task needs them.'
-  Write-Host 'Full machine index: .qianlima/workspace-index.json'
+  Write-Host "Startup elapsed: $([math]::Round($startupStopwatch.Elapsed.TotalMilliseconds, 1)) ms"
+  Write-Host 'Read for Claude Code: CLAUDE.md'
+  Write-Host 'Read for Manus: MANUS.md'
+  Write-Host 'Read for Manus boot: .qianlima/MANUS_BOOT.md'
+  Write-Host 'Read for desktop agents: DESKTOP_AGENT_BRIEF.md'
+  Write-Host 'Read for evaluation layer: .qianlima/qianlima-eval.yaml'
+  Write-Host 'Read first: .qianlima/CODEX_BOOT.md'
+  Write-Host 'Fast route index: .qianlima/codex-router.json'
+  Write-Host 'Full workspace index: .qianlima/WORKSPACE_INDEX.md'
 }

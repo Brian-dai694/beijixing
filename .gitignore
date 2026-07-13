@@ -37,14 +37,15 @@ daily-summaries/
 # 运行时产物 — 不提交
 # ═══════════════════════════════════════════════════
 
-# 日志（保留 .gitkeep，确保干净克隆可启动）
-.qianlima/logs/*
-!.qianlima/logs/.gitkeep
+# 临时执行状态
+.qianlima/tmp/
+
+# 日志
+.qianlima/logs/
 .qianlima/run-traces/
 
-# 用量账本（保留 .gitkeep，确保干净克隆可启动）
-.qianlima/usage-ledger/*
-!.qianlima/usage-ledger/.gitkeep
+# 用量账本
+.qianlima/usage-ledger/
 
 # 反馈
 .qianlima/feedback/

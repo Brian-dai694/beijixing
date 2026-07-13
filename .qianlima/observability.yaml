@@ -1,7 +1,12 @@
 observability:
   version: "v2.7.0"
-  purpose: Track workflow components, experience, decisions, files, cost, and savings.
+  purpose: Track workflow components, experience, decisions, files, cost, savings, and cost aggregation.
   principle: Cost visibility and savings are central runtime signals, not after-run bookkeeping.
+  changes:
+    v2_7_0:
+      - "cost_observability: 新增 baseline_cost_usd（必填）、tier（必填）、method（estimated|measured|modeled）"
+      - "realtime_cost_card: required_for 扩展为 every_workflow_completion"
+      - "新增 cost_aggregation 维度：周累计 / 月累计 / 相比基线累计节约 / 聚合仪表盘"
 
 dimensions:
   component_observability:
@@ -42,19 +47,17 @@ dimensions:
       - overwrite_attempts
 
   cost_observability:
-    description: Track model, tool, workflow cost, and savings in real time.
+    description: Track model, tool, workflow cost, savings, and cost aggregation dashboard in real time.
     metrics:
       - model_calls
       - input_tokens
       - output_tokens
       - tool_calls
       - rows_read
+      - tier                            # 🆕 v2.7.0: L0/L1/L2/L3 模型路由等级
+      - method                          # 🆕 v2.7.0: estimated | measured | modeled（来自 Cage 设计模式）
       - estimated_cost_usd
-      - pricing_catalog_version
-      - pricing_source_url
-      - pricing_verified_at
-      - cost_metering_method
-      - baseline_cost_usd
+      - baseline_cost_usd              # 🔴 必填
       - estimated_savings_usd
       - estimated_savings_rate_pct
       - cost_limit_usd
@@ -66,22 +69,27 @@ dimensions:
     description: User-visible compact cost and savings summary.
     template: templates/realtime-cost-card_template.md
     generator: scripts/new-cost-card.ps1
+    aggregator: scripts/new-cost-aggregation.ps1   # 🆕 v2.7.0
     required_for:
       - every_non_trivial_workflow
+      - every_workflow_completion                  # 🆕 v2.7.0: 所有非 trivial workflow 完成时必须输出
       - before_expensive_tool_calls
       - before_multi_file_summarization
       - before_high_risk_or_high_cost_actions
     fields:
       - current_estimated_cost_usd
       - cost_limit_usd
+      - tier                                        # 🆕 v2.7.0
+      - method                                      # 🆕 v2.7.0: estimated | measured | modeled
       - baseline_cost_usd
       - estimated_savings_usd
       - estimated_savings_rate_pct
+      - cumulative_weekly_cost_usd                  # 🆕 v2.7.0
       - primary_savings_source
       - continue_or_stop
 
   context_observability:
-    description: Track context usage, compression level, and safety reserve.
+    description: Track context usage, compression level, safety reserve, and ConAct folding.
     metrics:
       - estimated_context_tokens
       - context_budget_ratio
@@ -91,6 +99,30 @@ dimensions:
       - files_indexed
       - compression_level_used
       - source_reload_count
+      - conact_folding_triggered      # 🆕 v2.7.0
+      - conact_folded_tokens_saved    # 🆕 v2.7.0
+
+  latency_observability:
+    description: Attribute task delay so optimization targets the actual bottleneck.
+    metrics:
+      - startup_ms
+      - routing_ms
+      - context_load_ms
+      - tool_ms
+      - model_ms
+      - first_useful_output_ms
+      - total_duration_seconds
+
+  runtime_observability:
+    description: Track budget, sandbox, and state-machine enforcement for each task run.
+    metrics:
+      - context_level
+      - current_state
+      - budget_exhaustion_reason
+      - tool_budget_ratio
+      - step_budget_ratio
+      - sandbox_denial_count
+      - confirmation_wait_count
 
   model_observability:
     description: Track provider-specific model behavior and adapter choice.
@@ -105,70 +137,32 @@ dimensions:
       - reasoning_mode_enabled
       - reserve_ratio_used
 
-  qianlima_eval_observability:
-    description: Track MiniAppBench-style run evaluation quality.
-    metrics:
-      - eval_report_generated
-      - eval_weighted_score
-      - eval_status
-      - intent_alignment_score
-      - evidence_static_quality_score
-      - dynamic_execution_quality_score
-      - cost_savings_efficiency_score
-      - risk_control_score
-      - hard_block_count
-      - pending_verification_count
-      - next_optimization_count
-      - private_shadow_case_pass_rate
+  # ── 🆕 v2.7.0: 成本聚合维度 ─────────────────────────────────
 
-  browser_space_observability:
-    description: Track browser task spaces, semantic snapshots, takeover readiness, and browser cost savings.
+  cost_aggregation:
+    description: Aggregate cost stats across all usage-ledger records.
+    generator: scripts/new-cost-aggregation.ps1
+    frequency: weekly
+    output_path: "reports/cost-aggregation-{date}.md"
     metrics:
-      - browser_tool
-      - task_space_created_or_reused
-      - logged_in_state
-      - pages_visited
-      - snapshot_count
-      - screenshot_count
-      - raw_dom_read_count
-      - actions_taken
-      - resnapshot_after_state_change_count
-      - stale_reference_or_selector_count
-      - downloads_created
-      - submit_or_write_actions
-      - confirmations_required
-      - confirmations_received
-      - takeover_available
-      - reusable_browser_path_extracted
-      - browser_cost_savings_estimate_usd
-
-  response_experience_observability:
-    description: Track whether users receive decision-relevant stage results quickly.
-    metrics:
-      - service_level
-      - route_latency_ms
-      - first_delivery_latency_ms
-      - first_delivery_within_3s
-      - evidence_grade_at_first_delivery
-      - provisional_delivery_count
-      - hot_state_hit
-      - hot_state_freshness
-      - audit_escalation_level
-      - parallel_read_fanout_count
-      - first_useful_output_ms
-      - final_delivery_ms
-      - evidence_completeness_rate
-      - user_adoption_rate
-      - snapshot_hit_rate
-      - tool_health_tier
-      - latency_by_component
-      - task_contract_state
-      - task_interrupted_or_frozen
+      - total_cost_this_week_usd
+      - total_cost_this_month_usd
+      - total_savings_vs_baseline_usd
+      - savings_rate_this_week_pct
+      - cost_by_workflow
+      - cost_by_tier
+      - top_cost_driver
+      - anomaly_runs
+      - trend_30d
+    alert_thresholds:
+      weekly_cost_exceeds_budget: "阻断并提示用户"
+      single_run_cost_2x_baseline: "阻断并等待用户确认"
 
 default_trace_fields:
   - run_id
   - workflow_id
   - scenario
+  - tier                              # 🆕 v2.7.0
   - data_sources
   - source_files
   - output_files
@@ -179,9 +173,9 @@ default_trace_fields:
   - usage_summary
   - realtime_cost_card
   - savings_summary
+  - cost_aggregation_summary          # 🆕 v2.7.0
   - context_budget_summary
   - model_adapter_summary
-  - qianlima_eval_summary
-  - browser_space_summary
-  - response_experience_summary
+  - latency_summary
+  - runtime_policy_summary
   - status

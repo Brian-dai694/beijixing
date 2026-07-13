@@ -4,7 +4,8 @@ risk_rules:
     auto_write_allowed: false
     delete_allowed: false
     external_send_requires_confirmation: true
-    high_risk_from_compressed_context_allowed: false
+    sandbox_policy: agent-runtime-policy.yaml
+    source_data_overwrite_allowed: false
 
   high_risk_actions:
     - id: change_bid
@@ -15,6 +16,15 @@ risk_rules:
       policy: second_confirmation_required
     - id: delete_data
       name: 删除数据
+      policy: command_safety_check_and_second_confirmation_required
+    - id: recursive_delete
+      name: 递归删除文件
+      policy: command_safety_check_and_second_confirmation_required
+    - id: overwrite_existing_files
+      name: 覆盖已有文件
+      policy: command_safety_check_and_confirmation_required
+    - id: move_outside_workspace
+      name: 移动文件到工作区外
       policy: blocked_by_default
     - id: send_to_group
       name: 发送到群聊
@@ -22,60 +32,12 @@ risk_rules:
     - id: write_back
       name: 写回外部系统
       policy: confirmation_required
-    - id: compressed_context_decision
-      name: 仅基于压缩摘要做高影响决策
-      policy: source_reload_required
-    - id: browser_logged_in_action
-      name: 已登录浏览器中的业务动作
-      policy: task_space_and_trace_required
-    - id: browser_submit_or_publish
-      name: 浏览器提交、发布、发送或保存
-      policy: confirmation_required
-    - id: browser_financial_or_order_action
-      name: 浏览器付款、下单、采购、改价、调竞价或调预算
+    - id: purchase_order
+      name: 创建采购订单
       policy: second_confirmation_required
-    - id: browser_account_or_permission_change
-      name: 浏览器账号、权限、成员或安全设置变更
-      policy: blocked_by_default
-
-  compression_security:
-    version: "v2.6.1"
-    rule_file: "rules/compression-attack-defense.md"
-    policy: "Compressed summaries are working memory, not source of truth."
-    blocks:
-      - high_risk_action_from_summary_only
-      - missing_source_sections_in_summary
-      - permissions_loaded_only_from_summary
-    requires:
-      - direct_reload_for_high_risk_actions
-      - explicit_pending_verification_when_source_omitted
-      - second_confirmation_when_summary_conflicts_with_source
-
-  browser_space_security:
-    version: "v2.6.8"
-    rule_file: "rules/browser-space-policy.md"
-    policy: "Browser automation must run inside a named task space with snapshot, trace, and takeover awareness."
-    applies_to:
-      - kimi_webbridge
-      - chrome_devtools
-      - ego_lite
-      - desktop_agents
-      - logged_in_browser_sessions
-    blocks:
-      - unconfirmed_submit_or_publish
-      - unconfirmed_financial_or_order_action
-      - account_or_permission_change_without_manual_owner
-      - private_export_committed_to_public_repo
-      - action_from_stale_snapshot
-    requires:
-      - task_space_name
-      - current_page_or_tab
-      - allowed_actions
-      - forbidden_actions
-      - snapshot_before_action
-      - resnapshot_after_state_change
-      - takeover_or_stop_path
-      - cost_card_for_non_trivial_run
+    - id: change_price
+      name: 修改商品价格
+      policy: second_confirmation_required
 
   sensitive_data:
     default_policy: mask_or_aggregate
@@ -89,4 +51,3 @@ risk_rules:
       - bank_account
       - salary
       - contract_amount
-
