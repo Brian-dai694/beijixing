@@ -319,6 +319,28 @@ workflows:
       - write_back
       - delete_data
 
+  - id: skill_evolution
+    name: Skill 自进化观察与候选 Patch
+    scenario: agent_evolution
+    status: active
+    definition: workflows/skill_evolution.yaml
+    task_card: task-cards/skill-evolution.yaml
+    cost_baseline_usd: 0.05
+    model_tier: L1
+    required_inputs:
+      - skill_id
+      - feedback_summary
+    optional_inputs:
+      - source_run_id
+      - evidence_paths
+    required_permissions:
+      - read
+      - aggregate
+    forbidden_operations:
+      - auto_apply_patch
+      - write_back
+      - delete_data
+
 # ═══════════════════════════════════════════════════════════════
 # 全局治理规则（从 agent-skills 借鉴）
 # ═══════════════════════════════════════════════════════════════
