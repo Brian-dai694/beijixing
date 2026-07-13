@@ -1,26 +1,22 @@
 # 千里马 — 亚马逊运营 AI Agent Harness
-# 版本: v2.7.0 | 2026-07-11
+# 版本: v2.7.1 | 2026-07-13
 
 千里马计划是一个面向亚马逊卖家的 AI Agent Harness 系统。它不是另一个“关键词工具”或“广告管理面板”，而是 **Agent 治理层**：让 LLM 能可靠、安全、可追溯地执行亚马逊运营任务。
 
 ## 核心理念
 
-> Harness 不是 prompt 模板，而是运行时系统。
+> Harness 不是 prompt 模板，而是运行时系统。  
 > 它观察自己、诊断问题、积累经验，并持续自我改进。
 
-本项目借鉴了 [Lilian Weng — Harness Engineering for Self-Improvement (2026)](https://lilianweng.github.io/posts/2026-07-04-harness/) 以及多个 SOTA 项目的设计理念。v2.6.8 新增 Browser Task Space 治理层，吸收 ego-lite 的 Space / Snapshot / Skills 思想：浏览器任务必须有独立任务空间、语义快照、用户接管路径、确认门禁和成本节约记录。v2.6.9 新增体验优先响应层：启动入口使用指纹缓存和轻量路由；任务以阶段成果而不是空进度播报交付。v2.7.0 新增轻量任务运行内核：快照优先、SWR、可中断检查点、本地聚合、工具健康和质量仪表盘。
+本项目借鉴了 [Lilian Weng — Harness Engineering for Self-Improvement (2026)](https://lilianweng.github.io/posts/2026-07-04-harness/) 以及多个 SOTA 项目的设计理念。v2.7.1 完成分层启动、运行时策略、命令安全、评估、观测、记忆卡、子代理分工与状态化 Loop 的公开安全模板。
 
 ## 架构
 
 ```text
-千里马 Harness v2.7.0
+千里马 Harness v2.7.1
 ├── 场景智能路由      → 按场景精准加载，减少不必要上下文
-├── 热启动与快速路由  → 配置未变时复用校验结果，低风险任务只查紧凑路由索引
-├── 体验优先响应      → L0-L4 判级、3 秒阶段成果、A/B/C 证据等级与热状态复用
-├── 轻量任务运行内核  → 快照/SWR、任务合同、检查点、中断控制、本地聚合与健康降级
 ├── 健康自检          → 启动时自动检查骨架、索引和引用
 ├── Loop Engineering  → SDR / EVR / PBV / EDA 执行循环
-├── QianlimaEval      → Intent / Evidence / Dynamic / Cost / Risk 多维评分
 ├── 进化式改进        → fix / tune / A/B / extract / evolve 闭环
 ├── 子代理编排        → 任务分工、资源限制和交接规范
 ├── Context 2.0       → 动态上下文分配、智能压缩、实时监控
@@ -29,9 +25,13 @@
 ├── Skill 注册表      → trigger / scope / capability / quality gate 标准化
 ├── 自然语言路由      → 用户发任务后自动匹配 skill / workflow / MCP
 ├── 实时成本卡        → 每个非简单任务显示成本、节约、是否继续，使用统一模板
-├── 官方计费目录      → 按模型官方价格计算输入、缓存命中和输出成本
-├── Skill 自进化      → 反馈脱敏、三层归因、候选 Patch、验证后人工发布
-├── 浏览器任务空间    → 登录态浏览器任务的独立空间、语义快照、接管路径和确认门禁
+├── 分层启动          → L0-L4 按风险加载，缓存命中走快速状态检查
+├── 运行时策略        → 预算、沙箱、状态机和 L4 二次确认
+├── 命令安全 Hook     → 删除、覆盖、格式化和越界路径的前置拦截
+├── QianlimaEval      → 来源、风险、账本和首答延迟的分层验收
+├── Memory Cards      → 带来源、有效期与置信度的本地运营对象记忆
+├── Maker / Checker   → 子代理上下文隔离，父代理保留外部决策权
+├── 状态化 EVR Loop  → execute / verify / refine 可追溯循环
 ├── 多 Agent 入口     → Codex / Claude / Manus / Qoder CN / Lingma / LinkAI / Obsidian / 桌面端
 ├── 本地知识库        → Obsidian Vault、MOC、笔记模板、公私知识分离
 ├── KV Cache 优化     → 稳定前缀与缓存命中策略
@@ -72,25 +72,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\start-qianlima.ps1"
 ```text
 .qianlima/WORKSPACE_INDEX.md
 .qianlima/workspace-index.json
-.qianlima/codex-router.json
 ```
 
-首次启动、配置变更或 `-Force` 会完整重建和校验；其他启动复用指纹缓存。普通聊天不加载运营配置，高风险和歧义任务仍回读完整风险规则与任务卡。
-
-每个业务请求先用 `new-staged-response.ps1` 做 `L0-L4` 判级：3 秒内给出路线、已知事实或排除项，并用 `A=实时数据 / B=近期缓存 / C=历史记录或假设` 明确第一轮结论的可信度。需要决策、报告、跨源证据或高风险执行时才升级完整审计。
-
-### 5. 快照、预算与中断
-
-`v2.7.0` 让长任务不再是不可控黑盒：先用合格快照给初判，SWR 刷新只在可能改变结论时补发；长任务用任务合同保存检查点，用户可以切换为“只给结论 / 停止深查 / 报告 / 取消”。原始 CSV 先在本地聚合，模型只读取汇总和异常项。工具健康与体验事件会生成本地质量仪表盘，持续监控首次有用输出、最终交付、证据完整率和采纳率。
-
-这套内核只借鉴以下项目的设计，不安装其大型运行时：
-
-- LangGraph：状态机、检查点、人工中断。
-- Mem0：按需检索任务记忆，而非全量加载。
-- Langfuse：延迟归因、trace 与反馈指标。
-- LiteLLM：确定性路径优先，冲突或高风险时再升级推理。
-
-Agent 进入本仓库后，应先读取 `.qianlima/WORKSPACE_INDEX.md`、`.qianlima/CODEX_BOOT.md` 和 `.qianlima/risk-rules.yaml`，再选择任务卡并按需加载 workflow、模板、数据和治理文件。不要在启动阶段读取完整工作区。
+Agent 进入本仓库后，应先读取 `.qianlima/WORKSPACE_INDEX.md`，再按索引加载最小启动包。
 
 不同 Agent 可使用专用入口：
 
@@ -122,13 +106,11 @@ Agent 进入本仓库后，应先读取 `.qianlima/WORKSPACE_INDEX.md`、`.qianl
 ├── risk-rules.yaml               # 风险规则
 ├── rules/cost-savings-principle.md # 成本节约中心原则
 ├── rules/compression-attack-defense.md # 压缩攻击防御规则
-├── rules/browser-space-policy.md # 浏览器任务空间规则
 ├── context-policy.yaml           # 上下文策略
 ├── model-adapters.yaml           # 模型适配与 KV Cache 策略
 ├── meta-scenario-router.md       # 场景智能路由
 ├── workflow-index.yaml           # Workflow 索引
 ├── improvement-loop.yaml         # 进化式反馈闭环
-├── qianlima-eval.yaml            # QianlimaEval 运行质量评估配置
 ├── harness-health-check.yaml     # 健康自检
 ├── loop-engineering.yaml         # Loop Engineering 框架
 ├── subagent-orchestration.yaml   # 子代理编排
@@ -195,20 +177,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\new-cos
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\export-obsidian-vault.ps1" -OutputRoot ".\obsidian-export"
 ```
 
-生成 QianlimaEval 运行质量评估报告：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\new-qianlima-eval-report.ps1" -WorkflowId "product_discovery" -ReportPath ".\reports\your-report.md" -UserGoal "判断这个品类能不能做" -EstimatedCostUsd 0.03 -BaselineCostUsd 0.10 -CostLimitUsd 0.20
-```
-
-浏览器任务空间治理：
-
-```text
-workflow: browser_task_space
-rule: .qianlima/rules/browser-space-policy.md
-原则: 先声明任务空间和禁止动作，先读语义快照再行动，页面变化后重新快照，登录态写入必须确认。
-```
-
 为已确认的高风险动作生成本地 decision log：
 
 ```powershell
@@ -226,10 +194,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\new-dec
 
 | 版本 | 日期 | 变更 |
 |:--:|------|------|
-| v2.7.0 | 2026-07-11 | 新增轻量任务运行内核：快照优先/SWR、可中断任务合同、检查点、最小证据集、本地 CSV 聚合、工具健康分、延迟归因和质量仪表盘；高风险门禁不下沉 |
-| v2.6.9 | 2026-07-11 | 新增体验优先响应：L0-L4 快速判级、3 秒阶段成果、A/B/C 证据等级、脱敏热状态、最小 trace 到完整审计的升级规则 |
-| v2.6.8 | 2026-07-11 | 强化成本节约中心：新增官方模型价格目录、自动计费、零/未知用量阻断、成本超基线确认门禁、QianlimaEval 证据一致性检查、Skill 自进化第一步和 Browser Task Space；新增启动指纹缓存与低风险快速路由 |
-| v2.6.7 | 2026-07-10 | 新增 QianlimaEval 运行质量评估层：多维评分、硬阻断、成本节约评分和评估报告脚本 |
+| v2.7.1 | 2026-07-13 | Agent Harness 运行时升级：L0-L4 分层启动、快速状态检查、预算/沙箱/状态机、命令安全 Hook、QianlimaEval、延迟观测、私有 Memory Cards、Maker/Checker 分工与状态化 EVR Loop；公开模板完成隐私清理。 |
 | v2.6.6 | 2026-07-09 | 新增 Obsidian 本地知识库适配：Vault 策略、笔记模板、MOC 模板和 Git-safe 导出脚本 |
 | v2.6.5 | 2026-07-09 | 新增 LinkAI Cloud 发布入口和 Agent Prompt 模板，限定为 Git-safe 知识库问答与多渠道入口 |
 | v2.6.4 | 2026-07-09 | 新增通义灵码 / Qoder CN 专用入口：`QODER.md`、`LINGMA.md`，并同步启动提示 |
@@ -248,8 +213,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\new-dec
 ## 引用
 
 - Lilian Weng. “Harness Engineering for Self-Improvement.” 2026.
-- MiniAppBench/MiniAppEval. Multi-dimensional run evaluation and evidence trajectory pattern.
-- citrolabs/ego-lite. Space, Snapshot, ego-browser, and Skills design patterns.
 - XPolicyLab/XPolicyLab. Policy adapter and server-client separation pattern.
 - zsLiu2003/Comattack. COMA compression attack threat model.
 - 机器之心 SOTA：loop-engineering / memgovern / nemo-skills / alembic / gdpo / marshal / celery / awesome-kv-cache-optimization
