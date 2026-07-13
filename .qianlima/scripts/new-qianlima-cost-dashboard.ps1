@@ -1,3 +1,18 @@
+<#
+.SYNOPSIS
+Build a Markdown cost dashboard from the JSONL run ledger.
+.DESCRIPTION
+Reads .qianlima/usage-ledger/runs.jsonl and optional baselines.json, filters runs
+to the last N days, and computes total and last-7-day cost, per-workflow cost with
+baseline overrun flags, a daily trend with bar chart, cost per outcome unit, and a
+latency breakdown. Writes a UTF-8 (no BOM) Markdown report to OutputPath.
+.PARAMETER Days
+Size of the reporting window in days, 1-365 (default 30).
+.PARAMETER OutputPath
+Output Markdown path; defaults to .qianlima/reports/cost-dashboard.md.
+.EXAMPLE
+.\new-qianlima-cost-dashboard.ps1 -Days 14
+#>
 param(
   [ValidateRange(1, 365)]
   [int]$Days = 30,

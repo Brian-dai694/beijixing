@@ -1,3 +1,16 @@
+<#
+.SYNOPSIS
+  Generate the Qianlima workspace startup index in Markdown and JSON.
+.DESCRIPTION
+  Scans the .qianlima root for startup, deferred governance, and governance files, and
+  enumerates task-cards, workflows, templates, and playbooks. Writes a human-readable
+  WORKSPACE_INDEX.md and a machine-readable workspace-index.json, and drops a latest-run
+  summary into the logs folder when it exists.
+.PARAMETER Root
+  Path to the .qianlima root. Defaults to the parent of the script directory.
+.EXAMPLE
+  powershell -NoProfile -File .\bootstrap-qianlima.ps1
+#>
 param(
   [string]$Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 )

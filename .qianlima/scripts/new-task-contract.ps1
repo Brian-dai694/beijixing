@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+    Creates a task-contract JSON file for a request under working/.
+.DESCRIPTION
+    Builds a contract capturing the request id, route, reliability mode, and
+    decision type, then computes a time budget (defaulting per reliability
+    mode) and the minimum evidence list required for that decision type.
+    Writes it to working/task-contract-<RequestId>.json.
+.PARAMETER RequestId
+    Short file-safe identifier for the request; used in the output file name.
+.PARAMETER Route
+    Route/workflow the task is being run under.
+.PARAMETER ReliabilityMode
+    quick, evidence, or execute; sets the default time budget.
+.PARAMETER DecisionType
+    Decision category that selects the minimum evidence checklist.
+.EXAMPLE
+    ./new-task-contract.ps1 -RequestId req-101 -Route replenishment -ReliabilityMode evidence -DecisionType replenishment
+#>
 param(
   [Parameter(Mandatory)]
   [string]$RequestId,

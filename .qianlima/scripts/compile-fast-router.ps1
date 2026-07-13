@@ -1,3 +1,16 @@
+<#
+.SYNOPSIS
+  Compile natural-language-router.yaml into a compact codex-router.json index.
+.DESCRIPTION
+  Parses .qianlima/natural-language-router.yaml line by line, extracting each route's
+  id, intent, strong signals, skill, workflow, tools, and risk. Builds a trigger map
+  from signals to route ids and writes a versioned codex-router.json. Throws if the
+  source YAML is missing or no routes are compiled.
+.PARAMETER Root
+  Path to the .qianlima root holding the router YAML. Defaults to the script's parent.
+.EXAMPLE
+  powershell -NoProfile -File .\compile-fast-router.ps1
+#>
 param(
   [string]$Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 )

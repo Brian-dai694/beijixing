@@ -1,3 +1,18 @@
+<#
+.SYNOPSIS
+  Decide whether to serve, refresh, or replace a cached snapshot.
+.DESCRIPTION
+  Reads a JSON snapshot and checks its quality status and age against its TTL plus a
+  stale-while-revalidate window. Returns a decision (serve, serve-and-refresh, stale
+  refresh, or live-evidence-required) with an evidence grade, reason, and the snapshot
+  facts, anomalies, and source refs. Throws if the snapshot file is missing.
+.PARAMETER SnapshotPath
+  Path to the JSON snapshot file to evaluate.
+.PARAMETER SWRSeconds
+  Stale-while-revalidate window in seconds added to the TTL. Defaults to 3600.
+.EXAMPLE
+  .\get-snapshot-decision.ps1 -SnapshotPath .\working\snap.json -Json
+#>
 param(
   [Parameter(Mandatory)]
   [string]$SnapshotPath,

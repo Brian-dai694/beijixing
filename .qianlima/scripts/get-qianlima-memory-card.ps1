@@ -1,3 +1,19 @@
+<#
+.SYNOPSIS
+  Load a cached Qianlima memory card and report its freshness.
+.DESCRIPTION
+  Resolves memory\cards\<EntityType>\<EntityId>.json under the project root and reads it
+  as JSON. Compares the card's expires_at against current UTC time to mark it fresh or
+  stale and to flag whether a source reload is required. Throws if the card file is missing.
+.PARAMETER EntityType
+  Card category: asin, sku, campaign, or keyword.
+.PARAMETER EntityId
+  File-safe identifier of the card to load.
+.PARAMETER AsJson
+  Emit the full result including the card as JSON.
+.EXAMPLE
+  .\get-qianlima-memory-card.ps1 -EntityType asin -EntityId B0ABC12345 -AsJson
+#>
 param(
   [Parameter(Mandatory = $true)]
   [ValidateSet('asin', 'sku', 'campaign', 'keyword')]

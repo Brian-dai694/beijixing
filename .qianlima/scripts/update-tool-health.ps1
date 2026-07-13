@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+Records a tool invocation outcome and recomputes its health tier.
+.DESCRIPTION
+Updates working/tool-health.json for the named tool, accumulating attempts,
+successes, timeouts, duration, and completeness. Recalculates success rate and
+averages, then assigns a health tier: primary, fallback, or avoid based on
+success rate, completeness, and timeout counts. Creates the file if missing.
+.PARAMETER ToolName
+File-safe name of the tool whose health record is updated.
+.PARAMETER DurationMs
+Duration of this invocation in milliseconds (0 to 3600000).
+.PARAMETER Outcome
+Result of this call: success or failure (default success).
+.PARAMETER TimedOut
+Marks this invocation as a timeout, raising the timeout count.
+.EXAMPLE
+.\update-tool-health.ps1 -ToolName search_amazon -DurationMs 1200 -Outcome success
+#>
 param(
   [Parameter(Mandatory)]
   [string]$ToolName,

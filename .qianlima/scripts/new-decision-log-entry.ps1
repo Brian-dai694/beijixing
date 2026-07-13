@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+Create a proposed decision-log YAML entry for a workflow action.
+.DESCRIPTION
+Writes a structured decision_log_entry YAML file under logs/ that captures the
+scenario, action type, risk level, recommendation, evidence source refs and
+verification scaffolding. High-risk action types (change_bid, change_price,
+write_back, delete_data, etc.) require a UserConfirmationRef, and an existing log
+is not overwritten unless Force is supplied.
+.PARAMETER WorkflowId
+Workflow the decision belongs to.
+.PARAMETER ActionType
+Proposed action; high-risk values force a required user confirmation reference.
+.PARAMETER RiskLevel
+Risk classification: low, medium, high or critical (default medium).
+.PARAMETER UserConfirmationRef
+Reference proving user confirmation; mandatory for high-risk actions.
+.EXAMPLE
+.\new-decision-log-entry.ps1 -WorkflowId bid_review -ActionType change_bid -UserConfirmationRef chat-123
+#>
 param(
   [string]$Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [string]$RunId = "$(Get-Date -Format 'yyyy-MM-dd')_manual_001",

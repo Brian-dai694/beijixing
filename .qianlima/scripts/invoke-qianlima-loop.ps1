@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+Drive an Execute-Verify-Refine loop state machine for a workflow run.
+.DESCRIPTION
+Manages a JSON loop-state file under .qianlima/run-traces. Start creates a new
+state in the execute phase; Advance transitions execute/verify/refine based on the
+supplied Outcome, incrementing the iteration counter and freezing once MaxIterations
+is reached; Status reports the current state. Every change appends a history entry.
+.PARAMETER WorkflowId
+Lowercase workflow identifier used to name the run and state file.
+.PARAMETER Action
+Operation to perform: Start, Advance or Status (default Status).
+.PARAMETER Outcome
+Transition trigger required for Advance (e.g. execute_complete, verify_pass, stop).
+.PARAMETER MaxIterations
+Maximum refine iterations before the loop freezes, 1-10 (default 3).
+.EXAMPLE
+.\invoke-qianlima-loop.ps1 -WorkflowId daily_ad_report -Action Start
+#>
 param(
   [Parameter(Mandatory = $true)]
   [ValidatePattern('^[a-z0-9][a-z0-9_-]*$')]

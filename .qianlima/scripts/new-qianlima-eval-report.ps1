@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+Score a workflow run report across intent, quality, execution, cost and risk.
+.DESCRIPTION
+Inspects a report artifact plus optional trace and usage ledger files, scans the
+content for goals, structure, sources, cost cards and high-risk actions, then
+computes a weighted score. Applies hard blocks for missing artifacts, detected
+credentials or unconfirmed high-risk actions, and writes a Markdown eval report
+with a pass, review or blocked status.
+.PARAMETER WorkflowId
+Workflow identifier used to name the run and output report.
+.PARAMETER ReportPath
+Path to the report artifact to evaluate (required for context levels above L0).
+.PARAMETER ContextLevel
+Context depth L0-L4 that adjusts required evidence and latency targets (default L2).
+.PARAMETER EstimatedCostUsd
+Estimated run cost in USD; compared against baseline and limit when provided.
+.EXAMPLE
+.\new-qianlima-eval-report.ps1 -WorkflowId daily_ad_report -ReportPath .\reports\report.md
+#>
 param(
   [Parameter(Mandatory = $true)]
   [string]$WorkflowId,

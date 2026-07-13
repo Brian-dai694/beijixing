@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+    Creates a YAML usage-ledger record for a single run.
+.DESCRIPTION
+    Writes a per-run usage/cost ledger file under usage-ledger. Validates that
+    token and cost inputs are non-negative, optionally prices the run from the
+    model cost catalog (-AutoPrice), and computes savings and savings rate from
+    the baseline. Flags cost_status as over_limit or over_baseline_guard and
+    may switch continue_or_stop to needs_confirmation.
+.PARAMETER RunId
+    Run identifier; sanitized to form the YAML file name.
+.PARAMETER AutoPrice
+    Price the run from get-model-cost.ps1 instead of using manual estimates.
+.PARAMETER CostLimit
+    Cost ceiling; exceeding it marks the run over_limit.
+.PARAMETER Force
+    Overwrite an existing ledger file for the same run id.
+.EXAMPLE
+    ./new-usage-record.ps1 -RunId 2026-07-13_run_001 -ModelProvider openai -ModelName gpt-x -InputTokens 1000 -OutputTokens 500 -AutoPrice
+#>
 param(
   [string]$Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [string]$RunId = "$(Get-Date -Format 'yyyy-MM-dd')_manual_001",

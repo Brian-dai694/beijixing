@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+    Stage-0 quick classifier for an incoming natural-language request.
+.DESCRIPTION
+    Loads the compact router (codex-router.json) and response policy, then
+    matches the request text against route signals plus built-in high-risk,
+    business, and small-talk signal sets. Emits a service level (L0-L4),
+    selected route, risk status, evidence grade, and recommended next action.
+.PARAMETER Request
+    The user request text to classify.
+.PARAMETER Freshness
+    Freshness hint (live, fresh, cache, ...) used to derive the evidence grade.
+.PARAMETER KnownFact
+    A known fact that lets a request resolve at L1 without loading evidence.
+.PARAMETER Json
+    Emit the classification result as JSON instead of formatted host output.
+.EXAMPLE
+    ./new-staged-response.ps1 -Request "check ACoS for this ASIN" -Freshness cache -Json
+#>
 param(
   [Parameter(Mandatory)]
   [string]$Request,

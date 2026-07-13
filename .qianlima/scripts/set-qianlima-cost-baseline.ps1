@@ -1,3 +1,18 @@
+<#
+.SYNOPSIS
+Computes and stores a median cost baseline for a workflow.
+.DESCRIPTION
+Reads usage-ledger/runs.jsonl, selects the most recent completed runs for the
+given workflow, and computes the median estimated_cost_usd over SampleSize runs.
+Throws if fewer than SampleSize completed runs exist. Merges the resulting
+baseline into usage-ledger/baselines.json, replacing any prior entry.
+.PARAMETER WorkflowId
+Lowercase workflow identifier to build the baseline for.
+.PARAMETER SampleSize
+Number of recent completed runs to use for the median (3 to 100, default 5).
+.EXAMPLE
+.\set-qianlima-cost-baseline.ps1 -WorkflowId daily_ad_report -SampleSize 7
+#>
 param(
   [Parameter(Mandatory = $true)]
   [ValidatePattern('^[a-z0-9][a-z0-9_-]*$')]

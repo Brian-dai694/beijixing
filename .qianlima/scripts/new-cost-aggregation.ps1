@@ -3,6 +3,23 @@
 # Usage: .\new-cost-aggregation.ps1 [-OutputPath <path>] [-DaysBack <int>]
 # Scans usage-ledger/*.yaml, outputs Markdown cost dashboard.
 
+<#
+.SYNOPSIS
+Generate a Markdown cost aggregation dashboard from usage-ledger YAML files.
+.DESCRIPTION
+Scans usage-ledger/*.yaml and parses each run's run/token/cost/result sections.
+Aggregates estimated cost by week, month and a rolling window, then by workflow
+and by day. Compares each run to a workflow baseline to compute total savings and
+flag runs that exceed 2x baseline. Writes Markdown to OutputPath or to the console.
+.PARAMETER OutputPath
+File path for the Markdown report; when empty the report is written to the console.
+.PARAMETER DaysBack
+Number of days back to include when filtering ledger records (default 30).
+.PARAMETER JsonOnly
+Reserved switch; JSON export is not implemented and exits early.
+.EXAMPLE
+.\new-cost-aggregation.ps1 -DaysBack 7 -OutputPath .\reports\cost.md
+#>
 param(
     [string]$OutputPath = "",
     [int]$DaysBack = 30,

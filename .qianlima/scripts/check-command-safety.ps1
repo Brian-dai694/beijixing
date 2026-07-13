@@ -1,3 +1,20 @@
+<#
+.SYNOPSIS
+  Classify a shell command as allow, confirmation-required, or deny.
+.DESCRIPTION
+  Inspects a command string for destructive verbs, recursion, wildcards, variable paths,
+  and parent traversal, then resolves literal target paths. Destructive commands need an
+  explicit in-workspace target, and recursive ops are limited to approved runtime scopes.
+  Returns the classification and reasons; by default exits 10 for confirmation and 20 for deny.
+.PARAMETER Command
+  The full command string to evaluate.
+.PARAMETER AsJson
+  Emit the result object as JSON instead of console text.
+.PARAMETER NoExit
+  Do not set a non-zero exit code for confirmation or deny outcomes.
+.EXAMPLE
+  .\check-command-safety.ps1 -Command 'Remove-Item .\.qianlima\tmp\a.txt' -AsJson
+#>
 param(
   [Parameter(Mandatory = $true)]
   [string]$Command,

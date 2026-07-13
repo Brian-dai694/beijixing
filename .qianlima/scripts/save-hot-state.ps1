@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+    Saves session or task hot-state to a JSON file under working/.
+.DESCRIPTION
+    Persists the currently selected route, service level, evidence grade,
+    freshness, source refs, pending checks, and last action summary for a
+    session (or a specific object). Rejects file-unsafe ids and refuses to
+    store sensitive values such as api keys, tokens, cookies, or account ids.
+.PARAMETER SessionId
+    Short file-safe session identifier; required.
+.PARAMETER Route
+    The currently selected route to persist.
+.PARAMETER ServiceLevel
+    Service level L0-L4 for the session.
+.PARAMETER ObjectId
+    Optional object id; when set, state is saved as task-memory-<ObjectId>.json.
+.EXAMPLE
+    ./save-hot-state.ps1 -SessionId sess-1 -Route replenishment -ServiceLevel L2 -EvidenceGrade B
+#>
 param(
   [Parameter(Mandatory)]
   [string]$SessionId,

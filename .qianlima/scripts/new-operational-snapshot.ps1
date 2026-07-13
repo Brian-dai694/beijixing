@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+Save a short-lived operational snapshot as JSON.
+.DESCRIPTION
+Writes a route-keyed snapshot JSON containing facts, anomalies and source refs to
+working/snapshots (or a custom OutputPath). Rejects any value that looks like a
+sensitive field (api key, token, cookie, password, account id, email, phone) and
+requires the route to be a short file-safe identifier. Records a TTL and quality status.
+.PARAMETER Route
+Short file-safe identifier used as the snapshot key and file name.
+.PARAMETER Fact
+One or more fact strings to store in the snapshot.
+.PARAMETER TtlSeconds
+Time-to-live in seconds, 60-86400 (default 900).
+.PARAMETER QualityStatus
+Quality gate result, passed or failed (default passed).
+.EXAMPLE
+.\new-operational-snapshot.ps1 -Route asin-b012 -Fact "bsr rose 12%" -TtlSeconds 1800
+#>
 param(
   [Parameter(Mandatory)]
   [string]$Route,

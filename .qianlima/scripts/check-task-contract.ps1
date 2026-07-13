@@ -1,3 +1,18 @@
+<#
+.SYNOPSIS
+  Evaluate and update a task contract's state and delivery mode.
+.DESCRIPTION
+  Loads working\task-contract-<RequestId>.json, compares now against its deadline, and
+  checks the control flag. Cancels, freezes, or leaves the contract running accordingly,
+  stamps last_checked_at, and writes it back. Returns whether external reads may continue
+  plus the delivery mode and pending checks. Throws on an unsafe RequestId or missing file.
+.PARAMETER RequestId
+  Short file-safe id identifying the task contract.
+.PARAMETER Root
+  Path to the .qianlima root; defaults to the script's parent when empty.
+.EXAMPLE
+  .\check-task-contract.ps1 -RequestId req-2026-0713-01 -Json
+#>
 param(
   [Parameter(Mandatory)]
   [string]$RequestId,

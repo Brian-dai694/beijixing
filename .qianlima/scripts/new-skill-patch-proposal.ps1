@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+    Creates a candidate-only skill patch proposal markdown file.
+.DESCRIPTION
+    Records a proposed change to a skill's routing, instruction, or resource
+    layer as a timestamped document under feedback/skill-evolution. Captures
+    the problem, proposed change, evidence paths, a success metric, and a
+    rollback plan. The proposal is candidate_only and applies no change.
+.PARAMETER SkillId
+    Identifier of the skill being patched; sanitized for use in the file name.
+.PARAMETER TargetLayer
+    Layer to change: routing, instruction, or resource.
+.PARAMETER ProposedChange
+    Description of the concrete change being proposed.
+.PARAMETER SuccessMetric
+    Metric used to validate the candidate against the current version.
+.EXAMPLE
+    ./new-skill-patch-proposal.ps1 -SkillId keyword-diag -TargetLayer instruction -TargetFile skill.md -ProblemStatement "misroutes" -ProposedChange "add signal" -SuccessMetric "route accuracy +5%"
+#>
 param(
   [Parameter(Mandatory = $true)]
   [string]$SkillId,

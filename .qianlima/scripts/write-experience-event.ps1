@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+Appends a structured experience event to the JSONL log.
+.DESCRIPTION
+Builds a schema-versioned event record for a run and appends it as one compact
+JSON line to logs/experience-events.jsonl, creating the log directory if needed.
+The yes/no/unknown flags for evidence, adoption, and snapshot hit are converted
+to nullable booleans. Throws if the RunId is not a short file-safe identifier.
+.PARAMETER RunId
+File-safe identifier tying the event to a specific run.
+.PARAMETER EventType
+Event kind, e.g. first_delivery, tool_call, snapshot_decision, task_frozen.
+.PARAMETER Component
+Pipeline component that emitted the event, e.g. routing, snapshot, tool, model.
+.PARAMETER LatencyMs
+Observed latency for the event in milliseconds.
+.EXAMPLE
+.\write-experience-event.ps1 -RunId run-42 -EventType tool_call -Component tool -LatencyMs 850
+#>
 param(
   [Parameter(Mandatory)]
   [string]$RunId,

@@ -1,3 +1,16 @@
+<#
+.SYNOPSIS
+Validates the Qianlima workspace skeleton and privacy guards.
+.DESCRIPTION
+Checks that required directories, project files, and public template files exist,
+warning about expected-absent private files. Verifies that paths referenced by
+workflow-index.yaml resolve, then scans tracked text files for leaked Windows
+user paths and secrets. Exits 1 and lists issues on any failure.
+.PARAMETER Root
+Path to the .qianlima workspace root; defaults to the parent of this script.
+.EXAMPLE
+.\validate-qianlima.ps1
+#>
 param(
   [string]$Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 )

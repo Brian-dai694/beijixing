@@ -1,3 +1,18 @@
+<#
+.SYNOPSIS
+  Aggregate experience events into a quality metrics dashboard.
+.DESCRIPTION
+  Reads logs\experience-events.jsonl and computes averages and rates: first useful output
+  and final delivery latency, evidence completeness, user adoption, snapshot hit rate, and
+  average latency grouped by component. Writes the dashboard JSON to OutputPath (defaults
+  to working\quality-dashboard.json) and prints or returns it.
+.PARAMETER Root
+  Path to the .qianlima root; defaults to the script's parent when empty.
+.PARAMETER OutputPath
+  Destination JSON file; defaults to working\quality-dashboard.json under Root.
+.EXAMPLE
+  .\get-quality-dashboard.ps1 -Json
+#>
 param(
   [string]$Root = '',
   [string]$OutputPath = '',

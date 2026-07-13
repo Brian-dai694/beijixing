@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+    Appends a single run's usage metrics as one JSON line to the ledger.
+.DESCRIPTION
+    Builds a usage record (tokens, tool calls, latency breakdowns, cost, and
+    outcome) for a workflow run and appends it as one compact JSON object to
+    .qianlima/usage-ledger/runs.jsonl. Generates a run id when none is given
+    and creates the ledger directory if needed. Append-only for safe incremental use.
+.PARAMETER WorkflowId
+    Lowercase workflow identifier (validated pattern); required.
+.PARAMETER RunId
+    Run identifier; auto-generated from the workflow id and timestamp if empty.
+.PARAMETER Status
+    Run outcome: completed, partial, failed, or cancelled.
+.PARAMETER PassThru
+    Return the ledger path, run id, and record object instead of host messages.
+.EXAMPLE
+    ./record-qianlima-usage.ps1 -WorkflowId keyword_diagnosis -InputTokens 1200 -OutputTokens 340 -ToolCalls 3
+#>
 param(
   [Parameter(Mandatory = $true)]
   [ValidatePattern('^[a-z0-9][a-z0-9_-]*$')]

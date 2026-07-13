@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+Writes a per-entity memory card JSON file with an expiry.
+.DESCRIPTION
+Builds a memory card for an ASIN, SKU, campaign, or keyword and saves it under
+memory/cards/<EntityType>/<EntityId>.json. Facts are parsed from key=value
+strings, all inputs are scanned for credential-like material and rejected, and
+an expires_at timestamp is derived from FreshForHours.
+.PARAMETER EntityType
+Entity kind: asin, sku, campaign, or keyword (selects the target folder).
+.PARAMETER EntityId
+File-safe identifier for the entity; becomes the card file name.
+.PARAMETER SourceRef
+One or more source references backing the card's facts.
+.PARAMETER Fact
+Zero or more key=value strings stored as structured facts.
+.EXAMPLE
+.\set-qianlima-memory-card.ps1 -EntityType asin -EntityId B0EXAMPLE -SourceRef report#12 -Fact 'price=19.99'
+#>
 param(
   [Parameter(Mandatory = $true)]
   [ValidateSet('asin', 'sku', 'campaign', 'keyword')]

@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+Summarizes a local CSV into numeric stats and group counts.
+.DESCRIPTION
+Imports the CSV and produces a schema-versioned report: per-column numeric
+summaries (valid/invalid counts, sum, average, min, max) for each NumericColumn,
+and top group row counts for each GroupBy field. Reports missing columns and
+records a rerun command. Emits JSON to OutputPath and/or stdout.
+.PARAMETER InputPath
+Path to the source .csv file; must exist and have a .csv extension.
+.PARAMETER NumericColumn
+Columns to aggregate numerically; accepts comma-separated values.
+.PARAMETER GroupBy
+Columns to group rows by for top-count reporting.
+.PARAMETER OutputPath
+Optional file to write the JSON result to; stdout is used when omitted.
+.EXAMPLE
+.\summarize-csv.ps1 -InputPath data\ads.csv -NumericColumn spend,sales -GroupBy campaign
+#>
 param(
   [Parameter(Mandatory)]
   [string]$InputPath,

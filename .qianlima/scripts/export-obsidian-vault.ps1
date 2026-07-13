@@ -1,3 +1,18 @@
+<#
+.SYNOPSIS
+  Export a Git-safe Obsidian vault from public Qianlima docs.
+.DESCRIPTION
+  Builds a numbered vault folder tree under OutputRoot, then copies public entry docs,
+  agent entrypoints, workflows, task-cards, rules, and templates into it. Validates the
+  resolved vault path before writing and refuses unsafe targets. Fails if the vault
+  exists unless -Force is given, and writes a Qianlima-Home MOC note.
+.PARAMETER OutputRoot
+  Directory that will contain the qianlima-git-safe-vault folder.
+.PARAMETER Force
+  Overwrite an existing vault instead of refusing.
+.EXAMPLE
+  powershell -NoProfile -File .\export-obsidian-vault.ps1 -Force
+#>
 param(
   [string]$Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [string]$OutputRoot = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path 'obsidian-export'),

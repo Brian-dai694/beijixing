@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+Record a redacted skill feedback observation as a YAML file.
+.DESCRIPTION
+Creates a timestamped YAML record under feedback/skill-evolution capturing a
+skill feedback event and its candidate layer. Redacts api keys, tokens, passwords,
+emails and phone numbers from the summary and evidence paths. Validates that
+confidence is between 0 and 1 and marks the record for classify-and-propose-only.
+.PARAMETER SkillId
+Identifier of the skill the feedback concerns; sanitized for the file name.
+.PARAMETER FeedbackType
+Kind of feedback: correction, rejection, failure, request or acceptance.
+.PARAMETER FeedbackSummary
+Free-text summary of the feedback; sensitive values are redacted before storage.
+.PARAMETER Confidence
+Confidence score between 0 and 1 (default 0.5).
+.EXAMPLE
+.\new-skill-feedback-record.ps1 -SkillId keyword-scan -LayerCandidate routing -FeedbackType correction -FeedbackSummary "wrong route chosen"
+#>
 param(
   [Parameter(Mandatory = $true)]
   [string]$SkillId,
