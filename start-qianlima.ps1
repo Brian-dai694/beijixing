@@ -76,6 +76,10 @@ function Get-QianlimaStartupSourceState {
     if ($pathParts | Where-Object { $_ -in $excludedDirectories }) {
       return
     }
+    # Candidate drafts are shadow-only and must not invalidate the production startup cache.
+    if (($relativePath -replace '\\', '/') -match '^evolution/candidates(?:/|$)') {
+      return
+    }
     if ($_.PSIsContainer) {
       $directories.Add($_)
       return
@@ -101,6 +105,7 @@ function Get-QianlimaStartupSourceState {
       $relativePath = $_.FullName.Substring($QianlimaRoot.Length).TrimStart('\', '/')
       $pathParts = $relativePath -split '[\\/]'
       if ($pathParts | Where-Object { $_ -in $excludedDirectories }) { return $false }
+      if (($relativePath -replace '\\', '/') -match '^evolution/candidates(?:/|$)') { return $false }
       if (-not $_.PSIsContainer -and $relativePath -in $generatedFiles) { return $false }
       return $true
     } | Sort-Object Name | ForEach-Object {
@@ -155,6 +160,7 @@ function Test-QianlimaStartupCache([object]$Cache) {
       $relativePath = $_.FullName.Substring($QianlimaRoot.Length).TrimStart('\', '/')
       $pathParts = $relativePath -split '[\\/]'
       if ($pathParts | Where-Object { $_ -in @('archive', 'context-summaries', 'evaluations', 'exports', 'feedback', 'inbox', 'local-data', 'logs', 'run-traces', 'usage-ledger', 'working') }) { return $false }
+      if (($relativePath -replace '\\', '/') -match '^evolution/candidates(?:/|$)') { return $false }
       if (-not $_.PSIsContainer -and $relativePath -in @('WORKSPACE_INDEX.md', 'workspace-index.json', 'startup-cache.json', 'codex-router.json')) { return $false }
       return $true
     } | Sort-Object Name | ForEach-Object {
