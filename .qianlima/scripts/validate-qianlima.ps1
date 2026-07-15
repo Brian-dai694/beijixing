@@ -132,10 +132,10 @@ foreach ($relative in $privacyScanFiles) {
   if ($relative -match '(^|/)\.git/|(^|/)\.qianlima/WORKSPACE_INDEX\.md$|(^|/)\.qianlima/workspace-index\.json$|(^|/)\.qianlima/usage-ledger/|(^|/)\.qianlima/logs/') { continue }
   $scanPath = Join-Path $ProjectRoot $relative
   if (-not (Test-Path -LiteralPath $scanPath -PathType Leaf)) { continue }
-  $item = Get-Item -LiteralPath $scanPath
+  $item = Get-Item -LiteralPath $scanPath -Force
   if ($item.Length -gt 1048576) { continue }
   if ($item.Extension -notin @('.md', '.yaml', '.yml', '.ps1', '.json', '.txt', '.gitignore', '.gitattributes')) { continue }
-  $content = Get-Content -LiteralPath $scanPath -Encoding UTF8 -Raw
+  $content = Get-Content -LiteralPath $scanPath -Encoding UTF8 -Raw -Force
   foreach ($privacyPattern in $privacyPatterns) {
     if ($content -match $privacyPattern.Pattern) {
       Add-Issue "Privacy guard failed ($($privacyPattern.Name)): $relative"
