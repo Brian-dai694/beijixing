@@ -92,10 +92,10 @@ foreach ($relative in $files) {
   if ($relative -match '(^|/)\.qianlima/WORKSPACE_INDEX\.md$|(^|/)\.qianlima/workspace-index\.json$|(^|/)\.qianlima/usage-ledger/|(^|/)\.qianlima/logs/') { continue }
   $path = Join-Path $ProjectRoot $relative
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
-  $item = Get-Item -LiteralPath $path
+  $item = Get-Item -LiteralPath $path -Force
   if ($item.Length -gt 1048576) { continue }
   if ($item.Extension -notin @('.md', '.yaml', '.yml', '.ps1', '.json', '.txt', '.gitignore', '.gitattributes')) { continue }
-  $text = Get-Content -LiteralPath $path -Encoding UTF8 -Raw
+  $text = Get-Content -LiteralPath $path -Encoding UTF8 -Raw -Force
   foreach ($pattern in $secretPatterns) {
     if ($text -match $pattern) {
       Add-Issue "Potential secret-like value found in public-safe scan: $relative"
