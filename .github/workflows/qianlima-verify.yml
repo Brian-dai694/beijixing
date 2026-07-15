@@ -55,6 +55,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Restore public runtime files
+        shell: bash
+        run: |
+          git checkout --force HEAD -- .qianlima
+          test -d .qianlima
+
       - name: Install PowerShell 7
         shell: bash
         run: |
