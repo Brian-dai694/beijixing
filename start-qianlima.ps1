@@ -69,8 +69,8 @@ function Get-QianlimaStartupSourceState {
     }
   }
 
-  $directories.Add((Get-Item -LiteralPath $QianlimaRoot))
-  Get-ChildItem -LiteralPath $QianlimaRoot -Recurse | ForEach-Object {
+  $directories.Add((Get-Item -LiteralPath $QianlimaRoot -Force))
+  Get-ChildItem -LiteralPath $QianlimaRoot -Recurse -Force | ForEach-Object {
     $relativePath = $_.FullName.Substring($QianlimaRoot.Length).TrimStart('\', '/')
     $pathParts = $relativePath -split '[\\/]'
     if ($pathParts | Where-Object { $_ -in $excludedDirectories }) {
