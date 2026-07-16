@@ -10,6 +10,7 @@ $cardPath = Join-Path $projectRoot ('.qianlima\local-a2a-agents\{0}\agent-card.j
 $registryPath = Join-Path $projectRoot '.qianlima\local-a2a-agents.json'
 $traceRoot = Join-Path $projectRoot '.qianlima\run-traces'
 $localAgentScript = Join-Path $PSScriptRoot 'invoke-local-readonly-a2a-agent.ps1'
+$grantScript = Join-Path $PSScriptRoot 'new-delegation-grant.ps1'
 
 if (-not (Test-Path -LiteralPath $cardPath -PathType Leaf)) { throw "Local Agent Card not found: $cardPath" }
 if (-not (Test-Path -LiteralPath $registryPath -PathType Leaf)) { throw "Local agent registry not found: $registryPath" }
@@ -37,8 +38,19 @@ $envelope = [ordered]@{
   stop_conditions = @('evidence_sufficient'); prohibited = @('hidden_reasoning', 'full_memory', 'secrets', 'raw_workspace_export', 'external_write')
 }
 [IO.File]::WriteAllText($envelopePath, ($envelope | ConvertTo-Json -Depth 8), [Text.UTF8Encoding]::new($false))
-$mockResult = & $localAgentScript -EnvelopePath $envelopePath -PassThru | ConvertFrom-Json
+$grantId = "onboarding-grant-$stamp"
+$grantPath = Join-Path $traceRoot "delegation-grants/$grantId.json"
+& $grantScript -GrantId $grantId -AgentId $AgentId -TaskId $taskId -WorkOrderId "onboarding-order-$stamp" -DataRef 'artifact-onboarding-sanitized' -AllowedTool 'read_selected_sources' -RiskCeiling L3 -VerifierAgentId 'evidence_checker' | Out-Null
+$mockResult = & $localAgentScript -EnvelopePath $envelopePath -GrantPath $grantPath -PassThru | ConvertFrom-Json
 $cases += [PSCustomObject]@{ name = 'local_contract_exchange'; passed = ($mockResult.status -eq 'completed' -and (Test-Path -LiteralPath $mockResult.artifact_path)) }
+$revokeScript = Join-Path $PSScriptRoot 'revoke-delegation-grant.ps1'
+& $revokeScript -GrantId $grantId -Reason 'Contract test revocation check.' | Out-Null
+$previousPreference = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+$revoked = powershell.exe -NoProfile -ExecutionPolicy Bypass -File $localAgentScript -EnvelopePath $envelopePath -GrantPath $grantPath -PassThru 2>&1
+$revokedExit = $LASTEXITCODE
+$ErrorActionPreference = $previousPreference
+$cases += [PSCustomObject]@{ name = 'revoked_grant_rejected'; passed = ($revokedExit -ne 0 -and ($revoked -join "`n") -match 'revoked') }
 
 $failed = @($cases | Where-Object { -not $_.passed })
 $result = [PSCustomObject]@{ agent_id = $AgentId; passed = ($failed.Count -eq 0); cases = $cases }

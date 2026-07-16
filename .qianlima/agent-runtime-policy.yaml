@@ -198,6 +198,11 @@ agent_runtime_policy:
     evidence_creator: scripts/new-evidence-receipt.ps1
     direct_agent_to_agent: prohibited
     failure_default: revoke_and_shrink
+    runtime_enforcement:
+      local_invoke_requires_grant: true
+      revocation_ledger: .qianlima/run-traces/grant-revocations.jsonl
+      audit_events: scripts/write-audit-event.ps1
+      revoked_grant_action: deny_before_tool_use
 
   a2a_internal_contract:
     compatibility: a2a-compatibility.yaml
