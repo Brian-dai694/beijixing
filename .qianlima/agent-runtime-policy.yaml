@@ -189,6 +189,16 @@ agent_runtime_policy:
     no_secret_in_order: true
     manager_owned_fan_in: required
 
+  broker_contracts:
+    capability_contract: capability-contract-schema.yaml
+    trust_policy: agent-trust-policy.yaml
+    delegation_grant: delegation-grant-schema.yaml
+    grant_creator: scripts/new-delegation-grant.ps1
+    evidence_receipt: evidence-receipt-schema.yaml
+    evidence_creator: scripts/new-evidence-receipt.ps1
+    direct_agent_to_agent: prohibited
+    failure_default: revoke_and_shrink
+
   a2a_internal_contract:
     compatibility: a2a-compatibility.yaml
     task_state: a2a-task-state.yaml

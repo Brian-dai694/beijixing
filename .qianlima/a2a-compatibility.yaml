@@ -20,6 +20,7 @@ a2a_compatibility:
   model_mapping:
     agent_card:
       qianlima_source: agent-cards.yaml
+      capability_contract: capability-contract-schema.yaml
       exchange_policy: "Declare only externally safe capability metadata."
       authority_rule: "A card is discovery metadata, never a permission grant."
     context:
@@ -37,7 +38,15 @@ a2a_compatibility:
       rule: "Exchange references, hashes, media types, and bounded summaries; never inline sensitive raw content."
     receipt:
       qianlima_source: run receipt and usage ledger
+      evidence_receipt: evidence-receipt-schema.yaml
       rule: "The manager records verification and final decision outside the delegated agent."
+
+  broker_contracts:
+    delegation_grant: delegation-grant-schema.yaml
+    grant_creator: scripts/new-delegation-grant.ps1
+    evidence_receipt: evidence-receipt-schema.yaml
+    evidence_creator: scripts/new-evidence-receipt.ps1
+    direct_agent_to_agent: prohibited
 
   state_mapping:
     pending: submitted
