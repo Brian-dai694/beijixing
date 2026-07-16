@@ -180,6 +180,15 @@ agent_runtime_policy:
     parent_only: [workflow_completion, L4_confirmation, external_write_decision]
     failure_rule: "Checker failure returns to maker when repairable; otherwise freeze with pending verification."
 
+  agent_contracts:
+    cards: agent-cards.yaml
+    work_order_schema: work-order-schema.yaml
+    creator: scripts/new-work-order.ps1
+    rule: "Assign only to an enabled Agent Card; allowed tools and data scope are the intersection of card, order, and runtime grant."
+    no_shared_hidden_reasoning: true
+    no_secret_in_order: true
+    manager_owned_fan_in: required
+
   plugin_and_flow_runtime:
     plugin_registry: plugin-registry.yaml
     workflow_runtime: workflow-runtime.yaml

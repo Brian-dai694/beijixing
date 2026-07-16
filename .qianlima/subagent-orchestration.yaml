@@ -19,6 +19,13 @@ orchestration:
     verifier_independence_required: true
     final_decision_owner: parent_agent
 
+  contract_policy:
+    agent_cards: agent-cards.yaml
+    work_order_schema: work-order-schema.yaml
+    assignment_rule: "A worker receives a work order, not the parent's full context or unrestricted tool list."
+    handoff_fields: [work_order_id, status, artifact_refs, evidence_refs, failure_category, verifier_status]
+    forbidden_handoff_fields: [hidden_reasoning, full_memory, secrets, unrestricted_tool_grants]
+
   # ── 何时使用子代理 ──────────────────────────────────────────
 
   decision_tree:
