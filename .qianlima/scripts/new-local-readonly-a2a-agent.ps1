@@ -10,6 +10,7 @@ param(
   [ValidatePattern('^[A-Za-z0-9_-]{3,80}$')]
   [string]$AgentId = 'local-readonly-evidence-checker',
   [string]$AgentName = 'Local Read-Only Evidence Checker',
+  [ValidateRange(1024, 65535)] [int]$Port = 15722,
   [switch]$SkipContractTest,
   [switch]$PassThru
 )
@@ -27,7 +28,7 @@ if (-not (Test-Path -LiteralPath $agentRoot -PathType Container)) {
 
 # This URL is an identity placeholder only. Dispatch is disabled and no listener is started.
 $interface = [PSCustomObject]@{
-  url = "http://127.0.0.1:15722/a2a"
+  url = "http://127.0.0.1:$Port/a2a"
   protocolBinding = 'JSONRPC'
   protocolVersion = '1.0'
 }
@@ -74,6 +75,7 @@ $registry = if (Test-Path -LiteralPath $registryPath) {
 }
 if ($registry.schema_version -ne 1) { throw 'Unsupported local A2A registry schema version.' }
 $existing = @($registry.agents | Where-Object { $_.id -eq $AgentId })
+$createdAt = if ($existing.Count -gt 0 -and $existing[0].created_at) { $existing[0].created_at } else { (Get-Date).ToUniversalTime().ToString('o') }
 $entry = [PSCustomObject]@{
   id = $AgentId
   name = $AgentName
@@ -84,7 +86,7 @@ $entry = [PSCustomObject]@{
   network_access = 'none'
   write_access = 'none'
   risk_ceiling = 'L3'
-  created_at = (Get-Date).ToUniversalTime().ToString('o')
+  created_at = $createdAt
 }
 if ($existing.Count -gt 0) {
   $registry.agents = @($registry.agents | Where-Object { $_.id -ne $AgentId }) + @($entry)
