@@ -27,9 +27,13 @@ a2a_compatibility:
       rule: "context_id groups related work but does not widen data access."
     task:
       qianlima_source: work-order-schema.yaml
-      rule: "One immutable work order maps to one A2A-compatible unit of work."
+      qianlima_state_source: a2a-task-state.yaml
+      envelope_creator: scripts/new-task-envelope.ps1
+      rule: "One immutable work order maps to one A2A-compatible task envelope."
     artifact:
       qianlima_source: report, evidence package, snapshot, or logical artifact reference
+      receipt_schema: artifact-receipt-schema.yaml
+      receipt_creator: scripts/new-artifact-receipt.ps1
       rule: "Exchange references, hashes, media types, and bounded summaries; never inline sensitive raw content."
     receipt:
       qianlima_source: run receipt and usage ledger

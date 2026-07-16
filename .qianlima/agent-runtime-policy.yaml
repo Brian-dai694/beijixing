@@ -189,6 +189,16 @@ agent_runtime_policy:
     no_secret_in_order: true
     manager_owned_fan_in: required
 
+  a2a_internal_contract:
+    compatibility: a2a-compatibility.yaml
+    task_state: a2a-task-state.yaml
+    task_envelope_creator: scripts/new-task-envelope.ps1
+    artifact_receipt_schema: artifact-receipt-schema.yaml
+    artifact_receipt_creator: scripts/new-artifact-receipt.ps1
+    network_listener: prohibited
+    terminal_task_mutability: prohibited
+    revision_rule: "Create a new task_id and reference the prior task; never overwrite a terminal task."
+
   plugin_and_flow_runtime:
     plugin_registry: plugin-registry.yaml
     workflow_runtime: workflow-runtime.yaml

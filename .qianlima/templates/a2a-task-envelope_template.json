@@ -5,6 +5,7 @@
   "context_id": "ctx-example",
   "task_id": "task-example",
   "parent_run_id": "run-example",
+  "work_order_ref": "work-order-example",
   "agent_ref": "evidence_checker",
   "goal": "Verify source-backed claims in a bounded evidence package.",
   "input_refs": [
@@ -36,7 +37,8 @@
   "status_policy": {
     "input_required": "Return a named missing field or source reference.",
     "auth_required": "Not permitted for this read-only template.",
-    "terminal_task_immutable": true
+    "terminal_task_immutable": true,
+    "revision_rule": "Create a new task_id referencing this task; never overwrite a terminal task."
   },
   "prohibited": ["hidden_reasoning", "full_memory", "secrets", "raw_workspace_export", "external_write"]
 }
