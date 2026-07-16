@@ -10,7 +10,6 @@ param(
   [ValidatePattern('^[A-Za-z0-9_-]{3,80}$')]
   [string]$AgentId = 'local-readonly-evidence-checker',
   [string]$AgentName = 'Local Read-Only Evidence Checker',
-  [ValidateRange(1024, 65535)] [int]$Port = 15722,
   [switch]$SkipContractTest,
   [switch]$PassThru
 )
@@ -28,7 +27,7 @@ if (-not (Test-Path -LiteralPath $agentRoot -PathType Container)) {
 
 # This URL is an identity placeholder only. Dispatch is disabled and no listener is started.
 $interface = [PSCustomObject]@{
-  url = "http://127.0.0.1:$Port/a2a"
+  url = "qianlima-local://$AgentId/a2a"
   protocolBinding = 'JSONRPC'
   protocolVersion = '1.0'
 }

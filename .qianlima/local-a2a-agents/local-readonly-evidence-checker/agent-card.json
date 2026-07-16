@@ -5,7 +5,7 @@
     "protocolVersion":  "1.0",
     "supportedInterfaces":  [
                                 {
-                                    "url":  "http://127.0.0.1:15722/a2a",
+                                    "url":  "qianlima-local://local-readonly-evidence-checker/a2a",
                                     "protocolBinding":  "JSONRPC",
                                     "protocolVersion":  "1.0"
                                 }

@@ -44,8 +44,6 @@ daily-summaries/
 # 日志
 .qianlima/logs/
 .qianlima/run-traces/
-.qianlima/local-a2a-agents/*/server.json
-.qianlima/local-a2a-agents/*/server-*.log
 
 # 用量账本
 .qianlima/usage-ledger/

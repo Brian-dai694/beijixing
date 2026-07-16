@@ -9,7 +9,7 @@ $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $cardPath = Join-Path $projectRoot ('.qianlima\local-a2a-agents\{0}\agent-card.json' -f $AgentId)
 $registryPath = Join-Path $projectRoot '.qianlima\local-a2a-agents.json'
 $traceRoot = Join-Path $projectRoot '.qianlima\run-traces'
-$mockScript = Join-Path $PSScriptRoot 'invoke-a2a-local-mock.ps1'
+$localAgentScript = Join-Path $PSScriptRoot 'invoke-local-readonly-a2a-agent.ps1'
 
 if (-not (Test-Path -LiteralPath $cardPath -PathType Leaf)) { throw "Local Agent Card not found: $cardPath" }
 if (-not (Test-Path -LiteralPath $registryPath -PathType Leaf)) { throw "Local agent registry not found: $registryPath" }
@@ -37,7 +37,7 @@ $envelope = [ordered]@{
   stop_conditions = @('evidence_sufficient'); prohibited = @('hidden_reasoning', 'full_memory', 'secrets', 'raw_workspace_export', 'external_write')
 }
 [IO.File]::WriteAllText($envelopePath, ($envelope | ConvertTo-Json -Depth 8), [Text.UTF8Encoding]::new($false))
-$mockResult = & $mockScript -EnvelopePath $envelopePath -OutputPath $artifactPath -PassThru | ConvertFrom-Json
+$mockResult = & $localAgentScript -EnvelopePath $envelopePath -PassThru | ConvertFrom-Json
 $cases += [PSCustomObject]@{ name = 'local_contract_exchange'; passed = ($mockResult.status -eq 'completed' -and (Test-Path -LiteralPath $mockResult.artifact_path)) }
 
 $failed = @($cases | Where-Object { -not $_.passed })
