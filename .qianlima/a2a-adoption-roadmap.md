@@ -25,7 +25,8 @@ Exit gate: replay cases show no cross-context artifact access and no L4 authorit
 
 ## Phase 2: Governed A2A Client
 
-- Allow one explicitly allowlisted, read-only remote agent.
+- Begin with `a2a-client-gateway-policy.yaml` and `scripts/preflight-a2a-client.ps1`; preflight is dry-run only and defaults to deny.
+- Allow one explicitly allowlisted, read-only remote agent only after a separate approval enables network dispatch.
 - Insert a Qianlima gateway before dispatch and after artifact return.
 - Require protocol-version negotiation, source classification, a manager-owned verifier, and a complete receipt.
 

@@ -199,6 +199,13 @@ agent_runtime_policy:
     terminal_task_mutability: prohibited
     revision_rule: "Create a new task_id and reference the prior task; never overwrite a terminal task."
 
+  a2a_client_gateway:
+    policy: a2a-client-gateway-policy.yaml
+    registry: a2a-remote-registry.json
+    preflight: scripts/preflight-a2a-client.ps1
+    default: deny
+    network_io: prohibited_until_separate_approval
+
   plugin_and_flow_runtime:
     plugin_registry: plugin-registry.yaml
     workflow_runtime: workflow-runtime.yaml
