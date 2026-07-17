@@ -204,6 +204,18 @@ agent_runtime_policy:
       audit_events: scripts/write-audit-event.ps1
       revoked_grant_action: deny_before_tool_use
 
+  agent_runtime_adapters:
+    registry: agent-runtime-adapters.yaml
+    scripts: [scripts/invoke-codex-supervisor.ps1, scripts/invoke-codewhale.ps1, scripts/invoke-claude-code.ps1, scripts/invoke-raven.ps1]
+    default_mode: dry_run
+    plan_start_requires: [issued_grant, matching_task_id, unexpired_grant, non_revoked_grant, no_network, no_tools]
+    execute_requires: [issued_grant, matching_task_id, unexpired_grant, non_revoked_grant, sandbox_ready, explicit_execute_switch]
+    allowed_risk_ceiling: [L0, L1, L2]
+    denied: [network_access, write_access, can_delegate, L3, L4, secrets_in_prompt]
+    supervisor_worker_boundary: "Codex plans and verifies; CodeWhale, Claude Code, and Raven only execute bounded worker orders."
+    raven_requires: [raven_sandbox_vm_for_execute]
+    unverified_cli_policy: "Unknown vendor command contracts remain discover-only and cannot be started by the adapter."
+
   a2a_internal_contract:
     compatibility: a2a-compatibility.yaml
     task_state: a2a-task-state.yaml
