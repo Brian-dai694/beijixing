@@ -2,7 +2,7 @@
 
 [中文](README.md) · **English** → [README.en.md](README.en.md)
 
-[![CI](https://github.com/Brian-dai694/qianlima/actions/workflows/qianlima-verify.yml/badge.svg)](https://github.com/Brian-dai694/qianlima/actions/workflows/qianlima-verify.yml)
+[![CI](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml/badge.svg)](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-v2.7.6-blue.svg)](CHANGELOG.md)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5391FE?logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/)
@@ -48,11 +48,18 @@
 
 ## 快速开始
 
+### 选择版本
+
+- **个人版**：使用根目录启动入口，适合个人卖家和本地工作流。
+- **企业版**：从 [`enterprise 企业版/README.md`](enterprise%20企业版/README.md) 开始，提供组织、员工、E1-E4 API/Agent 模式、MCP 准入、审批、审计与撤销治理。
+
+企业版是主 Harness 的受治理 Overlay，不复制或放宽主 Harness。
+
 ### 1. 克隆仓库
 
 ```bash
-git clone <repo-url>
-cd qianlima
+git clone https://github.com/Brian-dai694/beijixing.git
+cd beijixing
 ```
 
 ### 2. 配置私有数据
@@ -170,6 +177,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\verify-
 - public-safe 严格校验
 - runtime 安全门检查
 - 未确认高风险动作拦截检查
+- 企业版离线合同与治理回归
 
 ## Runtime 辅助脚本
 

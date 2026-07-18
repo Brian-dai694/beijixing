@@ -2,7 +2,7 @@
 
 **English** · [中文](README.md)
 
-[![CI](https://github.com/Brian-dai694/qianlima/actions/workflows/qianlima-verify.yml/badge.svg)](https://github.com/Brian-dai694/qianlima/actions/workflows/qianlima-verify.yml)
+[![CI](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml/badge.svg)](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-v2.7.6-blue.svg)](CHANGELOG.md)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5391FE?logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/)
@@ -48,11 +48,18 @@ Qianlima Harness v2.7.6
 
 ## Quick start
 
+### Choose an edition
+
+- **Personal Edition**: use the root startup entrypoints for individual sellers and local workflows.
+- **Enterprise Edition**: start with [`enterprise 企业版/README.md`](enterprise%20企业版/README.md) for organization, employee, E1-E4 API/Agent modes, MCP admission, approvals, audit, and revocation controls.
+
+The Enterprise Edition is a governed overlay of the shared Harness. It does not fork or loosen the core.
+
 ### 1. Clone
 
 ```bash
-git clone https://github.com/Brian-dai694/qianlima.git
-cd qianlima
+git clone https://github.com/Brian-dai694/beijixing.git
+cd beijixing
 ```
 
 ### 2. Configure private data
