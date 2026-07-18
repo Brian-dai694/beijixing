@@ -1,6 +1,6 @@
-# Qianlima Enterprise Edition
+# Beijixing Enterprise Edition
 
-The Enterprise Edition is a product profile over the shared Qianlima core.
+The Enterprise Edition is a Beijixing product profile over the shared Qianlima core.
 It does not copy or fork the main Harness. It reads the shared contracts from
 the parent workspace and adds enterprise identity, approval, audit, Runner,
 and deployment settings here.
