@@ -121,3 +121,15 @@ SESSION-STATE.md
 MEMORY.md
 requirements.txt
 *.lock
+
+# Root-level business data and generated deliverables are local-only.
+/.qianlima/specifications/drafts/
+/_tmp_*
+/~$*
+/*.xlsx
+/*.csv
+/YB1_*.json
+/webbridge-req-*.json
+/amazon-collector-extension*/
+/*.zip
+/产出/

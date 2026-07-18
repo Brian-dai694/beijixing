@@ -1,0 +1,78 @@
+edition:
+  id: enterprise
+  version: 0.1.0
+  product_profile: enterprise-governed
+  shared_core_root: ..
+  do_not_fork_harness: true
+
+shared_contracts:
+  business_capability_catalog: ../.qianlima/specifications/business-capability-catalog.json
+  mcp_capability_port_map: ../.qianlima/specifications/mcp-capability-port-map.json
+  north_star: ../.qianlima/specifications/north-star-protocol.json
+  governance_framework: ../.qianlima/enterprise-governance-framework.json
+  runtime_policy: ../.qianlima/agent-runtime-policy.yaml
+  runner_registry: ../.qianlima/execution-runners.json
+  harness_boundary: ../.qianlima/harness-boundary.json
+  deployment_policy: ./deployment-policy.yaml
+  task_level_policy: ./task-level-policy.json
+  organization_role_templates: ./organization-role-templates.json
+  connection_policy: ./connection-policy.json
+  approval_routing_policy: ./approval-routing-policy.json
+  five_view_task_contract: ./five-view-task-contract.json
+  commerce_deliverable_contract: ./commerce-deliverable-contract.json
+  commerce_operating_model: ./commerce-operating-model.json
+  compliance_mcp_policy: ./compliance-mcp-policy.json
+  lingxing_business_architecture: ./lingxing-business-architecture.json
+  lingxing_mcp_adapter: ./lingxing-mcp-adapter-contract.json
+  enterprise_mcp_platform: ./enterprise-mcp-platform-contract.json
+  direct_mcp_session: ./direct-mcp-session-contract.json
+  employee_lifecycle: ./employee-lifecycle-policy.json
+  file_organization: ./file-organization-policy.json
+  review_compounding: ./review-compounding-policy.json
+  deployment_modes: ./deployment-mode-policy.json
+
+enterprise_controls:
+  identity: external_sso_or_local_enterprise_identity
+  authorization: rbac_plus_task_scoped_grant
+  continuous_trust: trust-policy.yaml
+  governance_adapter: governance-adapter.yaml
+  event_contract: event-contract.json
+  approvals: human_approval_for_l4_and_production_promotion
+  audit: append_only_trace_and_central_sink_optional
+  agent_registry: governed_allowlist
+  memory: task_scoped_memory_broker
+  evolution: candidate_replay_simulation_and_human_promotion
+  tenant_isolation: required
+  direct_agent_to_agent: deny
+  task_classification: enterprise_L0_L4_with_organizational_impact
+  organization_onboarding: guided_beginner_setup
+  data_connections: broker_only_configured_connectors
+  task_views: business_outcome_failure_core_issue_handling
+  commerce_outcomes: profitability_title_main_image_five_bullets_long_description
+  commerce_lifecycle: selection_listing_fulfillment_traffic_conversion_after_sales_review
+  lingxing_integration: reserved_mcp_readonly_first
+  mcp_integration: vendor_neutral_broker_governed_registry
+  approved_direct_mcp: local_connector_enforced_short_lived_session
+  employee_management: joiner_mover_leaver_append_only
+  artifact_organization: business_department_risk_month_task_type
+  operational_learning: review_to_candidate_then_replay_verify_and_human_promote
+  api_agent_deployment: E1_E2_E3_E4_selected_by_two_questions
+
+runtime_defaults:
+  mode: plan
+  dry_run: true
+  network: deny_by_default
+  web_access: deny
+  erp_access: deny
+  file_export: deny
+  host_workspace_mount: deny
+  secret_mode: secret_ref_only
+  real_execution: disabled_until_attestation
+  external_a2a: disabled
+  environment_gate: required_before_enterprise_start
+
+platform:
+  windows: Docker Desktop with WSL2 backend preferred; Hyper-V is an implementation fallback
+  macos: Docker Desktop with the native Linux virtualization backend
+  linux: Docker Engine or an approved isolated Runner
+  user_configuration: hide_platform_backend_details
