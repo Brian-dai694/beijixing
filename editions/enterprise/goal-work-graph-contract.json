@@ -18,7 +18,7 @@
     "required_fields": ["node_id", "goal_id", "work_order_ref", "responsible_role", "depends_on", "completion_rule", "risk_level"],
     "completion_rule": "independent_verification_passed_or_explicit_human_decision",
     "required_lineage": ["task_id", "grant_id", "trace_id", "artifact_refs", "evidence_refs", "verification_ref"],
-    "state_values": ["planned", "ready", "working", "awaiting_verification", "blocked", "frozen", "completed", "rejected", "superseded"],
+    "state_values": ["planned", "ready", "granted", "working", "awaiting_verification", "blocked", "frozen", "verified", "rejected", "superseded"],
     "invariants": [
       "A work node maps to one immutable work order at a time.",
       "A refinement or retry creates a new task and references the prior node evidence.",
@@ -28,7 +28,7 @@
   },
   "manager_projection": {
     "audience": ["business_owner", "department_manager", "finance_owner", "security_admin"],
-    "allowed_sources": ["verified_event", "approved_decision", "budget_snapshot", "sanitized_evidence_ref"],
+    "allowed_sources": ["verified_event", "broker_work_node_state", "approved_decision", "budget_snapshot", "sanitized_evidence_ref"],
     "required_fields": ["goal_id", "projection_as_of", "progress", "verified_outcomes", "blockers", "risks", "decision_requests", "cost_status", "evidence_refs"],
     "prohibited_fields": ["raw_agent_chat", "hidden_reasoning", "secret_value", "unverified_completion_claim"],
     "decision_request": {
@@ -46,7 +46,7 @@
   "global_invariants": [
     "The Broker remains the authority for Grant issuance, revocation, budget enforcement, verification recording, and final task state.",
     "Agent-to-Agent direct communication remains prohibited; sub-delegation is Broker-mediated only.",
-    "Projections are rebuildable read models over append-only events and cannot overwrite event history.",
+    "Projections are rebuildable read models over append-only events and Broker-owned Work Node state; Agent status messages cannot overwrite either source.",
     "Business systems remain systems of record; Northstar stores governed references and receipts rather than unrestricted copies of enterprise data.",
     "A failed, frozen, or rejected node preserves its evidence and handling owner."
   ]

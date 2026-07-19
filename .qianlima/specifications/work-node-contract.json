@@ -1,0 +1,58 @@
+{
+  "contract": "work-node-contract",
+  "schema_version": 1,
+  "purpose": "A Work Node binds one R&D milestone to an owner-accountable, scope-limited, grant-gated unit of executable work. Runtime-agnostic: the same node runs on Claude, Codex, or any adapter without governance state changing.",
+  "immutable_after_create": ["work_node_id", "goal_id", "owner", "scope", "acceptance_criteria"],
+  "required": [
+    "work_node_id",
+    "goal_id",
+    "milestone",
+    "owner",
+    "scope",
+    "acceptance_criteria",
+    "verification",
+    "risk_ceiling",
+    "status",
+    "created_at"
+  ],
+  "field_contract": {
+    "work_node_id": "Stable per-node identifier. Pattern ^[a-z0-9][a-z0-9_-]*$. No secrets.",
+    "goal_id": "References the parent Goal in the company view. The node inherits the goal's risk_ceiling as an upper bound.",
+    "milestone": "Human-readable milestone this node completes. <=120 chars.",
+    "owner": "owner_id (role or person key) accountable for the node's verified outcome. The owner is who the manager projection is addressed to.",
+    "scope": {
+      "repo_root": "Workspace-relative directory this node may read/write. fff and diff are bound to this root.",
+      "allowed_paths": "List of path globs the node may modify. Diff must be a subset of these.",
+      "excluded_paths": "Path globs the node may never read or write (secrets, .env, credentials, home dir)."
+    },
+    "acceptance_criteria": {
+      "tests_required": "bool. If true, verification demands a test-result.json with failed=0.",
+      "test_result_ref": "Workspace-relative path to the test-result.json the verifier will read.",
+      "diff_subset_of_scope": "bool. If true, every changed file must fall under scope.allowed_paths.",
+      "policy_hash": "sha256 of the policy version in force when the node was created. Recorded at verification for traceability.",
+      "min_action_receipts": "int. Minimum count of Action Receipts required before verification (proves work was governed)."
+    },
+    "claude_adapter": {
+      "budget": "Injected from the Grant: max_tool_calls, max_cost_usd, timeout_ms.",
+      "system_context": "Task scope + acceptance criteria injected into the runtime. Never contains secrets or full memory."
+    },
+    "fff_binding": "References fff-capability-spec.yaml. fff may only retrieve under scope.repo_root, honoring excluded_paths.",
+    "verification": {
+      "verifier_type": "One of: rule_check | test_gate | independent_checker. P0 uses test_gate.",
+      "required_receipts": "List of receipt types that must exist and pass before verified (action_receipt, artifact_receipt)."
+    },
+    "risk_ceiling": "L0-L4. May not exceed the parent goal's risk_ceiling.",
+    "status": "Lifecycle state; see lifecycle.",
+    "grant_id": "Set when a Grant is issued for this node. Null until dispatch.",
+    "verified_at": "UTC ISO when the Broker wrote verified. Null otherwise.",
+    "created_at": "UTC ISO creation timestamp."
+  },
+  "lifecycle": ["draft", "granted", "running", "awaiting_verification", "verified", "blocked", "rejected"],
+  "invariants": [
+    "An Agent can never write status=verified. Only the Broker sets verified after verify-work-node.ps1 passes.",
+    "A node whose Grant is revoked or expired transitions to blocked on the next capability call and appears blocked in the manager projection.",
+    "verified requires: acceptance_criteria satisfied, receipt chain complete, policy_hash recorded, and independent (non-executor) verification.",
+    "status, verified_at, and grant_id are the only mutable fields after create; all others are immutable.",
+    "Switching runtime adapter (Claude<->Codex) must not change work_node_id, grant_id, scope, or verification result."
+  ]
+}

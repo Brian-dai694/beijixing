@@ -1,0 +1,81 @@
+# shadow-run-policy.yaml — Shadow-run constraints for the daily operating loop
+# A shadow run is read-only: the system generates the same outputs a human operator would,
+# but no prices, bids, budgets, orders, or messages are written to external systems.
+# Goal: prove all 8 Harness components work end-to-end before opening controlled writes.
+shadow_run:
+  version: 1
+  mode: read_analyze_compare_only
+  write_enabled: false
+  duration_days: 14
+  start_condition: "All 8 Harness components produce non-empty output on a synthetic test run."
+  exit_condition:
+    min_daily_runs: 10
+    miss_rate_threshold: 0.10          # system misses ≤10% of anomalies human caught
+    false_positive_rate_threshold: 0.20
+    decision_latency_p90_seconds: 300  # 90th percentile decision time ≤ 5 min
+    human_override_rate_threshold: 0.30 # human overrides ≤30% of recommendations
+
+  scope:
+    marketplace: amazon_jp             # start with single marketplace
+    workflows:
+      - daily_ad_report
+    data_sources:
+      - type: file_table               # Excel/CSV exports from 领星 or ad platform
+      - type: lark_sheet               # Feishu sheets as interim bridge
+      - type: manual_input             # operator pastes for shadow baseline
+
+  forbidden_actions:
+    - change_price
+    - change_bid
+    - change_budget
+    - create_purchase_order
+    - send_external_message
+    - write_back_erp
+    - delete_data
+    - overwrite_existing_files
+
+  comparison:
+    baseline_source: manual_daily_report
+    comparison_fields:
+      - anomaly_list            # did system catch the same anomalies?
+      - next_actions            # did recommendations match human decisions?
+      - profit_impact_estimate  # directional correctness of impact estimate
+    metrics:
+      miss_rate:
+        definition: "Anomalies caught by human but not by system / total human anomalies"
+        target: "≤ 0.10 by end of shadow run"
+      false_positive_rate:
+        definition: "System anomalies not confirmed by human / total system anomalies"
+        target: "≤ 0.20 by end of shadow run"
+      decision_latency:
+        definition: "Time from data available to decision-ready output"
+        target: "p90 ≤ 300s"
+      human_intervention_rate:
+        definition: "Decisions where human corrected or rejected system recommendation"
+        target: "Trend downward across 14 days"
+      profit_relevance:
+        definition: "Fraction of recommendations that would have improved profit if executed"
+        target: "Track; no threshold for shadow run"
+
+  harness_component_checks:
+    context_compiler:
+      check: "qianlima-context-fast.ps1 returns status=ready within 10s for L2 tasks"
+    policy_enforcement:
+      check: "invoke-governed-runner.ps1 blocks all write actions (forbidden_actions above)"
+    runtime_adapter:
+      check: "invoke-governed-cli.ps1 returns dry_run status with adapter_id present"
+    scheduling:
+      check: "Run queue item created, status transitions pending→running→completed"
+    capability_gateway:
+      check: "Data source read succeeds; no MCP write called"
+    evidence_verification:
+      check: "new-artifact-receipt.ps1 produces receipt with non-placeholder sha256 hash"
+    memory_state:
+      check: "audit-events.jsonl gains ≥1 new entry per run; usage-ledger/runs.jsonl updated"
+    evaluation_loop:
+      check: "record-qianlima-usage.ps1 appends to runs.jsonl; cost fields non-zero"
+
+  promotion_gate:
+    requirement: "All 8 harness_component_checks pass for 3 consecutive days"
+    next_phase: "controlled_writes — one action type at a time, starting with bid adjustment"
+    approver: "owner (human) explicit confirmation required"

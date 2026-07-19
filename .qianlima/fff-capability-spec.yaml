@@ -1,0 +1,70 @@
+# fff-capability-spec.yaml - Governed knowledge-retrieval capability for Work Nodes
+# fff is a read-only workspace search/retrieval tool. It is admitted to the
+# capability catalog ONLY under these constraints. The scope-enforcement shell
+# (invoke-fff-scoped.ps1) enforces every rule here before fff would ever run.
+fff_capability:
+  version: 1
+  capability_id: fff_readonly_retrieval
+  classification: internal_sanitized
+  access_mode: read_only        # fff may never write, delete, or send externally.
+  external_send: forbidden
+  network_access: none
+
+  # --- Scope binding -------------------------------------------------------
+  scope_binding:
+    bound_to: work_node.scope.repo_root
+    rule: "Every retrieval path must resolve under the Work Node's repo_root (StartsWith prefix, trailing separator)."
+    reject_if_outside: true
+    reject_home_dir: true        # never scan the user home directory
+    reject_absolute_paths: true  # only workspace-relative paths permitted
+    reject_parent_traversal: true # no ".." segments
+
+  # --- Exclusions (never read, even inside repo_root) ----------------------
+  excluded_patterns:
+    - "**/.env"
+    - "**/.env.*"
+    - "**/*credential*"
+    - "**/*secret*"
+    - "**/*.pem"
+    - "**/*.key"
+    - "**/id_rsa*"
+    - "**/.git/**"
+    - "**/node_modules/**"
+    - "**/.qianlima/run-traces/**"   # governance memory is not fff-searchable
+    - "**/delegation-grants/**"
+
+  # --- Size / volume limits ------------------------------------------------
+  limits:
+    max_file_size_kb: 512
+    max_files_per_call: 200
+    max_total_bytes_per_call: 10485760   # 10 MiB
+    max_calls_per_grant: 100
+
+  # --- Grant gating --------------------------------------------------------
+  grant_gating:
+    requires_active_grant: true
+    reject_if_revoked: true      # checks grant-revocations.jsonl
+    reject_if_expired: true
+    reject_if_over_call_budget: true
+
+  # --- Audit / receipts ----------------------------------------------------
+  audit:
+    action_receipt_required: true          # every call writes an Action Receipt
+    receipt_decision_on_deny: deny         # a blocked call still produces a deny receipt
+    input_hash: sanitized_query_summary    # hash a sanitized query, never raw content
+    output_hash: result_manifest           # hash a manifest of returned paths, not contents
+
+  # --- Revocation cleanup --------------------------------------------------
+  revocation_cleanup:
+    on_grant_revoked:
+      - "reject all subsequent fff calls for this work_node"
+      - "write a deny Action Receipt with reason=grant_revoked"
+      - "surface the node as blocked in the next manager projection"
+    on_node_verified_or_rejected:
+      - "no new fff calls accepted; the node is terminal"
+
+  invariants:
+    - "fff is read-only; it can never mutate the workspace or send data externally."
+    - "A retrieval outside repo_root or matching an excluded pattern is denied and produces a deny receipt."
+    - "No fff call proceeds without an active, unrevoked, unexpired, in-budget Grant."
+    - "Governance memory (run-traces, grants) is never fff-searchable."

@@ -1,0 +1,76 @@
+# company-view-schema.yaml — thin management view layer
+# This is NOT a company brain. It is a minimal schema for the management view on top of the
+# Harness: who owns what goal, what resource, and what constitutes success.
+# The Harness (8 components) governs execution; this layer governs intent and accountability.
+company_view:
+  version: 1
+
+  objects:
+
+    goal:
+      description: "A time-bounded, owner-accountable target with a defined success condition."
+      required:
+        - goal_id           # e.g. "q3-2026-ad-efficiency"
+        - title             # human-readable, ≤80 chars
+        - owner             # single responsible person or role
+        - period            # ISO date range  "2026-07-01/2026-09-30"
+        - success_condition # verifiable, measurable statement
+        - risk_ceiling      # L0-L4; sets max Harness authorization level for this goal
+      optional:
+        - parent_goal_id    # OKR decomposition — child goals reference parent
+        - kpi_refs          # list of operating_fact.fact_id serving as metrics
+        - resource_budget   # { currency, amount, period }
+        - confidence        # estimated probability (0.0–1.0)
+        - status            # draft | active | paused | completed | cancelled
+      invariants:
+        - "A goal's risk_ceiling constrains all work orders and grants created under it."
+        - "success_condition must be falsifiable — it cannot be 'do our best'."
+        - "Changing the owner or risk_ceiling requires explicit human confirmation."
+
+    responsibility:
+      description: "Who is accountable for which goals and what budget they control."
+      required:
+        - owner_id          # unique identifier (role or person key)
+        - display_name
+        - scope             # description of accountability boundary
+        - goals             # list of goal_id this owner is responsible for
+        - budget_ceiling    # { currency, amount } max spend without escalation
+      optional:
+        - escalation_path   # owner_id of the person to escalate to
+        - approval_authorities # list of action types this owner can approve without escalation
+        - delegates         # list of owner_id who act on this owner's behalf
+      invariants:
+        - "L4 actions that exceed budget_ceiling must escalate."
+        - "No two owners may have overlapping exclusive write authority over the same goal."
+
+    operating_fact:
+      description: >
+        A verified, source-traced business measurement. The raw material for anomaly detection,
+        decisions, and the improvement loop. Facts are immutable once verified.
+      required:
+        - fact_id           # unique, deterministic  e.g. "ad_acos_2026-07-19_us"
+        - source            # data_source_id from data-sources.yaml
+        - classification    # public | internal_sanitized | confidential_reference_only
+        - period            # ISO date or date range the fact describes
+        - kpi_name          # e.g. "acos_pct", "inventory_days", "gross_margin_usd"
+        - value             # numeric or structured object
+        - unit              # e.g. "%", "USD", "units", "days"
+        - verified          # bool — unverified facts cannot trigger L3+ actions
+      optional:
+        - source_hash       # sha256 of source record for immutability proof
+        - confidence        # 0.0–1.0
+        - anomaly_flag      # bool — set by diagnostic rules
+        - linked_goal_ids   # goals this fact informs
+      invariants:
+        - "A verified fact cannot be overwritten; corrections create a new fact with source_ref."
+        - "Unverified facts are visible in L1/L2 analysis but cannot authorize L3+ actions."
+
+  shadow_run_extensions:
+    description: >
+      Additional fields active during a shadow run. These fields are stripped before the
+      company view goes into production-write mode.
+    fields:
+      - comparison_source   # manual_report_ref or baseline_fact_id
+      - delta               # computed difference from comparison_source
+      - human_judgment      # what the human decided vs. what the system recommended
+      - intervention_type   # confirmed | corrected | rejected | no_action

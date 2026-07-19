@@ -1,0 +1,46 @@
+{
+  "contract": "action-receipt-contract",
+  "schema_version": 1,
+  "purpose": "One receipt per governed tool-call. Proves an action happened under a specific Grant, with input/output hashes and cost, so the manager projection can trace every step without reading the agent conversation.",
+  "granularity": "per_tool_call",
+  "distinct_from": "artifact-receipt (per output) and evidence-receipt (per conclusion). Action Receipt is per invocation.",
+  "immutable_after_create": "all_fields",
+  "required": [
+    "action_id",
+    "work_node_id",
+    "grant_id",
+    "tool_name",
+    "sequence",
+    "decision",
+    "input_hash",
+    "created_at"
+  ],
+  "field_contract": {
+    "action_id": "Unique per tool-call. Pattern ^[a-zA-Z0-9._-]+$.",
+    "work_node_id": "The Work Node this action serves. Ties the receipt into the projection.",
+    "grant_id": "The active Grant that authorized this call. Verifier confirms it was not revoked/expired at call time.",
+    "tool_name": "The capability invoked (e.g. fff, claude_code_worker, edit_file).",
+    "sequence": "Monotonic index of this call within the node (0-based). Detects gaps/reordering.",
+    "decision": "allow | deny | freeze. deny/freeze receipts prove a governed refusal (e.g. revoked grant).",
+    "input_hash": "sha256:<64hex> of a sanitized input summary. Never the raw input; no secrets.",
+    "output_hash": "sha256:<64hex> of the output artifact, or null for deny/freeze.",
+    "elapsed_ms": "Wall-clock duration of the call.",
+    "cost": {
+      "provider": "Cost source (local, anthropic, openai).",
+      "estimated_usd": "Estimated USD cost of this call. Rolls up into cost_per_adopted_outcome."
+    },
+    "connector_receipt": "Optional upstream receipt id/ref from the tool's own logging (MCP call id, CLI exit trace).",
+    "created_at": "UTC ISO timestamp."
+  },
+  "storage": {
+    "path": "run-traces/action-receipts/<work_node_id>/<action_id>.json",
+    "immutable": true,
+    "append_only_index": "The set of files under a node dir IS the receipt chain; deletion is a governance violation."
+  },
+  "invariants": [
+    "A receipt is written for every tool-call, including denied and frozen ones.",
+    "input_hash and output_hash never contain raw data; they hash a sanitized summary.",
+    "sequence must be contiguous from 0; a gap means a call was made without a receipt (verification fails).",
+    "Receipts are immutable; a correction creates a new action_id referencing the prior one via connector_receipt."
+  ]
+}

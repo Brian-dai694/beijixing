@@ -1,0 +1,74 @@
+{
+  "contract": "manager-projection-contract",
+  "schema_version": 1,
+  "purpose": "The owner-facing view. Shows goal progress, verified nodes, blockers, risk, cost, and pending decisions. Generated ONLY from verified events, approved decisions, receipts, and budget snapshots. Never contains agent conversation, chain-of-thought, or self-reported completion.",
+  "generated_from_only": [
+    "verified events (verify-work-node results)",
+    "Broker-owned Work Node state (never Agent self-report)",
+    "approved decisions (grants, revocations)",
+    "action + artifact receipts",
+    "budget/usage snapshots"
+  ],
+  "forbidden_content": [
+    "agent long-form conversation",
+    "hidden reasoning / chain-of-thought",
+    "self-reported 'I completed X' without verification",
+    "raw private data or secrets"
+  ],
+  "required": [
+    "projection_id",
+    "goal_id",
+    "owner",
+    "generated_at",
+    "goal_progress",
+    "nodes",
+    "cost",
+    "verified_outcomes",
+    "blockers",
+    "decision_requests",
+    "pending_decisions",
+    "cost_status",
+    "evidence_refs",
+    "human_readable_summary"
+  ],
+  "field_contract": {
+    "projection_id": "Unique projection id. Pattern ^[a-zA-Z0-9._-]+$.",
+    "goal_id": "The goal being projected.",
+    "owner": "Who this projection is addressed to (the accountable owner).",
+    "generated_at": "UTC ISO. Projections are snapshots; a new decision regenerates a new projection.",
+    "goal_progress": {
+      "total_nodes": "Count of work nodes under the goal.",
+      "verified": "Count with status=verified.",
+      "blocked": "Count with status=blocked.",
+      "in_progress": "Count running or awaiting_verification.",
+      "percent_verified": "verified / total_nodes, rounded."
+    },
+    "nodes": "Per-node summary array. Each: {work_node_id, milestone, status, verified_at, risk_ceiling, blocker (nullable), traceability}.",
+    "traceability": {
+      "diff_ref": "Workspace-relative path to the change set.",
+      "test_result_ref": "Path to the test-result.json the verifier read.",
+      "evidence_hash": "sha256 of the verified artifact.",
+      "policy_version": "policy_hash in force at verification.",
+      "action_receipt_count": "Number of receipts in the node's chain."
+    },
+    "cost": {
+      "cost_to_date_usd": "Sum of all action-receipt costs for the goal, including denied/frozen/retry actions.",
+      "cost_per_verified_node_usd": "cost_to_date / verified (null if verified=0). This is the Cost-per-Adopted-Outcome primitive.",
+      "note": "Cost includes failures and rework; it is not just the successful-path cost."
+    },
+    "pending_decisions": "Array of items requiring THIS owner's action: {decision_id, kind (approve_l4|unblock|budget_increase|accept_risk), node_ref, why, evidence_ref, deadline, reversible (bool)}.",
+    "risk_flags": "Array of drifting/at-risk signals: {kind (grant_expiring|budget_overrun|verification_failed|scope_violation), node_ref, detail}.",
+    "verified_outcomes": "Verified-only node summaries with the independent verification time and evidence hash.",
+    "blockers": "Broker-derived blocked Work Nodes with their reason and evidence reference.",
+    "decision_requests": "Enterprise-compatible alias for pending_decisions; P0 emits an empty array until approval routing is connected.",
+    "cost_status": "Budget comparison state. P0 emits not_evaluated_against_goal_budget until goal budget snapshots are connected.",
+    "evidence_refs": "Sanitized traceability references included in the projection; never raw Agent conversation or source contents.",
+    "human_readable_summary": "3-5 plain sentences the owner can read in 10 seconds: what is verified, what is blocked and why, what decision is needed. No jargon, no agent self-report."
+  },
+  "invariants": [
+    "A node appears as 'verified' ONLY if verify-work-node.ps1 wrote status=verified. Agent self-report never surfaces here.",
+    "A node whose grant is revoked/expired appears as blocked with the revocation reason.",
+    "Every verified node in the projection is traceable to a diff, a test result, an evidence hash, and a policy version.",
+    "The projection is regenerated per decision event; it is a derived snapshot, never hand-edited."
+  ]
+}

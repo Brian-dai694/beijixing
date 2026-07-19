@@ -1,6 +1,6 @@
 param(
   [Parameter(Mandatory = $true)] [ValidatePattern('^[a-zA-Z0-9._-]+$')] [string]$EventType,
-  [Parameter(Mandatory = $true)] [ValidateSet('allow', 'deny', 'revoke', 'complete', 'freeze')] [string]$Decision,
+  [Parameter(Mandatory = $true)] [ValidateSet('allow', 'deny', 'revoke', 'accept', 'reject', 'complete', 'freeze')] [string]$Decision,
   [string]$TaskId = '',
   [string]$GrantId = '',
   [string]$AgentId = '',

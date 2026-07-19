@@ -65,6 +65,13 @@ through an ordinary user start.
 - `new-five-view-task.ps1`: Creates a five-view task brief without executing anything.
 - `goal-work-graph-contract.json`: Links human-owned goals to immutable work nodes, verified evidence, decision projections, and governed improvement candidates.
 - `test-goal-work-graph-contract.ps1`: Offline regression for goal ownership, verified-only manager projections, and non-expanding improvement rules.
+- `../.qianlima/specifications/work-node-contract.json`: P0 R&D Work Node contract: one milestone, one task-bound Grant, one runtime-independent verification result.
+- `../.qianlima/specifications/action-receipt-contract.json`: Immutable, per-tool-call Action Receipt chain, including denied and frozen calls.
+- `../.qianlima/specifications/manager-projection-contract.json`: Owner-facing projection derived from Broker state, verified events, receipts, and budget snapshots only.
+- `../.qianlima/scripts/bind-work-node-grant.ps1`: Broker-only dispatch gate. A Work Node cannot execute before an issued, unexpired Grant is bound to it.
+- `../.qianlima/scripts/verify-work-node.ps1`: Independent P0 verification gate for test results, scoped diffs, Grant validity, and receipt continuity.
+- `../.qianlima/scripts/new-manager-projection.ps1`: Generates the verified-only owner report; it never exposes Agent conversation or self-reported completion.
+- `../.qianlima/scripts/test-rd-p0-governance.ps1`: Read-only P0 contract regression.
 - `commerce-deliverable-contract.json`: Profitability, title, main image, five bullets, and long-description outcome contract.
 - `new-commerce-deliverable-pack.ps1`: Creates a pending product deliverable pack without uploading or changing price.
 - `commerce-operating-model.json`: Reports, plans, profit settlement, sourcing, logistics, inventory, traffic, ads, promotions, after-sales, and review lifecycle.
