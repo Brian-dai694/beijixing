@@ -138,3 +138,41 @@ jobs:
         shell: bash
         run: |
           pwsh -NoProfile -File ./.qianlima/scripts/test-evolution-policy.ps1
+
+      - name: Core runtime regressions (pwsh)
+        shell: bash
+        run: |
+          pwsh -NoProfile -File ./.qianlima/scripts/test-context-fast.ps1
+          pwsh -NoProfile -File ./.qianlima/scripts/test-command-safety.ps1
+          pwsh -NoProfile -File ./.qianlima/scripts/test-protected-invariants.ps1
+
+      - name: A2A and delegation regressions (pwsh)
+        shell: bash
+        run: |
+          pwsh -NoProfile -File ./.qianlima/scripts/test-broker-contracts.ps1
+          pwsh -NoProfile -File ./.qianlima/scripts/test-sub-delegation.ps1
+          pwsh -NoProfile -File ./.qianlima/scripts/test-a2a-dispatch-gate-regression.ps1
+          pwsh -NoProfile -File ./.qianlima/scripts/test-a2a-local-mock.ps1
+
+      - name: Currency-safe cost ledger regression (pwsh)
+        shell: bash
+        run: |
+          pwsh -NoProfile -File ./.qianlima/scripts/record-qianlima-usage.ps1 -WorkflowId ci_cost -RunId ci-cost-usd -EstimatedCost 1 -Currency USD
+          pwsh -NoProfile -File ./.qianlima/scripts/record-qianlima-usage.ps1 -WorkflowId ci_cost -RunId ci-cost-cny -EstimatedCost 7 -Currency CNY
+          pwsh -NoProfile -File ./.qianlima/scripts/new-qianlima-cost-dashboard.ps1 -Days 1 -OutputPath ./.qianlima/reports/ci-cost-dashboard.md
+          grep -q 'USD 1.000000' ./.qianlima/reports/ci-cost-dashboard.md
+          grep -q 'CNY 7.000000' ./.qianlima/reports/ci-cost-dashboard.md
+          ! grep -q 'Last 1 days cost | .*8.000000' ./.qianlima/reports/ci-cost-dashboard.md
+
+      - name: Enterprise launcher fails closed without deployment prerequisites
+        shell: bash
+        run: |
+          enterprise_dir="$(find . -maxdepth 1 -type d -print0 | xargs -0 -n1 sh -c 'test -f "$0/start-enterprise.sh" && printf "%s\n" "$0"' | head -n1)"
+          test -n "$enterprise_dir"
+          chmod +x "$enterprise_dir/start-enterprise.sh"
+          set +e
+          output="$(bash "$enterprise_dir/start-enterprise.sh" -SkipValidation -Quiet 2>&1)"
+          status=$?
+          set -e
+          test "$status" -ne 0
+          printf '%s\n' "$output" | grep -q 'Enterprise managed environment is not ready'

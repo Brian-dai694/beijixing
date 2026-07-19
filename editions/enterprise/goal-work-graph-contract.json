@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "contract_id": "qianlima-enterprise-goal-work-graph",
+  "principle": "Northstar turns human-owned intent into constrained, verifiable, and compounding action without transferring final accountability to an Agent.",
+  "purpose": "Link one human-owned goal to immutable work nodes, task-level Grants, verified evidence, decision projections, and governed improvement candidates.",
+  "references": {
+    "event_contract": "event-contract.json",
+    "task_views": "five-view-task-contract.json",
+    "a2a_policy": "../.qianlima/a2a-compatibility.yaml",
+    "improvement_contract": "../.qianlima/specifications/improvement-candidate-contract.json"
+  },
+  "goal": {
+    "required_fields": ["goal_id", "title", "business_owner_id", "priority", "success_metrics", "deadline", "budget_ref", "risk_profile"],
+    "owner_decisions": ["priority", "tradeoff", "budget_exception", "L4_approval", "acceptance_of_business_outcome"],
+    "agent_prohibitions": ["change_goal_priority", "expand_budget", "self_accept_business_outcome", "change_owner"]
+  },
+  "work_node": {
+    "required_fields": ["node_id", "goal_id", "work_order_ref", "responsible_role", "depends_on", "completion_rule", "risk_level"],
+    "completion_rule": "independent_verification_passed_or_explicit_human_decision",
+    "required_lineage": ["task_id", "grant_id", "trace_id", "artifact_refs", "evidence_refs", "verification_ref"],
+    "state_values": ["planned", "ready", "working", "awaiting_verification", "blocked", "frozen", "completed", "rejected", "superseded"],
+    "invariants": [
+      "A work node maps to one immutable work order at a time.",
+      "A refinement or retry creates a new task and references the prior node evidence.",
+      "A child node may only receive a Broker-issued Grant whose scope is a strict subset of its parent Grant.",
+      "A node cannot move to completed from an Agent status message alone."
+    ]
+  },
+  "manager_projection": {
+    "audience": ["business_owner", "department_manager", "finance_owner", "security_admin"],
+    "allowed_sources": ["verified_event", "approved_decision", "budget_snapshot", "sanitized_evidence_ref"],
+    "required_fields": ["goal_id", "projection_as_of", "progress", "verified_outcomes", "blockers", "risks", "decision_requests", "cost_status", "evidence_refs"],
+    "prohibited_fields": ["raw_agent_chat", "hidden_reasoning", "secret_value", "unverified_completion_claim"],
+    "decision_request": {
+      "required_fields": ["decision_id", "owner_role", "decision_type", "options", "deadline", "impact_scope", "evidence_refs"],
+      "decision_types": ["priority_tradeoff", "budget_exception", "risk_acceptance", "L4_approval", "scope_change", "freeze_or_resume"]
+    }
+  },
+  "compounding_loop": {
+    "inputs": ["verification_failure", "rollback", "human_correction", "cost_outlier", "repeated_blocker"],
+    "output": "governed_improvement_candidate",
+    "required_gates": ["replay", "simulation_or_dry_run", "independent_verification", "human_promotion"],
+    "production_rule": "A candidate cannot modify production policy, permissions, prompts, routing, or tool access before every required gate passes."
+  },
+  "event_requirements": ["goal_created", "goal_priority_changed", "goal_node_linked", "goal_risk_escalated", "manager_projection_published", "decision_requested", "decision_recorded", "goal_outcome_verified"],
+  "global_invariants": [
+    "The Broker remains the authority for Grant issuance, revocation, budget enforcement, verification recording, and final task state.",
+    "Agent-to-Agent direct communication remains prohibited; sub-delegation is Broker-mediated only.",
+    "Projections are rebuildable read models over append-only events and cannot overwrite event history.",
+    "Business systems remain systems of record; Northstar stores governed references and receipts rather than unrestricted copies of enterprise data.",
+    "A failed, frozen, or rejected node preserves its evidence and handling owner."
+  ]
+}

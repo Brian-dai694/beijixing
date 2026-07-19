@@ -7,6 +7,9 @@ BeforeAll {
     $safe = $runId -replace '[^A-Za-z0-9_.-]', '-'
     Get-Content -LiteralPath (Join-Path $script:TmpDir "usage-ledger\$safe.yaml") -Raw
   }
+  function script:CanonicalLedger {
+    Get-Content -LiteralPath (Join-Path $script:TmpDir 'usage-ledger\runs.jsonl') -Raw
+  }
 }
 
 AfterAll { Remove-Item -Recurse -Force $script:TmpDir -ErrorAction SilentlyContinue }
@@ -36,6 +39,42 @@ Describe 'new-usage-record cost guard' {
     Make @{ RunId = 'a/b c'; EstimatedCost = 1; Force = $true }
     Test-Path (Join-Path $script:TmpDir 'usage-ledger\a-b-c.yaml') | Should -BeTrue
   }
+  It 'records tokenizer provenance and measured-versus-estimated token variance' {
+    Make @{ RunId = 'token-variance'; InputTokens = 1730; OutputTokens = 200; EstimatedInputTokens = 1000; EstimatedOutputTokens = 200; TokenizerId = 'official-counter'; TokenizerVersion = '2026-07'; WorkloadType = 'typescript'; TokenMeasurementMethod = 'official_counter'; TokenMeasurementReference = 'https://example.test/count'; Force = $true }
+    $y = Ledger 'token-variance'
+    $y | Should -Match "id: 'official-counter'"
+    $y | Should -Match 'workload_type: ''typescript'''
+    $y | Should -Match 'input_tokens_delta: 730'
+    $y | Should -Match 'total_tokens_delta_pct: 60.83'
+  }
+  It 'flags billed cost variance outside the configured tolerance' {
+    Make @{ RunId = 'billing-variance'; EstimatedCost = 1; BilledCost = 1.1; BillingTolerancePct = 1; Force = $true }
+    $y = Ledger 'billing-variance'
+    $y | Should -Match 'status: variance_detected'
+    $y | Should -Match 'estimated_cost_delta_pct: 10'
+  }
+  It 'includes tool cost in the effective estimated cost' {
+    Make @{ RunId = 'tool-cost'; EstimatedCost = 1; ToolCost = 0.25; Force = $true }
+    $y = Ledger 'tool-cost'
+    $y | Should -Match 'estimated_cost: 1'
+    $y | Should -Match 'model_cost: 0.75'
+    $y | Should -Match 'tool_cost: 0.25'
+  }
+  It 'appends the YAML evidence to the canonical versioned JSONL ledger' {
+    Make @{ RunId = 'canonical'; TaskSuccess = $true; InputTokens = 10; OutputTokens = 2; EstimatedCost = 0.1; Currency = 'CNY'; Force = $true }
+    $json = @(CanonicalLedger -split "`r?`n" | Where-Object { $_ } | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.run_id -eq 'canonical' })[0]
+    $json.schema_version | Should -Be 2
+    $json.run_id | Should -Be 'canonical'
+    $json.currency | Should -Be 'CNY'
+    $json.estimated_cost | Should -Be 0.1
+  }
+  It 'rejects cached input or reasoning tokens outside the declared totals' {
+    { & $script:ScriptPath -Root $script:TmpDir -RunId 'bad-cache' -InputTokens 1 -CachedInputTokens 2 -Force } | Should -Throw
+    { & $script:ScriptPath -Root $script:TmpDir -RunId 'bad-reasoning' -OutputTokens 1 -ReasoningTokens 2 -Force } | Should -Throw
+  }
+  It 'rejects a tool cost larger than the total effective cost' {
+    { & $script:ScriptPath -Root $script:TmpDir -RunId 'invalid-tool-cost' -EstimatedCost 0.1 -ToolCost 0.2 -Force } | Should -Throw
+  }
   It 'throws on negative cost' {
     { & $script:ScriptPath -Root $script:TmpDir -RunId 'neg' -EstimatedCost -1 -Force } | Should -Throw
   }
@@ -43,4 +82,5 @@ Describe 'new-usage-record cost guard' {
     Make @{ RunId = 'dup'; EstimatedCost = 1; Force = $true }
     { & $script:ScriptPath -Root $script:TmpDir -RunId 'dup' -EstimatedCost 1 } | Should -Throw
   }
+
 }

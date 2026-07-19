@@ -48,6 +48,21 @@ $contextPath = Join-Path $traceRoot "a2a-envelope-context-$stamp.json"
 try { & $mockScript -EnvelopePath $contextPath | Out-Null; $cases += [PSCustomObject]@{ name = 'cross_context_rejected'; passed = $false } }
 catch { $cases += [PSCustomObject]@{ name = 'cross_context_rejected'; passed = $_.Exception.Message -match 'context_id' } }
 
+# Replay determinism: the same envelope must reproduce the same payload integrity hash across runs.
+$detEnvelope = $envelope | ConvertTo-Json -Depth 8 | ConvertFrom-Json
+$detEnvelope.task_id = "det-$stamp"
+$detPath = Join-Path $traceRoot "a2a-envelope-det-$stamp.json"
+[IO.File]::WriteAllText($detPath, ($detEnvelope | ConvertTo-Json -Depth 8), [Text.UTF8Encoding]::new($false))
+$detArtifact = Join-Path $traceRoot "a2a-mock-det-$stamp.json"
+$detRunReceipt = Join-Path $traceRoot "receipt-a2a-local-det-$stamp.json"
+$detArtifactReceipt = Join-Path $traceRoot "artifact-receipts\artifact-det-$stamp.json"
+$clearDet = { foreach ($p in @($detArtifact, $detRunReceipt, $detArtifactReceipt)) { if (Test-Path -LiteralPath $p) { Remove-Item -LiteralPath $p -Force } } }
+& $clearDet
+$detHash1 = (& $mockScript -EnvelopePath $detPath -PassThru | ConvertFrom-Json).artifact_hash
+& $clearDet
+$detHash2 = (& $mockScript -EnvelopePath $detPath -PassThru | ConvertFrom-Json).artifact_hash
+$cases += [PSCustomObject]@{ name = 'replay_hash_deterministic'; passed = ($detHash1 -eq $detHash2 -and $detHash1 -match '^sha256:[0-9a-f]{64}$') }
+
 $cases | Format-Table -AutoSize
 $failed = @($cases | Where-Object { -not $_.passed })
 if ($failed.Count -gt 0) { throw "A2A local mock regression failed: $($failed.name -join ', ')" }

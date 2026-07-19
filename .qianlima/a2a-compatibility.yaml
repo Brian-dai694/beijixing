@@ -47,6 +47,10 @@ a2a_compatibility:
     evidence_receipt: evidence-receipt-schema.yaml
     evidence_creator: scripts/new-evidence-receipt.ps1
     direct_agent_to_agent: prohibited
+    sub_delegation:
+      allowed: broker_mediated_only
+      trigger: "A parent grant with can_delegate=true."
+      rule: "The Broker issues a new grant with a new task_id and parent_grant_id; child scope is a strict subset of the parent (tools, data_refs, risk_ceiling, budget, expiry). This is not an exception to direct_agent_to_agent: prohibited."
 
   state_mapping:
     pending: submitted

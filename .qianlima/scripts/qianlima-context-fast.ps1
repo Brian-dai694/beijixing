@@ -186,7 +186,7 @@ if ($memoryRequested -and (-not $MemoryRequestPath -or -not $MemoryGrantPath -or
 $memoryResult = $null
 if ($memoryRequested) {
   $memoryScript = Join-Path $PSScriptRoot 'invoke-memory-broker.ps1'
-  $memoryOutput = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $memoryScript -RequestPath $MemoryRequestPath -GrantPath $MemoryGrantPath -MemoryPath $MemoryPath -PassThru 2>&1)
+  $memoryOutput = @(& (Get-PowerShellExecutable) -NoProfile -ExecutionPolicy Bypass -File $memoryScript -RequestPath $MemoryRequestPath -GrantPath $MemoryGrantPath -MemoryPath $MemoryPath -PassThru 2>&1)
   $memoryCode = $LASTEXITCODE
   $memoryText = ($memoryOutput -join "`n")
   $memoryStart = $memoryText.IndexOf('{'); $memoryEnd = $memoryText.LastIndexOf('}')

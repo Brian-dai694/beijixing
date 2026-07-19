@@ -207,15 +207,13 @@ model_routing:
 
   cost_estimation:
     formula: >
-      estimated_cost = (input_tokens × input_price + output_tokens × output_price)
-      × provider_multiplier × cache_hit_discount
+      effective_cost = (target_model_input_tokens × input_price + output_tokens × output_price)
+      + cached_input_tokens × cached_input_price + tool_costs.
+      target_model_input_tokens must come from provider usage, an official counter, or a clearly labeled estimate for the target model.
     cache_hit_discount: 0.10      # 缓存命中时输入 token 成本打 1 折
-    provider_multipliers:
-      deepseek: 0.15               # DeepSeek 相对 Anthropic 的价格比例
-      openai: 0.80
-      anthropic: 1.00              # 基准
-      google: 0.60
     note: >
       精确计费数据从 API response 的 usage 字段提取。
-      无法获取时使用 (typical_input_tokens × input_price + typical_output_tokens × output_price) 作为估计。
-      价格变动时参考 model-adapters.yaml 的最新价格表。
+      不得将 A 厂商分词器的 token 数直接套用给 B 厂商报价；代码、中文和工具 schema 必须优先使用目标模型的官方计数器或已验证本地编码器。
+      无法获取时使用 (target_model_estimated_input_tokens × input_price + typical_output_tokens × output_price) 作为估计，并标记 measurement_method=estimate。
+      比较不同模型时同时输出 tokenizer_id、tokenizer_version、workload_type、实际/预估 token 偏差和缓存命中；不同币种不直接排序。
+      价格变动时参考 model-pricing.json 的官方来源并先刷新验证日期。

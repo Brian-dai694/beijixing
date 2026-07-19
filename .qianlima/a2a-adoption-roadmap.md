@@ -41,4 +41,6 @@ Not scheduled. This requires separate approval for authentication, tenant isolat
 - An A2A Agent Card is not a permission grant.
 - External agents never receive L4 execution authority.
 - Finished tasks are immutable; refinements create a new task referencing prior artifacts.
+- An A2A-compatible task is a node in a human-owned goal work graph. It does not carry manager authority, change goal priority, or declare a business outcome by itself.
+- Manager projections are generated only from verified events, approved decisions, and budget snapshots. An Agent's status message is never completion evidence.
 - A2A transport does not replace MCP tools, risk rules, command safety, or human confirmation.

@@ -2,14 +2,22 @@
 delegation_grant:
   version: 1
   required: [grant_id, agent_id, task_id, work_order_id, data_refs, allowed_tools, budget, risk_ceiling, expires_at, verifier_agent_id, can_delegate, status]
+  optional: [parent_grant_id]
   defaults:
     can_delegate: false
+    parent_grant_id: null
     network_access: none
     write_access: none
     status: issued
+  can_delegate_semantics:
+    meaning: "can_delegate=true authorizes this Agent to request a Broker-mediated SUB-DELEGATION only."
+    not_direct: "It never permits direct agent-to-agent contact; direct_agent_to_agent stays prohibited."
+    mechanism: "A sub-delegation is a NEW grant with a NEW task_id, carrying parent_grant_id, issued by the Broker."
+    subset_rule: "Child permissions are the intersection of the parent grant and can only shrink: tools, data_refs, risk_ceiling, budget, and expiry never exceed the parent."
   invariants:
     - "A grant is scoped to one task and one Agent; it cannot be transferred or reused."
     - "Permissions are the intersection of Agent Card, work order, grant, and runtime policy."
     - "L4 grants require explicit confirmation, a preflight snapshot, and a rollback reference."
     - "Expired, revoked, cancelled, or completed grants cannot authorize new tool calls."
     - "Failure defaults to revoke and shrink scope; it never expands authorization."
+    - "can_delegate authorizes a Broker-mediated sub-delegation only; a child grant needs a new task_id, references parent_grant_id, and is a strict subset of the parent. Direct agent-to-agent delegation is never allowed."

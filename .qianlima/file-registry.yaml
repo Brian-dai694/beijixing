@@ -966,6 +966,51 @@ files:
     can_overwrite: true
     retention: keep
 
+  - file_id: canonical_usage_ledger_module
+    path: .qianlima/scripts/Qianlima.UsageLedger.psm1
+    display_name: Canonical usage-ledger parser
+    scenario: all
+    file_type: script_module
+    description: Reads schema v1 USD compatibility records and schema v2 currency-safe JSONL records for all cost reporting.
+    can_overwrite: true
+    retention: keep
+
+  - file_id: record_usage_script
+    path: .qianlima/scripts/record-qianlima-usage.ps1
+    display_name: Canonical usage-ledger recorder
+    scenario: all
+    file_type: script
+    description: Appends versioned token, cost, currency, and billing-reconciliation evidence to JSONL.
+    can_overwrite: true
+    retention: keep
+
+  - file_id: cost_dashboard_script
+    path: .qianlima/scripts/new-qianlima-cost-dashboard.ps1
+    display_name: Currency-safe cost dashboard
+    scenario: all
+    file_type: script
+    description: Aggregates canonical JSONL costs only within the same currency.
+    can_overwrite: true
+    retention: keep
+
+  - file_id: cost_baseline_script
+    path: .qianlima/scripts/set-qianlima-cost-baseline.ps1
+    display_name: Currency-scoped cost baseline builder
+    scenario: all
+    file_type: script
+    description: Computes median completed-run baselines without mixing currencies.
+    can_overwrite: true
+    retention: keep
+
+  - file_id: compare_model_effective_cost_script
+    path: .qianlima/scripts/compare-model-effective-cost.ps1
+    display_name: Target-model effective cost comparison script
+    scenario: all
+    file_type: script
+    description: Compares measured target-model token usage against verified catalog prices without calling provider APIs.
+    can_overwrite: true
+    retention: keep
+
   - file_id: new_decision_log_script
     path: .qianlima/scripts/new-decision-log-entry.ps1
     display_name: Decision log generator script

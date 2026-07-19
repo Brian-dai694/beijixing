@@ -63,6 +63,8 @@ through an ordinary user start.
 - `approval-routing-policy.json`: Responsibility, threshold, and batch approval routing.
 - `five-view-task-contract.json`: Business, outcome, failure, core-issue, and handling views over one task.
 - `new-five-view-task.ps1`: Creates a five-view task brief without executing anything.
+- `goal-work-graph-contract.json`: Links human-owned goals to immutable work nodes, verified evidence, decision projections, and governed improvement candidates.
+- `test-goal-work-graph-contract.ps1`: Offline regression for goal ownership, verified-only manager projections, and non-expanding improvement rules.
 - `commerce-deliverable-contract.json`: Profitability, title, main image, five bullets, and long-description outcome contract.
 - `new-commerce-deliverable-pack.ps1`: Creates a pending product deliverable pack without uploading or changing price.
 - `commerce-operating-model.json`: Reports, plans, profit settlement, sourcing, logistics, inventory, traffic, ads, promotions, after-sales, and review lifecycle.

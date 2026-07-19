@@ -30,12 +30,16 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+function Get-PowerShellExecutable() {
+  if ($PSVersionTable.PSEdition -eq 'Core') { return 'pwsh' }
+  return 'powershell'
+}
 $cardPath = Join-Path $projectRoot "memory\cards\$EntityType\$EntityId.json"
 if (-not (Test-Path -LiteralPath $cardPath -PathType Leaf)) {
   throw "Memory card not found: $cardPath"
 }
 $brokerScript = Join-Path $PSScriptRoot 'invoke-memory-broker.ps1'
-$brokerOutput = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $brokerScript -RequestPath $RequestPath -GrantPath $GrantPath -MemoryPath $cardPath -PassThru 2>&1)
+$brokerOutput = @(& (Get-PowerShellExecutable) -NoProfile -ExecutionPolicy Bypass -File $brokerScript -RequestPath $RequestPath -GrantPath $GrantPath -MemoryPath $cardPath -PassThru 2>&1)
 $brokerCode = $LASTEXITCODE
 $brokerText = ($brokerOutput -join "`n")
 $jsonStart = $brokerText.IndexOf('{'); $jsonEnd = $brokerText.LastIndexOf('}')

@@ -1219,28 +1219,31 @@ export_bundle:
 
 | Agent | 职责 | 可调用工具 | 权限等级 |
 |------|------|---------|:---:|
-| 主控 Agent | 理解目标、拆分任务、判断权限、汇总结果 | 全部（受权限约束） | 协调者 |
+| 主控 Agent | 理解已批准的目标、提出任务拆分、协调输出、汇总候选结果 | 仅 Broker 已授权的工具 | 协调者，不拥有授权权 |
 | 数据 Agent | 读取数据源、字段映射、数据质量检查 | data_connector, file_reader | 只读 |
 | 分析 Agent | 计算指标、识别异常、应用诊断规则 | data_connector, calculator | 只读 |
 | 执行 Agent | 生成报告、创建文档、同步表格 | report_writer, lark_sheets | 可写本地 |
 | 审计 Agent | 检查来源、权限、成本、风险和验收 | data_connector, usage_ledger | 只读 |
 | 文档 Agent | 更新 SOP、模板、规则和复盘记录 | file_writer | 可写本地 |
+| Broker / 治理层 | 签发或撤销授权、检查预算、决定冻结、记录验收和最终状态 | 不作为普通 Agent 调用 | 唯一授权与决策记录方 |
 
 ### 10.2 Agent 协作协议
 
 不引入 A2A 协议。Agent 之间通过共享 `work.ws` 和 workflow 状态通信。
 
 ```text
-主控 Agent 读取 work.ws
-  → 创建执行上下文（run_id, workflow_id, 日期范围, 权限边界）
+Broker 接收负责人目标与 workflow 请求
+  → 生成或引用不可变 Work Order、任务级 Grant 和验收要求
+  → 主控 Agent 读取已批准的执行上下文（run_id, workflow_id, 日期范围, 权限边界）
   → 数据 Agent 读取数据，输出结构化结果
   → 分析 Agent 消费数据 Agent 的输出，输出诊断结果
   → 执行 Agent 消费分析 Agent 的输出，生成报告
-  → 审计 Agent 消费所有上游输出，输出验证报告
-  → 主控 Agent 汇总，更新 work.ws，交付用户
+  → 审计 Agent 消费所有上游输出，输出独立验证报告
+  → Broker 记录验证、冻结或验收决定，更新工作状态投影
+  → 主控 Agent 仅呈现已验证的结果、阻塞与待决事项
 ```
 
-每个 Agent 的输出都写入执行上下文，不直接对话。
+每个 Agent 的输出都写入执行上下文或 Artifact 引用，不直接对话。权限判断、最终完成状态和跨场景写入不由主控 Agent 决定。
 
 ### 10.3 Agent 问责
 
@@ -1248,6 +1251,30 @@ export_bundle:
 - 如果报告出错，可以追溯到是哪个 Agent 的哪个步骤
 - 如果审计 Agent 发现数据 Agent 的输出有问题，标记 `data_quality_issue` 而不是直接修改
 - 用户反馈说"这个建议不对"，Agent 应该定位到分析 Agent 的诊断规则
+
+### 10.4 目标工作图与负责人决策投影
+
+一个 workflow 解决的是“怎么执行”；目标工作图解决的是“为什么做、谁负责、多个任务如何共同达成结果”。目标不直接赋予 Agent 权力。它必须通过任务节点映射到 Work Order、Grant、验收标准和预算边界。
+
+```yaml
+goal_work_graph:
+  goal:
+    goal_id: G-2026-Q3-profit
+    owner: business_owner
+    success_metrics: [profit_margin, stockout_rate]
+    deadline: 2026-09-30
+  node:
+    node_id: N-ad-daily-report
+    work_order_ref: WO-ad-daily-report
+    depends_on: [N-data-quality-check]
+    completion_rule: independent_verification_passed
+  manager_projection:
+    sources: [verified_event, approved_decision, budget_snapshot]
+    includes: [progress, blockers, risks, decision_requests, evidence_refs]
+    excludes: [raw_agent_chat, hidden_reasoning, unverified_completion_claim]
+```
+
+负责人只接收需要判断的事项，例如预算超限、证据冲突、跨部门依赖或 L4 审批。正常节点的进度由追加式事件和独立验证自动汇总。失败、人工修订和回滚可以生成改进候选，但候选必须经过回放、仿真、独立验证和人工晋升，不能直接改变生产规则。
 
 ---
 

@@ -21,7 +21,13 @@ $agent = @($registry.agents | Where-Object { $_.id -eq $AgentId }) | Select-Obje
 if (-not $agent) { Deny 'Agent is not allowlisted.' }
 if (-not $agent.enabled) { Deny 'Allowlisted agent is disabled.' }
 if ($envelope.protocol_target -notlike 'A2A 1.0*') { Deny 'Envelope protocol version is not supported.' }
-if ($envelope.delegation.risk_ceiling -eq 'L4' -or $envelope.delegation.risk_ceiling -gt $agent.risk_ceiling) { Deny 'Envelope risk exceeds the remote agent ceiling.' }
+# Compare risk by numeric rank, not string order, so the ceiling check is robust and consistent with qianlima-context-fast.ps1.
+$riskRank = @{ L0 = 0; L1 = 1; L2 = 2; L3 = 3; L4 = 4 }
+$envelopeRisk = $envelope.delegation.risk_ceiling
+$agentRisk = $agent.risk_ceiling
+if (-not $riskRank.ContainsKey([string]$envelopeRisk)) { Deny "Envelope risk ceiling is unknown: $envelopeRisk" }
+if (-not $riskRank.ContainsKey([string]$agentRisk)) { Deny "Agent risk ceiling is unknown: $agentRisk" }
+if ($envelopeRisk -eq 'L4' -or $riskRank[[string]$envelopeRisk] -gt $riskRank[[string]$agentRisk]) { Deny 'Envelope risk exceeds the remote agent ceiling.' }
 if ($envelope.delegation.network_access -ne 'none' -or $envelope.delegation.write_access -ne 'none') { Deny 'Remote delegation must remain read-only and without delegated network access.' }
 foreach ($reference in @($envelope.input_refs)) {
   if ($reference.source_classification -notin @($agent.allowed_source_classifications)) { Deny 'Input source classification is not allowed for this agent.' }

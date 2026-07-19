@@ -5,6 +5,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# Use pwsh on PowerShell Core (macOS/Linux) where powershell.exe does not exist.
+$psExe = if ($PSVersionTable.PSEdition -eq 'Core') { 'pwsh' } else { 'powershell' }
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $traceRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot '.qianlima\run-traces')).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
 $receiptScript = Join-Path $PSScriptRoot 'new-run-receipt.ps1'
@@ -54,7 +56,10 @@ if (Test-Path -LiteralPath $outputFullPath) {
   throw 'A2A task artifacts are immutable. Create a new task_id for refinements.'
 }
 
-$artifact = [ordered]@{
+# Deterministic semantic payload. The integrity hash covers ONLY this, so replaying the same
+# envelope reproduces the same hash. Non-deterministic fields (created_at) live under metadata
+# and never enter the hash, satisfying the Phase 1 "replayable" exit gate.
+$payload = [ordered]@{
   schema_version = 1
   artifact_type = 'qianlima_a2a_mock_verification'
   artifact_id = "artifact-$($envelope.task_id)"
@@ -67,22 +72,42 @@ $artifact = [ordered]@{
   status = 'completed'
   summary = 'Local mock verified the task contract and emitted a bounded artifact reference only.'
   input_reference_count = @($envelope.input_refs).Count
-  created_at = (Get-Date).ToUniversalTime().ToString('o')
 }
-$artifactJson = $artifact | ConvertTo-Json -Depth 6
+$payloadJson = $payload | ConvertTo-Json -Depth 6 -Compress
+$sha256 = [System.Security.Cryptography.SHA256]::Create()
+try {
+  $payloadBytes = [Text.Encoding]::UTF8.GetBytes($payloadJson)
+  $payloadHashHex = ([BitConverter]::ToString($sha256.ComputeHash($payloadBytes)) -replace '-', '').ToLowerInvariant()
+} finally {
+  $sha256.Dispose()
+}
+$artifactHash = "sha256:$payloadHashHex"
+
+$artifact = [ordered]@{
+  schema_version = 1
+  payload = $payload
+  metadata = [ordered]@{
+    created_at = (Get-Date).ToUniversalTime().ToString('o')
+    generator = 'invoke-a2a-local-mock.ps1'
+  }
+  integrity = [ordered]@{
+    algorithm = 'sha256'
+    scope = 'payload'
+    value = $artifactHash
+  }
+}
+$artifactJson = $artifact | ConvertTo-Json -Depth 8
 [IO.File]::WriteAllText($outputFullPath, $artifactJson, [Text.UTF8Encoding]::new($false))
 
 $relativeArtifactRef = ('run-traces/a2a-mock-{0}.json' -f $envelope.task_id)
-$fileHash = (Get-FileHash -LiteralPath $outputFullPath -Algorithm SHA256).Hash.ToLowerInvariant()
-$artifactHash = "sha256:$fileHash"
 $artifactId = "artifact-$($envelope.task_id)"
 $artifactReceiptScript = Join-Path $PSScriptRoot 'new-artifact-receipt.ps1'
 $artifactReceiptArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $artifactReceiptScript, '-ArtifactId', $artifactId, '-TaskId', $envelope.task_id, '-Name', 'verification_receipt', '-MediaType', 'application/json', '-Reference', $relativeArtifactRef, '-IntegrityHash', $artifactHash, '-SourceClassification', 'internal_sanitized', '-VerificationStatus', 'passed')
-& powershell.exe @artifactReceiptArgs | Out-Null
+& $psExe @artifactReceiptArgs | Out-Null
 $runId = "a2a-local-$($envelope.task_id)"
 $receiptArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $receiptScript, '-RunId', $runId, '-WorkflowId', 'a2a_compatibility', '-Status', 'completed', '-VerifierStatus', 'passed', '-ArtifactRef', $relativeArtifactRef)
 foreach ($evidence in @($envelope.input_refs | ForEach-Object { $_.artifact_id })) { $receiptArgs += @('-EvidenceRef', $evidence) }
-& powershell.exe @receiptArgs | Out-Null
+& $psExe @receiptArgs | Out-Null
 
 $result = [PSCustomObject]@{
   task_id = $envelope.task_id

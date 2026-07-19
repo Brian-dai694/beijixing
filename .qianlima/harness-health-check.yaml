@@ -87,9 +87,8 @@ health_check:
     - id: governance_integrity
       name: "治理文件完整性"
       priority: critical
-      description: "所有治理基础设施文件是否存在？"
+      description: "公开治理基础设施是否完整；私有运行时文件仅在私有工作区启用后检查。"
       required_files:
-        - ".qianlima/work.ws"
         - ".qianlima/WORKSPACE_INDEX.md"
         - ".qianlima/workflow-index.yaml"
         - ".qianlima/risk-rules.yaml"
@@ -97,11 +96,14 @@ health_check:
         - ".qianlima/model-adapters.yaml"
         - ".qianlima/world-model.yaml"
         - ".qianlima/meta-scenario-router.md"
-        - ".qianlima/data-sources.yaml"
         - ".qianlima/file-registry.yaml"
         - ".qianlima/improvement-loop.yaml"
         - ".qianlima/observability.yaml"
         - ".qianlima/evaluation-tasks.yaml"
+      optional_private_files:
+        - ".qianlima/work.ws"
+        - ".qianlima/data-sources.yaml"
+      public_template_policy: "Missing optional_private_files is expected in a Git-safe public template and must not degrade health. When either exists, validate its schema and references."
       thresholds:
         green: "全部存在"
         yellow: "缺失 1 个非关键文件"
