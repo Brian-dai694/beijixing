@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "map_id": "qianlima-shared-mcp-capability-port-map",
+  "map_id": "beijixing-enterprise-mcp-capability-port-map",
   "map_version": "1.0.0",
-  "profiles": ["personal", "enterprise"],
+  "profiles": ["enterprise"],
   "purpose": "Reserve stable local slots for governed MCP adapters without opening listeners by default.",
   "network_defaults": {
     "enabled": false,

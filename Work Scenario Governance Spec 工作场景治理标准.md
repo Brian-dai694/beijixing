@@ -180,10 +180,10 @@ Agent 应该把这些转换成治理配置，而不是要求用户填表。
 
 ```yaml
 workspace:
-  id: amazon_ops_personal
+  id: amazon_ops_enterprise
   name: 亚马逊运营工作台
   owner: current_user
-  mode: personal              # personal | team | enterprise
+  mode: enterprise
   created: 2026-06-23
   updated: 2026-06-23
 
@@ -590,7 +590,7 @@ file:
 
 ### 6.2 默认权限矩阵
 
-| 操作 | 个人版默认 | 说明 |
+| 操作 | 企业试点默认 | 说明 |
 |------|:---:|------|
 | 读取已授权的数据源 | ✅ 允许 | 前提是数据源已登记 |
 | 聚合统计 | ✅ 允许 | |
@@ -862,7 +862,7 @@ event:
     resolved_at: null
 ```
 
-### 8.4 联动规则（个人版默认）
+### 8.4 联动规则（企业试点默认）
 
 | 规则 | 触发条件 | 联动动作 |
 |------|---------|---------|

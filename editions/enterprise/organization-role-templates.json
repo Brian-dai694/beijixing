@@ -1,61 +1,117 @@
 {
-  "schema_version": 1,
-  "template_id": "qianlima-enterprise-beginner-roles",
-  "principle": "Assign a simple job role first; every real Agent action still requires task-scoped policy evaluation.",
-  "roles": [
+  "schema_version": 2,
+  "template_id": "beijixing-enterprise-role-catalog",
+  "principle": "A role limits what a user may request. It never grants standing Agent, MCP, data, network, or business-write authority.",
+  "role_layers": ["governance_role", "business_role", "task_grant"],
+  "governance_roles": [
     {
       "id": "business_owner",
-      "display_name": "老板/业务负责人",
-      "plain_description": "看公司汇总、预算和高风险审批，不负责安装系统。",
+      "display_name": "企业负责人",
+      "plain_description": "查看企业汇总并承担重大业务风险，不管理平台密钥或批准自己的 L4 请求。",
       "default_scope": "organization_summary",
       "may_request_levels": ["L0", "L1", "L2", "L3", "L4"],
-      "may_approve": ["business_L4"],
+      "may_approve": ["business_L4", "policy_exception"],
       "platform_admin": false,
-      "may_approve_own_L4": false,
-      "raw_secret_access": false
+      "may_approve_own_request": false
     },
     {
       "id": "department_manager",
-      "display_name": "部门主管",
-      "plain_description": "管理本部门员工、任务和预算，不能查看其他部门原始资料。",
+      "display_name": "部门负责人",
+      "plain_description": "管理本部门用户、任务、预算和日常审批，不能查看其他部门原始资料。",
       "default_scope": "assigned_department",
       "may_request_levels": ["L0", "L1", "L2", "L3"],
-      "may_approve": ["department_L3"],
+      "may_approve": ["department_L3", "routine_reversible_batch"],
       "platform_admin": false,
-      "cross_department_access": false,
-      "raw_secret_access": false
+      "cross_department_access": false
     },
     {
       "id": "employee",
       "display_name": "员工",
-      "plain_description": "使用已批准的 Agent 完成本部门任务，默认不能跨部门或执行企业写入。",
+      "plain_description": "在岗位、项目和任务 Grant 范围内使用已批准 Agent，默认不能跨部门或写入业务系统。",
       "default_scope": "own_department_and_assigned_projects",
       "may_request_levels": ["L0", "L1", "L2"],
       "may_approve": [],
       "platform_admin": false,
-      "cross_department_access": false,
-      "business_write": false,
-      "raw_secret_access": false
+      "business_write": false
+    },
+    {
+      "id": "user_admin",
+      "display_name": "用户管理员",
+      "plain_description": "导入、停用和维护用户身份，不分配自己、企业负责人或安全管理员角色。",
+      "default_scope": "identity_directory",
+      "may_request_levels": ["L0", "L1", "L2"],
+      "may_approve": ["user_lifecycle_plan"],
+      "platform_admin": true,
+      "may_assign_privileged_roles": false
     },
     {
       "id": "security_admin",
-      "display_name": "IT/安全管理员",
-      "plain_description": "负责设备、Agent、隔离和安全事件，不替老板批准业务动作。",
+      "display_name": "安全管理员",
+      "plain_description": "负责设备、Agent 准入、隔离与安全恢复，不替业务负责人批准业务动作。",
       "default_scope": "managed_devices_and_agent_runtime",
       "may_request_levels": ["L0", "L1", "L2", "L3"],
       "may_approve": ["device_admission", "agent_admission", "security_recovery"],
       "platform_admin": true,
-      "may_approve_business_L4": false,
-      "raw_business_data_access": false,
-      "raw_secret_access": false
+      "may_approve_business_L4": false
+    },
+    {
+      "id": "auditor",
+      "display_name": "审计员",
+      "plain_description": "只读检查授权、回执和事件链，不参与被审任务执行或批准。",
+      "default_scope": "approved_audit_scope",
+      "may_request_levels": ["L0", "L1", "L2", "L3"],
+      "may_approve": [],
+      "platform_admin": false,
+      "business_write": false
+    }
+  ],
+  "business_roles": [
+    {
+      "id": "operations_manager",
+      "display_name": "运营管理",
+      "capability_scope": ["reporting", "planning", "listing_content", "traffic_advertising_conversion_campaigns", "after_sales_clearance_root_cause"],
+      "data_scope": "assigned_marketplaces_and_products",
+      "default_max_level": "L3"
+    },
+    {
+      "id": "supply_chain_manager",
+      "display_name": "供应链管理",
+      "capability_scope": ["procurement_supplier_packaging_logistics", "inventory_fulfillment"],
+      "data_scope": "assigned_suppliers_shipments_and_inventory",
+      "default_max_level": "L3"
+    },
+    {
+      "id": "finance_manager",
+      "display_name": "财务管理",
+      "capability_scope": ["profit_accounting", "tax_customs_product_compliance", "reporting"],
+      "data_scope": "assigned_legal_entities_and_cost_centers",
+      "default_max_level": "L3"
+    },
+    {
+      "id": "product_manager",
+      "display_name": "产品管理",
+      "capability_scope": ["product_market_competition_keyword_pricing", "listing_content", "planning"],
+      "data_scope": "assigned_products_and_projects",
+      "default_max_level": "L3"
     }
   ],
   "assignment_rules": {
-    "new_employee_default": "employee",
-    "new_employee_scope": "own_department_and_assigned_projects",
-    "business_owner_and_security_admin_should_be_distinct": true,
+    "new_user_default_governance_role": "employee",
+    "new_user_default_business_roles": [],
+    "new_user_scope": "own_department_and_assigned_projects",
+    "business_owner_and_security_admin_must_be_distinct": true,
+    "user_admin_cannot_assign_privileged_roles": true,
+    "role_assignment_requires_named_approver": true,
+    "temporary_assignment_requires_expires_at": true,
+    "role_change_order": ["freeze_affected_work", "revoke_old_grants", "revoke_direct_mcp_sessions", "apply_assignment", "recalculate_scope", "issue_new_task_grants_on_demand"],
     "no_role_grants_permanent_agent_execution": true,
-    "departing_employee_action": "disable_identity_revoke_grants_and_credentials",
-    "department_change_action": "recalculate_scope_and_revoke_old_grants"
-  }
+    "offboard_action": "disable_identity_revoke_grants_sessions_credentials_and_preserve_history"
+  },
+  "separation_of_duties": [
+    ["requester", "own_L4_approver"],
+    ["worker", "independent_verifier"],
+    ["business_owner", "security_admin"],
+    ["user_admin", "privileged_role_approver"],
+    ["auditor", "audited_task_executor"]
+  ]
 }

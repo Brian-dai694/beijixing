@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "contract_id": "beijixing-enterprise-role-assignment",
+  "required_fields": ["assignment_id", "user_id", "organization_id", "role_type", "role_id", "scope_type", "scope_ids", "requested_by", "approved_by", "valid_from", "reason"],
+  "role_types": ["governance", "business"],
+  "scope_types": ["organization", "department", "project", "marketplace", "product", "cost_center"],
+  "privileged_governance_roles": ["business_owner", "security_admin", "user_admin"],
+  "rules": {
+    "requester_may_approve": false,
+    "privileged_assignment_requires_two_distinct_people": true,
+    "temporary_assignment_requires_expires_at": true,
+    "assignment_is_runtime_authority": false,
+    "assignment_is_agent_trust": false,
+    "assignment_is_data_access": false,
+    "effective_permission": "intersection_of_active_identity_role_scope_device_agent_trust_policy_and_task_grant",
+    "revocation_effect": "deny_new_actions_before_async_cleanup"
+  },
+  "terminal_states": ["active", "expired", "revoked", "rejected"],
+  "audit_events": ["role_assignment_requested", "role_assignment_approved", "role_assignment_activated", "role_assignment_expired", "role_assignment_revoked"]
+}

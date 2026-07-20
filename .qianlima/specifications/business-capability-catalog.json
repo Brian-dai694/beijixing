@@ -2,14 +2,8 @@
   "schema_version": 1,
   "catalog_id": "qianlima-amazon-business-capabilities",
   "catalog_version": "1.0.0",
-  "principle": "Personal and Enterprise editions share the same business capabilities; editions differ only in governance, identity, deployment, and approval controls.",
+  "principle": "Enterprise business capabilities are governed by identity, organization, task-level authorization, evidence, budget, approval, audit, and revocation controls.",
   "profiles": {
-    "personal": {
-      "capabilities": "all",
-      "identity": "local_user",
-      "audit": "local_append_only_trace",
-      "approval": "user_confirmation_for_L4"
-    },
     "enterprise": {
       "capabilities": "all",
       "identity": "enterprise_identity",
@@ -127,5 +121,5 @@
       "execution": "read_analyze_recommend"
     }
   ],
-  "edition_invariant": "Every capability above is available in both personal and enterprise profiles; only the governing controls differ."
+  "enterprise_invariant": "Every capability requires enterprise identity, scoped role eligibility, and a task Grant before runtime use."
 }

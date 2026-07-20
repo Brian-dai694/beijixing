@@ -3,10 +3,10 @@
 # Harness v2.2 | 千里马计划
 
 workspace:
-  id: amazon_ops_personal
+  id: amazon_ops_enterprise
   name: 亚马逊运营工作台
   owner: current_user
-  mode: personal
+  mode: enterprise
   root: "<YOUR_WORKSPACE_PATH>"
   created: "<YYYY-MM-DD>"
   updated: "<YYYY-MM-DD>"

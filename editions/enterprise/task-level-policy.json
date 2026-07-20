@@ -2,7 +2,6 @@
   "schema_version": 1,
   "policy_id": "qianlima-enterprise-task-levels",
   "edition": "enterprise",
-  "personal_classification_authority": "deny",
   "classification_formula": "risk_level + organizational_scope + data_classification + action_type + identity_and_runtime_posture",
   "levels": {
     "L0": {
@@ -81,5 +80,5 @@
     "finance_write": "L4",
     "purchase": "L4"
   },
-  "always_denied": ["restricted_secret_in_prompt", "personal_grant_reused_for_enterprise", "agent_self_approval", "agent_self_verification", "direct_agent_to_agent", "unmanaged_device_execution"]
+  "always_denied": ["restricted_secret_in_prompt", "non_enterprise_grant_reused", "agent_self_approval", "agent_self_verification", "direct_agent_to_agent", "unmanaged_device_execution"]
 }

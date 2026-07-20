@@ -20,7 +20,7 @@ $capabilityIds = @($catalog.capabilities | ForEach-Object { $_.id })
 $mappedCapabilityIds = @($map.shared_slots | ForEach-Object { @($_.capability_ids) } | Select-Object -Unique)
 $missing = @($capabilityIds | Where-Object { $_ -notin $mappedCapabilityIds })
 
-Add-Case 'personal_and_enterprise_share_map' (@($map.profiles) -contains 'personal' -and @($map.profiles) -contains 'enterprise')
+Add-Case 'enterprise_profile_only' (@($map.profiles).Count -eq 1 -and @($map.profiles) -contains 'enterprise')
 Add-Case 'listener_disabled_by_default' ($map.network_defaults.enabled -eq $false -and $map.network_defaults.public_listener -eq $false)
 Add-Case 'loopback_only' ($map.network_defaults.bind_address -eq '127.0.0.1' -and @($map.network_defaults.allowed_transports) -notcontains 'public_http')
 Add-Case 'reserved_ports_unique' (@($ports | Select-Object -Unique).Count -eq $ports.Count)

@@ -8,7 +8,6 @@
 ##>
 param(
   [ValidateSet('L0','L1','L2','L3','L4')] [string]$RequestedLevel = 'L0',
-  [ValidateSet('enterprise','personal')] [string]$ClassificationEdition = 'enterprise',
   [ValidateSet('none','public','internal_sanitized','confidential_reference_only','restricted_secret')] [string]$DataClassification = 'none',
   [ValidateSet('self','project','cross_project','cross_department')] [string]$OrganizationalScope = 'self',
   [ValidateSet('conversation','readonly','analysis','recommendation','task_artifact_write','task_cache_delete','internal_project_upload','new_version_write','internal_send','external_send','business_write','source_write','deployment','governance_change','credential_assignment','erp_write','finance_write','purchase')] [string]$ActionType = 'conversation',
@@ -29,7 +28,6 @@ $ErrorActionPreference = 'Stop'
 $rank = @{ L0 = 0; L1 = 1; L2 = 2; L3 = 3; L4 = 4 }
 $requiredRank = $rank[$RequestedLevel]
 $reasons = [System.Collections.Generic.List[string]]::new()
-if ($ClassificationEdition -ne 'enterprise') { [void]$reasons.Add('personal_classification_has_no_enterprise_authority') }
 if ($DataClassification -eq 'restricted_secret') { [void]$reasons.Add('restricted_secret_is_denied') }
 if ($OrganizationalScope -in @('cross_project','cross_department')) { $requiredRank = [Math]::Max($requiredRank, 3) }
 if ($DataClassification -eq 'confidential_reference_only') { $requiredRank = [Math]::Max($requiredRank, 3) }

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "policy_id": "beijixing-enterprise-user-management",
+  "source_of_truth": "approved_identity_directory_or_HR_system",
+  "user_required_fields": ["user_id", "display_name", "organization_id", "department_id", "manager_user_id", "employment_type", "status", "cost_center", "created_at"],
+  "states": ["invited", "active", "suspended", "offboarded"],
+  "employment_types": ["employee", "contractor", "service_account"],
+  "separate_objects": {
+    "identity": "who_the_human_or_service_is",
+    "employment": "organization_department_manager_and_cost_center",
+    "role_assignment": "what_may_be_requested_within_a_scope",
+    "agent_assignment": "which_admitted_Agent_may_be_selected",
+    "task_grant": "the_only_runtime_authority"
+  },
+  "activation_requirements": ["identity_verified", "department_assigned", "manager_assigned", "cost_center_assigned", "device_state_known", "security_training_acknowledged"],
+  "defaults": {
+    "status": "invited",
+    "governance_role": "employee",
+    "business_roles": [],
+    "agent_trust": "T0",
+    "mcp_access": "none",
+    "network_access": "none",
+    "business_write": false
+  },
+  "directory_views": {
+    "owner": ["organization_summary", "privileged_role_assignments", "orphaned_approvals", "monthly_cost"],
+    "manager": ["department_users", "role_assignments", "active_tasks", "budget_usage", "expiring_access"],
+    "user": ["own_profile", "own_roles", "own_agent_assignments", "own_active_grants", "own_cost_usage"],
+    "security_admin": ["identity_status", "device_status", "agent_trust", "security_events", "revocation_status"],
+    "auditor": ["immutable_identity_events", "role_events", "grant_events", "approval_evidence"]
+  },
+  "bulk_operations": {
+    "supported": ["invite", "department_assign", "manager_assign", "suspend", "offboard_plan"],
+    "dry_run_required": true,
+    "partial_success": "deny",
+    "max_batch_without_additional_review": 50,
+    "privileged_role_assignment": "never_bulk"
+  },
+  "cost_attribution": ["organization_id", "department_id", "cost_center", "user_id", "agent_id", "provider", "task_id"],
+  "invariants": [
+    "A disabled or offboarded user has no active Grant or direct MCP session.",
+    "User deletion is logical; identity, approval, receipt, and cost history remain attributable.",
+    "A role assignment cannot expand Agent trust, data classification, network access, or write authority.",
+    "Contractor and temporary assignments require expires_at and automatically suspend on expiry.",
+    "Service accounts have an owner, purpose, rotation policy, and cannot approve tasks."
+  ]
+}

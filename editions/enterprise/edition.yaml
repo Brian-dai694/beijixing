@@ -1,6 +1,6 @@
 edition:
   id: enterprise
-  version: 2.7.8
+  version: 2.8.0
   product_profile: enterprise-governed
   shared_core_root: ../..
   do_not_fork_harness: true
@@ -16,6 +16,9 @@ shared_contracts:
   deployment_policy: ./deployment-policy.yaml
   task_level_policy: ./task-level-policy.json
   organization_role_templates: ./organization-role-templates.json
+  user_management: ./user-management-policy.json
+  role_assignment: ./role-assignment-contract.json
+  identity_access_gate: ./invoke-identity-access-gate.ps1
   connection_policy: ./connection-policy.json
   approval_routing_policy: ./approval-routing-policy.json
   five_view_task_contract: ./five-view-task-contract.json
@@ -82,6 +85,8 @@ enterprise_controls:
   obsidian_integration: reserved_local_knowledge_connector_readonly_first
   approved_direct_mcp: local_connector_enforced_short_lived_session
   employee_management: joiner_mover_leaver_append_only
+  role_management: governance_plus_business_roles_scoped_and_expiring
+  user_access_authority: task_grant_only
   artifact_organization: business_department_risk_month_task_type
   operational_learning: review_to_candidate_then_replay_verify_and_human_promote
   api_agent_deployment: E1_E2_E3_E4_selected_by_two_questions

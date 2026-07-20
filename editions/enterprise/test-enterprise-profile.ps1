@@ -21,6 +21,9 @@ $deploymentPath = Join-Path $enterpriseRoot 'deployment-policy.yaml'
 $taskLevelPath = Join-Path $enterpriseRoot 'task-level-policy.json'
 $taskGatePath = Join-Path $enterpriseRoot 'invoke-enterprise-task-gate.ps1'
 $roleTemplatePath = Join-Path $enterpriseRoot 'organization-role-templates.json'
+$userManagementPath = Join-Path $enterpriseRoot 'user-management-policy.json'
+$roleAssignmentPath = Join-Path $enterpriseRoot 'role-assignment-contract.json'
+$identityAccessGatePath = Join-Path $enterpriseRoot 'invoke-identity-access-gate.ps1'
 $organizationWizardPath = Join-Path $enterpriseRoot 'new-enterprise-organization.ps1'
 $onboardingTextPath = Join-Path $enterpriseRoot 'onboarding-text.zh-CN.json'
 $connectionPolicyPath = Join-Path $enterpriseRoot 'connection-policy.json'
@@ -86,6 +89,9 @@ if (-not (Test-Path -LiteralPath $deploymentPath -PathType Leaf)) { throw 'Missi
 if (-not (Test-Path -LiteralPath $taskLevelPath -PathType Leaf)) { throw 'Missing enterprise task-level policy.' }
 if (-not (Test-Path -LiteralPath $taskGatePath -PathType Leaf)) { throw 'Missing enterprise task gate.' }
 if (-not (Test-Path -LiteralPath $roleTemplatePath -PathType Leaf)) { throw 'Missing enterprise organization role templates.' }
+if (-not (Test-Path -LiteralPath $userManagementPath -PathType Leaf)) { throw 'Missing enterprise user management policy.' }
+if (-not (Test-Path -LiteralPath $roleAssignmentPath -PathType Leaf)) { throw 'Missing enterprise role assignment contract.' }
+if (-not (Test-Path -LiteralPath $identityAccessGatePath -PathType Leaf)) { throw 'Missing enterprise identity access gate.' }
 if (-not (Test-Path -LiteralPath $organizationWizardPath -PathType Leaf)) { throw 'Missing enterprise organization wizard.' }
 if (-not (Test-Path -LiteralPath $onboardingTextPath -PathType Leaf)) { throw 'Missing Chinese organization onboarding text.' }
 if (-not (Test-Path -LiteralPath $connectionPolicyPath -PathType Leaf)) { throw 'Missing enterprise connection policy.' }
@@ -146,6 +152,8 @@ $events = Get-Content -LiteralPath $eventPath -Raw -Encoding UTF8 | ConvertFrom-
 $deployment = Get-Content -LiteralPath $deploymentPath -Raw -Encoding UTF8
 $taskLevels = Get-Content -LiteralPath $taskLevelPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $roleTemplates = Get-Content -LiteralPath $roleTemplatePath -Raw -Encoding UTF8 | ConvertFrom-Json
+$userManagement = Get-Content -LiteralPath $userManagementPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$roleAssignment = Get-Content -LiteralPath $roleAssignmentPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $onboardingText = Get-Content -LiteralPath $onboardingTextPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $connectionPolicy = Get-Content -LiteralPath $connectionPolicyPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $approvalRouting = Get-Content -LiteralPath $approvalRoutingPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -182,10 +190,12 @@ Add-Case $cases 'zero_exposure_default' ($trust -match '(?m)^\s*public_listener:
 Add-Case $cases 'push_pull_and_backpressure' ($events.delivery.event_stream_is_source_of_truth -eq $true -and @($events.delivery.pull) -contains 'audit_timeline' -and $events.backpressure.verification_queue_high -eq 'pause_new_multi_agent_delegations')
 Add-Case $cases 'managed_environment_required' ($edition -match '(?m)^\s*environment_gate:\s*required_before_enterprise_start\s*$' -and $deployment -match '(?m)^\s*on_failure:\s*block_enterprise_start\s*$')
 Add-Case $cases 'deployment_does_not_grant_execution' ($deployment -match '(?m)^\s*deployment_ready_is_execution_authority:\s*false\s*$' -and $deployment -match '(?m)^\s*task_bound_attestation_still_required:\s*true\s*$')
-Add-Case $cases 'enterprise_levels_distinct_from_personal' ($taskLevels.edition -eq 'enterprise' -and $taskLevels.personal_classification_authority -eq 'deny')
+Add-Case $cases 'enterprise_levels_are_authoritative' ($taskLevels.edition -eq 'enterprise')
 Add-Case $cases 'enterprise_l4_responsibility_routing' ($taskLevels.levels.L4.minimum_distinct_approvers -eq 1 -and $taskLevels.levels.L4.business_owner_required -eq 'only_by_profile_or_threshold' -and $taskLevels.levels.L4.initiator_may_approve -eq $false)
-Add-Case $cases 'beginner_role_templates' (@($roleTemplates.roles).Count -eq 4 -and @($roleTemplates.roles.id) -contains 'employee' -and @($roleTemplates.roles.id) -contains 'security_admin')
-Add-Case $cases 'owner_not_automatic_super_admin' ((@($roleTemplates.roles | Where-Object { $_.id -eq 'business_owner' }) | Select-Object -First 1).platform_admin -eq $false)
+Add-Case $cases 'enterprise_role_catalog' (@($roleTemplates.governance_roles).Count -ge 6 -and @($roleTemplates.business_roles.id) -contains 'operations_manager' -and @($roleTemplates.business_roles.id) -contains 'supply_chain_manager' -and @($roleTemplates.business_roles.id) -contains 'finance_manager')
+Add-Case $cases 'owner_not_automatic_super_admin' ((@($roleTemplates.governance_roles | Where-Object { $_.id -eq 'business_owner' }) | Select-Object -First 1).platform_admin -eq $false)
+Add-Case $cases 'user_role_and_grant_are_separate' ($userManagement.separate_objects.task_grant -eq 'the_only_runtime_authority' -and $roleAssignment.rules.assignment_is_runtime_authority -eq $false)
+Add-Case $cases 'privileged_roles_require_distinct_approval' ($roleAssignment.rules.privileged_assignment_requires_two_distinct_people -eq $true -and $roleTemplates.assignment_rules.user_admin_cannot_assign_privileged_roles -eq $true)
 Add-Case $cases 'chinese_beginner_onboarding' (-not [string]::IsNullOrWhiteSpace($onboardingText.prompts.company_name) -and $onboardingText.locale -eq 'zh-CN')
 Add-Case $cases 'configured_connections_deny_by_default' ($connectionPolicy.default_action -eq 'deny' -and $connectionPolicy.invariants.direct_agent_connection -eq 'deny')
 Add-Case $cases 'connection_operations_are_risk_specific' ($connectionPolicy.operation_levels.write_task_artifact -eq 'L2' -and $connectionPolicy.operation_levels.upload_internal_project -eq 'L3' -and $connectionPolicy.operation_levels.business_write -eq 'L4')
@@ -239,7 +249,7 @@ Add-Case $cases 'collaboration_scale_has_four_quota_scopes' (@($collaborationSca
 Add-Case $cases 'collaboration_group_revocation_required' ($edition.Contains('whole_grant_set_before_next_action') -and @($collaborationScale.revocation_manifest.order) -contains 'revoke_participant_grants')
 Add-Case $cases 'collaboration_revocation_confirmation_is_mechanical' (Test-Path -LiteralPath $collaborationRevocationValidatorPath -PathType Leaf)
 Add-Case $cases 'blocked_and_failed_are_distinct' ($edition.Contains('blocked_is_failed: false') -and $collaborationOutcome.status_semantics.blocked -match 'unavailable' -and $collaborationOutcome.status_semantics.failed -match 'failed')
-Add-Case $cases 'personal_and_enterprise_share_all_capabilities' ($businessCatalog.profiles.personal.capabilities -eq 'all' -and $businessCatalog.profiles.enterprise.capabilities -eq 'all' -and @($businessCatalog.capabilities).Count -ge 10)
+Add-Case $cases 'enterprise_business_capabilities_present' ($businessCatalog.profiles.enterprise.capabilities -eq 'all' -and @($businessCatalog.capabilities).Count -ge 10)
 Add-Case $cases 'business_periods_and_profit_views_defined' (@($businessCatalog.periods.PSObject.Properties.Name).Count -eq 5 -and @($businessCatalog.capabilities | Where-Object { $_.id -eq 'profit_accounting' }).standard_views.Count -ge 4)
 Add-Case $cases 'enterprise_overlay_allowed' ((& $boundaryChecker -CandidatePath ($enterpriseRelativePath + '/edition.yaml') -PassThru | ConvertFrom-Json).status -eq 'pass')
 

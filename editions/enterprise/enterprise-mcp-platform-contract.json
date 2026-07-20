@@ -5,7 +5,7 @@
   "default_action": "deny",
   "direct_agent_to_mcp": "allow_only_with_broker_signed_direct_session",
   "broker_required": "for_admission_and_session_grant_issuance",
-  "personal_mcp_authority_in_enterprise": "deny",
+  "ungoverned_mcp_authority": "deny",
   "server_categories": [
     "file_and_cloud_storage",
     "commerce_erp",

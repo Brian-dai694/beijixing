@@ -110,7 +110,7 @@ data_sources:
     display_name: US 广告消耗数据
     type: lark_base
     owner: current_user
-    workspace: amazon_ops_personal
+    workspace: amazon_ops_enterprise
     status: active
     business_purpose: 用于生成每日广告运营日报和广告异常分析
     scenarios:
@@ -704,4 +704,3 @@ Data Connector Spec 跑通后，下一份标准建议写：
 > Work Scenario Governance Spec 工作场景治理标准
 
 它用于把 `work.ws`、workflow、文件注册表、数据连接器、权限规则、成本台账和跨场景事件统一起来。
-

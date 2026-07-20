@@ -47,8 +47,12 @@ through an ordinary user start.
 - `deployment-policy.yaml`: Required managed runtime and fail-closed startup policy.
 - `task-level-policy.json`: Enterprise-specific L0-L4 meanings and escalation rules.
 - `invoke-enterprise-task-gate.ps1`: Mechanical enterprise task classification and authorization gate.
-- `test-enterprise-task-levels.ps1`: Personal-versus-enterprise risk regression suite.
-- `organization-role-templates.json`: Beginner-friendly owner, manager, employee, and security role templates.
+- `test-enterprise-task-levels.ps1`: Enterprise L0-L4 risk regression suite.
+- `organization-role-templates.json`: Governance roles plus scoped operations, supply-chain, finance, and product business roles.
+- `user-management-policy.json`: Identity, employment, role, Agent assignment, task Grant, lifecycle, batch, and cost-attribution rules.
+- `role-assignment-contract.json`: Scoped and expiring role assignment with self-approval and privileged-role controls.
+- `invoke-identity-access-gate.ps1`: Offline user and role eligibility gate; it grants no runtime authority.
+- `角色与用户管理指南.md`: Beginner guide for owners, managers, administrators, auditors, and employees.
 - `new-enterprise-organization.ps1`: Guided company, department, and initial administrator setup.
 - `组织与人员设置指南.md`: Plain-language onboarding guide for owners and employees.
 - `onboarding-text.zh-CN.json`: Chinese wizard text kept outside PowerShell source for Windows 5.1 compatibility.
@@ -123,10 +127,9 @@ task-bound Sandbox Attestation and a separate human enablement decision.
 Passing the environment gate proves deployment readiness only; it does not
 grant Agent, network, MCP, file, or business-system permissions.
 
-Enterprise L0-L4 is intentionally stricter than Personal L0-L4. Enterprise
-levels include organizational scope, employee and device identity, project and
-cost-center ownership, Agent trust, independent verification, and separation
-of duties. A Personal classification is never accepted as Enterprise authority.
+Enterprise L0-L4 includes organizational scope, employee and device identity,
+project and cost-center ownership, Agent trust, independent verification, and
+separation of duties.
 
 For first-time setup, run:
 
