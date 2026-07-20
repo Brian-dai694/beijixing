@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "contract_id": "qianlima-enterprise-layered-evidence-pack",
+  "layers": {
+    "L0_policy_context": {
+      "contains": ["request_id", "task_id", "agent_id", "organization_id", "department_id", "project_id", "device_id", "grant_id", "risk_level", "allowed_classifications"],
+      "visibility": "broker_and_audit_only",
+      "content": "none"
+    },
+    "L1_metadata_index": {
+      "contains": ["evidence_id", "source_type", "source_ref", "version", "classification", "validity", "verification_status", "content_sha256"],
+      "visibility": "broker_only",
+      "content": "none"
+    },
+    "L2_candidate_evidence": {
+      "contains": ["selected_sanitized_chunks", "rank_score", "selection_reason", "source_ref", "version", "content_sha256"],
+      "visibility": "task_selected_dispatch_payload",
+      "content": "sanitized_minimum_only"
+    },
+    "L3_original_references": {
+      "contains": ["source_ref", "version", "content_sha256", "jit_read_requirement"],
+      "visibility": "broker_reference_only",
+      "content": "never_embedded"
+    }
+  },
+  "admissible": ["grant_valid", "tenant_match", "department_project_match", "sensitivity_allowed", "not_revoked", "not_expired", "within_retention", "source_verified"],
+  "score": {
+    "formula": "0.40*relevance + 0.25*evidence_quality + 0.15*freshness - 0.10*retrieval_cost - 0.10*exposure_risk",
+    "constraint": "score_only_after_admissible_true",
+    "learned_end_to_end_selector": "deny"
+  },
+  "dispatch": {
+    "external_agent_receives": "L2_candidate_evidence_only",
+    "knowledge_search_capability": "deny",
+    "L3_read": "new task-bound just-in-time authorization required"
+  },
+  "runtime_dependency_policy": {
+    "HiLS_model_training": "not_required_not_installed",
+    "Python_3_11": "not_required",
+    "PyTorch_CUDA": "not_required",
+    "SGLang_HSA": "not_required",
+    "implementation": "governance_layer_only"
+  },
+  "separation": ["memory", "evidence", "preference", "policy"],
+  "automatic_cross_layer_promotion": "deny"
+}

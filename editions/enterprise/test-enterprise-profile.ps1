@@ -54,6 +54,7 @@ $collaborationOutcomePath = Join-Path $projectRoot '.qianlima\collaboration-outc
 $errorIndependenceGatePath = Join-Path $projectRoot '.qianlima\scripts\evaluate-error-independence.ps1'
 $governedFanInPath = Join-Path $projectRoot '.qianlima\scripts\invoke-governed-collaboration-fan-in.ps1'
 $enterpriseDataAdmissionPath = Join-Path $projectRoot '.qianlima\enterprise-data-admission-contract.json'
+$evidencePackLayeringPath = Join-Path $projectRoot '.qianlima\evidence-pack-layering-contract.json'
 $enterpriseDataAdmissionRunnerPath = Join-Path $projectRoot '.qianlima\scripts\invoke-enterprise-data-admission.ps1'
 $skillIntakeContractPath = Join-Path $projectRoot '.qianlima\skill-intake-contract.json'
 $skillIntakeGatePath = Join-Path $projectRoot '.qianlima\scripts\invoke-skill-intake-gate.ps1'
@@ -110,6 +111,7 @@ if (-not (Test-Path -LiteralPath $collaborationOutcomePath -PathType Leaf)) { th
 if (-not (Test-Path -LiteralPath $errorIndependenceGatePath -PathType Leaf)) { throw 'Missing error independence routing gate.' }
 if (-not (Test-Path -LiteralPath $governedFanInPath -PathType Leaf)) { throw 'Missing governed collaboration fan-in.' }
 if (-not (Test-Path -LiteralPath $enterpriseDataAdmissionPath -PathType Leaf)) { throw 'Missing enterprise data admission contract.' }
+if (-not (Test-Path -LiteralPath $evidencePackLayeringPath -PathType Leaf)) { throw 'Missing layered evidence pack contract.' }
 if (-not (Test-Path -LiteralPath $enterpriseDataAdmissionRunnerPath -PathType Leaf)) { throw 'Missing enterprise data admission runtime.' }
 if (-not (Test-Path -LiteralPath $skillIntakeContractPath -PathType Leaf)) { throw 'Missing enterprise Skill Intake contract.' }
 if (-not (Test-Path -LiteralPath $skillIntakeGatePath -PathType Leaf)) { throw 'Missing enterprise Skill Intake gate.' }
@@ -144,6 +146,7 @@ $fileOrganization = Get-Content -LiteralPath $fileOrganizationPath -Raw -Encodin
 $reviewCompounding = Get-Content -LiteralPath $reviewCompoundingPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $deploymentModes = Get-Content -LiteralPath $deploymentModePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $businessCatalog = Get-Content -LiteralPath $businessCatalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$evidencePackLayering = Get-Content -LiteralPath $evidencePackLayeringPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $cases = [System.Collections.Generic.List[object]]::new()
 Add-Case $cases 'shared_core_reference' ($edition -match '(?m)^\s*shared_core_root:\s*\.\.')
 Add-Case $cases 'no_harness_fork' ($edition -match '(?m)^\s*do_not_fork_harness:\s*true\s*$')
@@ -198,8 +201,10 @@ Add-Case $cases 'shadow_candidate_dispatch_disabled_by_default' (((Get-Content -
 Add-Case $cases 'blindspot_learning_is_governed_and_routing_only' ((Test-Path -LiteralPath $blindspotObservationPath -PathType Leaf) -and (Test-Path -LiteralPath $collaborationOutcomePath -PathType Leaf) -and (Test-Path -LiteralPath $errorIndependenceGatePath -PathType Leaf) -and $edition.Contains('no_permission_change'))
 Add-Case $cases 'collaboration_fan_in_enforces_contract_lineage_and_independence' ((Test-Path -LiteralPath $governedFanInPath -PathType Leaf) -and $edition.Contains('contract_lineage_independence_then_shadow_receipt'))
 Add-Case $cases 'raw_shadow_runtime_is_not_enterprise_entrypoint' ($edition.Contains('internal_component_governed_fan_in_only') -and $edition.Contains('collaboration_entrypoint: governed_collaboration_fan_in'))
-Add-Case $cases 'enterprise_data_admission_filters_before_ranking' ($edition.Contains('identity_grant_policy_filter_rank_topk_sanitize_receipt') -and (Test-Path -LiteralPath $enterpriseDataAdmissionRunnerPath -PathType Leaf))
+Add-Case $cases 'enterprise_data_admission_filters_before_ranking' ($edition.Contains('L0_policy_L1_metadata_L2_sanitized_L3_jit_reference') -and (Test-Path -LiteralPath $enterpriseDataAdmissionRunnerPath -PathType Leaf))
 Add-Case $cases 'external_agent_gets_evidence_pack_not_search' ($edition.Contains('external_agent_knowledge_search: deny_evidence_pack_only'))
+Add-Case $cases 'hils_is_design_pattern_not_runtime_dependency' ($edition.Contains('hils_runtime_dependency: none_governance_pattern_only') -and $evidencePackLayering.runtime_dependency_policy.HiLS_model_training -eq 'not_required_not_installed' -and $evidencePackLayering.runtime_dependency_policy.PyTorch_CUDA -eq 'not_required' -and $evidencePackLayering.runtime_dependency_policy.SGLang_HSA -eq 'not_required')
+Add-Case $cases 'memory_evidence_preference_policy_do_not_auto_promote' ($evidencePackLayering.automatic_cross_layer_promotion -eq 'deny' -and @($evidencePackLayering.separation).Count -eq 4)
 Add-Case $cases 'skill_intake_is_install_update_only' ($edition.Contains('skill_intake_gate: install_update_only_offline_static_first') -and (Test-Path -LiteralPath $skillIntakeGatePath -PathType Leaf))
 Add-Case $cases 'skill_intake_never_runs_on_startup' ($edition.Contains('skill_intake_startup_path: never'))
 Add-Case $cases 'improvement_pipeline_requires_evaluation_card_and_canary' ($edition.Contains('improvement_entrypoint: evaluation_card_replay_verify_human_canary_monitor') -and (Test-Path -LiteralPath $improvementPipelinePath -PathType Leaf))

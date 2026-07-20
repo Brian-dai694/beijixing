@@ -2,11 +2,13 @@
   "schema_version": 1,
   "contract_id": "qianlima-enterprise-data-admission",
   "purpose": "Filter enterprise evidence by policy before relevance ranking and Agent dispatch.",
-  "pipeline": ["identity_context_check", "task_grant_check", "mandatory_policy_filter", "relevance_rank", "top_k", "sanitize_minimize", "evidence_pack", "receipt_audit_revoke_verify"],
+  "pipeline": ["L0_policy_context", "mandatory_policy_filter", "L1_metadata_index", "relevance_rank", "top_k", "L2_sanitize_minimize", "L3_original_reference", "receipt_audit_revoke_verify"],
+  "layering_contract": "evidence-pack-layering-contract.json",
   "required_request_fields": ["request_id", "task_id", "agent_id", "grant_id", "organization_id", "department_id", "project_id", "device_id", "device_attestation", "purpose", "risk_level", "target", "max_items", "allowed_classifications", "now"],
   "relevance_dimensions": ["semantic", "authorization", "organization", "time", "evidence"],
   "mandatory_filter_order": ["grant", "classification", "organization", "scope", "revocation", "validity", "retention", "source", "verification"],
-  "ranking_dimensions": ["semantic_score", "evidence_quality", "freshness_score", "cost_efficiency", "risk_fit"],
+  "ranking_dimensions": ["relevance_score", "evidence_quality", "freshness_score", "retrieval_cost", "exposure_risk"],
+  "ranking_formula": "0.40*relevance + 0.25*evidence_quality + 0.15*freshness - 0.10*retrieval_cost - 0.10*exposure_risk",
   "invariants": [
     "Mandatory policy filtering runs before ranking and Top-K selection.",
     "A denied candidate never enters the ranked candidate set.",
@@ -14,6 +16,10 @@
     "External Agents never receive enterprise knowledge-search capability, raw paths, raw private content, credentials, or full indexes.",
     "Top-K is bounded by both the request and task Grant.",
     "Every returned item retains source, version, validity, verification, classification, and content hash metadata.",
+    "Original content is never embedded in L3; a new just-in-time Grant and policy check are required to read it.",
+    "Selection and exclusion reasons are recorded for every candidate.",
+    "Memory, evidence, preference, and policy cannot automatically promote into one another.",
+    "The governance runtime does not install or depend on HiLS model checkpoints, PyTorch, CUDA, SGLang, or HSA.",
     "An Evidence Pack is data, not authority, memory promotion, or permission expansion."
   ]
 }

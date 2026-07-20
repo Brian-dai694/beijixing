@@ -74,6 +74,9 @@ through an ordinary user start.
 - `invoke-obsidian-connector-gate.ps1`: Offline admission gate for note scope, file type, task Grant, and L4 write separation.
 - `../../.qianlima/enterprise-data-admission-contract.json`: Policy-first evidence admission; identity and Grant checks precede ranking and Top-K.
 - `../../.qianlima/scripts/invoke-enterprise-data-admission.ps1`: Produces minimum sanitized Evidence Packs; external Agents receive no knowledge-search capability.
+- `../../.qianlima/evidence-pack-layering-contract.json`: L0 policy context, L1 metadata, L2 sanitized chunks, and L3 just-in-time original references. Ranking occurs only after hard admission and records both selection and rejection reasons.
+
+HiLS is used only as a governance design analogy. Enterprise Beijixing does not install or require its model checkpoints, Python/PyTorch/CUDA stack, SGLang HSA backend, or GPU training environment.
 - `../../.qianlima/skill-intake-contract.json`: On-demand Skill/MCP installation intake with immutable provenance, offline static evidence, capability diff, and rescan triggers.
 - `../../.qianlima/scripts/invoke-skill-intake-gate.ps1`: Returns `approved`, `conditional`, or `denied`; approval still requires human confirmation, isolated trial, and a task Grant.
 

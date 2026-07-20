@@ -114,12 +114,16 @@
   },
   "enterprise_data_admission_overlay": {
     "contract": "enterprise-data-admission-contract.json",
+    "layering_contract": "evidence-pack-layering-contract.json",
     "runtime": "scripts/invoke-enterprise-data-admission.ps1",
     "regression": "scripts/test-enterprise-data-admission.ps1",
-    "mandatory_order": ["identity_context", "task_grant", "policy_filter", "rank", "top_k", "sanitize", "evidence_pack"],
+    "mandatory_order": ["L0_policy_context", "policy_filter", "L1_metadata", "rank", "top_k", "L2_sanitize", "L3_reference"],
     "policy_filter_before_ranking": true,
     "external_agent_search_capability": "deny",
     "external_agent_input": "sanitized_minimum_evidence_pack_only",
+    "original_content_read": "new_just_in_time_grant_and_policy_recheck",
+    "learned_end_to_end_selector": "deny",
+    "HiLS_runtime_dependency": "none_governance_pattern_only",
     "production_authority": "none"
   },
   "skill_intake_overlay": {

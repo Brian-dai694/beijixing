@@ -44,6 +44,7 @@ shared_contracts:
   error_independence_gate: ../../.qianlima/scripts/evaluate-error-independence.ps1
   governed_collaboration_fan_in: ../../.qianlima/scripts/invoke-governed-collaboration-fan-in.ps1
   enterprise_data_admission: ../../.qianlima/enterprise-data-admission-contract.json
+  evidence_pack_layering: ../../.qianlima/evidence-pack-layering-contract.json
   skill_intake: ../../.qianlima/skill-intake-contract.json
   improvement_evaluation_card: ../../.qianlima/improvement-evaluation-card-schema.json
   improvement_governance_pipeline: ../../.qianlima/scripts/invoke-improvement-governance-pipeline.ps1
@@ -85,8 +86,9 @@ enterprise_controls:
   blindspot_learning: sanitized_append_only_routing_only_no_permission_change
   collaboration_fan_in: contract_lineage_independence_then_shadow_receipt
   collaboration_entrypoint: governed_collaboration_fan_in
-  data_admission: identity_grant_policy_filter_rank_topk_sanitize_receipt
+  data_admission: L0_policy_L1_metadata_L2_sanitized_L3_jit_reference
   external_agent_knowledge_search: deny_evidence_pack_only
+  hils_runtime_dependency: none_governance_pattern_only
   skill_intake_gate: install_update_only_offline_static_first
   skill_intake_startup_path: never
   improvement_entrypoint: evaluation_card_replay_verify_human_canary_monitor
