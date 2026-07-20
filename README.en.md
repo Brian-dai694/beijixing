@@ -69,6 +69,10 @@ The vendor-neutral MCP platform reserves interfaces for ERP, finance, tax, custo
 
 Lingxing, tax, customs, and other MCP integrations in this public repository are contracts and enforcement gates only. No real endpoint, credential, or production write permission is enabled.
 
+## Model Collaboration
+
+Model fusion is evidence collaboration, not several models chatting. L0-L2 use one model by default; L3 may use independent candidates plus evidence verification; L4 produces candidates only and requires human confirmation. See `.qianlima/model-portfolio.yaml` and `.qianlima/fusion-plan-schema.yaml`.
+
 ## Quick Start
 
 ```bash

@@ -44,6 +44,25 @@
     "automatic_production_change": false,
     "production_authority": "none"
   },
+  "model_fusion_overlay": {
+    "model_portfolio": "model-portfolio.yaml",
+    "fusion_plan_schema": "fusion-plan-schema.yaml",
+    "validator": "scripts/validate-fusion-plan.ps1",
+    "regression": "scripts/test-model-fusion.ps1",
+    "default_strategy": "single_model",
+    "L0_L2": "fusion_denied",
+    "L3": "independent_candidates_named_verifier_and_evidence_first",
+    "L4": "candidate_only_needs_human",
+    "shadow_mode": {
+      "enabled_by_default": false,
+      "writes": false,
+      "external_calls": false,
+      "affects_primary_result": false,
+      "records": ["agreement_rate", "evidence_completeness", "cost", "latency", "material_conflicts"]
+    },
+    "claim_pack_required": ["claim", "source_refs", "data_time_range", "assumptions", "uncertainty", "falsifiers", "method_ref"],
+    "production_authority": "none"
+  },
   "memory_broker_overlay": {
     "contract": "specifications/memory-read-contract.json",
     "validator": "scripts/validate-memory-read.ps1",
@@ -167,8 +186,8 @@
     "rollback": "governance_snapshot_and_new_revision"
   },
   "control_status": {
-    "implemented": ["deny_by_default", "task_grants", "revocation", "A2A_local_contract", "CLI_adapter_plan_gate", "command_safety", "protected_invariants", "append_only_audit", "mock_runner_gate", "artifact_content_scan", "local_incident_containment_drill", "task_scoped_memory_read_gate", "complexity_admission_gate"],
-    "partially_implemented": ["Docker_isolation_probe", "MCP_gateway_runtime", "credential_rotation", "incident_notification", "production_runner_execution"],
+    "implemented": ["deny_by_default", "task_grants", "revocation", "A2A_local_contract", "CLI_adapter_plan_gate", "command_safety", "protected_invariants", "append_only_audit", "mock_runner_gate", "artifact_content_scan", "local_incident_containment_drill", "task_scoped_memory_read_gate", "complexity_admission_gate", "fusion_plan_validator", "evidence_first_fusion_regression"],
+    "partially_implemented": ["Docker_isolation_probe", "MCP_gateway_runtime", "credential_rotation", "incident_notification", "production_runner_execution", "shadow_fusion_runtime"],
     "not_enabled": ["external_A2A_network", "business_system_write_runner", "automatic_policy_promotion", "multi_tenant_external_exposure"]
   },
   "go_live_gates": [

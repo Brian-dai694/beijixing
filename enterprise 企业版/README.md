@@ -83,6 +83,10 @@ through an ordinary user start.
 - `deployment-mode-policy.json`: E1-E4 matrix for enterprise/BYOK API and fixed/employee-selected Agents.
 - `select-enterprise-deployment-mode.ps1`: Two-question beginner selector; it grants no runtime permissions.
 - `test-deployment-modes.ps1`: Offline regression for all four mappings and their hard boundaries.
+- `../.qianlima/model-portfolio.yaml`: Model Passport fields, routing tiers, evidence metrics, and trust boundaries.
+- `../.qianlima/fusion-plan-schema.yaml`: Evidence-first multi-model Fusion Plan contract.
+- `../.qianlima/scripts/validate-fusion-plan.ps1`: Validates risk, independence, data, verifier, and human-approval requirements.
+- `../.qianlima/scripts/test-model-fusion.ps1`: Offline regression for L0-L4 fusion admission.
 - `new-employee-lifecycle-request.ps1`: Creates a lifecycle request without changing identity or access.
 - `invoke-employee-lifecycle-gate.ps1`: Produces the mandatory revoke, handover, and recovery action plan.
 - `员工增减与调岗指南.md`: Beginner guide for managers, HR, and employees.

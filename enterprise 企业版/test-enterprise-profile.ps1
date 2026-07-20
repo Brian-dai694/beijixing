@@ -36,6 +36,8 @@ $directMcpPath = Join-Path $enterpriseRoot 'direct-mcp-session-contract.json'
 $employeeLifecyclePath = Join-Path $enterpriseRoot 'employee-lifecycle-policy.json'
 $fileOrganizationPath = Join-Path $enterpriseRoot 'file-organization-policy.json'
 $reviewCompoundingPath = Join-Path $enterpriseRoot 'review-compounding-policy.json'
+$modelPortfolioPath = Join-Path $projectRoot '.qianlima\model-portfolio.yaml'
+$fusionPlanPath = Join-Path $projectRoot '.qianlima\fusion-plan-schema.yaml'
 $deploymentModePath = Join-Path $enterpriseRoot 'deployment-mode-policy.json'
 $businessCatalogPath = Join-Path $projectRoot '.qianlima\specifications\business-capability-catalog.json'
 $boundaryChecker = Join-Path $projectRoot '.qianlima\scripts\check-harness-boundary.ps1'
@@ -70,6 +72,8 @@ if (-not (Test-Path -LiteralPath $employeeLifecyclePath -PathType Leaf)) { throw
 if (-not (Test-Path -LiteralPath $fileOrganizationPath -PathType Leaf)) { throw 'Missing file organization policy.' }
 if (-not (Test-Path -LiteralPath $reviewCompoundingPath -PathType Leaf)) { throw 'Missing review compounding policy.' }
 if (-not (Test-Path -LiteralPath $deploymentModePath -PathType Leaf)) { throw 'Missing API and Agent deployment mode policy.' }
+if (-not (Test-Path -LiteralPath $modelPortfolioPath -PathType Leaf)) { throw 'Missing model portfolio policy.' }
+if (-not (Test-Path -LiteralPath $fusionPlanPath -PathType Leaf)) { throw 'Missing fusion plan schema.' }
 if (-not (Test-Path -LiteralPath $businessCatalogPath -PathType Leaf)) { throw 'Missing shared business capability catalog.' }
 if (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'start-qianlima.ps1') -PathType Leaf)) { throw 'Missing shared core start script.' }
 
@@ -140,6 +144,7 @@ Add-Case $cases 'lesson_promotion_is_verified_and_human' (@($reviewCompounding.p
 Add-Case $cases 'four_api_agent_modes_defined' (@($deploymentModes.modes.PSObject.Properties).Count -eq 4 -and $deploymentModes.default_mode -eq 'E2')
 Add-Case $cases 'E4_is_restricted_by_default' ($deploymentModes.modes.E4.initial_trust_ceiling -eq 'T1' -and $deploymentModes.modes.E4.credential_mode -eq 'byok_secret_ref_only')
 Add-Case $cases 'deployment_mode_never_grants_business_authority' (@($deploymentModes.invariants | Where-Object { $_ -match 'L4' }).Count -gt 0 -and @($deploymentModes.invariants | Where-Object { $_ -match 'never grants MCP' }).Count -gt 0)
+Add-Case $cases 'model_fusion_contracts_present' ((Test-Path -LiteralPath $modelPortfolioPath -PathType Leaf) -and (Test-Path -LiteralPath $fusionPlanPath -PathType Leaf))
 Add-Case $cases 'personal_and_enterprise_share_all_capabilities' ($businessCatalog.profiles.personal.capabilities -eq 'all' -and $businessCatalog.profiles.enterprise.capabilities -eq 'all' -and @($businessCatalog.capabilities).Count -ge 10)
 Add-Case $cases 'business_periods_and_profit_views_defined' (@($businessCatalog.periods.PSObject.Properties.Name).Count -eq 5 -and @($businessCatalog.capabilities | Where-Object { $_.id -eq 'profit_accounting' }).standard_views.Count -ge 4)
 Add-Case $cases 'enterprise_overlay_allowed' ((& $boundaryChecker -CandidatePath ($enterpriseDirectoryName + '/edition.yaml') -PassThru | ConvertFrom-Json).status -eq 'pass')

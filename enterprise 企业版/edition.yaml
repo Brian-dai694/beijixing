@@ -29,6 +29,8 @@ shared_contracts:
   employee_lifecycle: ./employee-lifecycle-policy.json
   file_organization: ./file-organization-policy.json
   review_compounding: ./review-compounding-policy.json
+  model_portfolio: ../.qianlima/model-portfolio.yaml
+  fusion_plan: ../.qianlima/fusion-plan-schema.yaml
   deployment_modes: ./deployment-mode-policy.json
 
 enterprise_controls:
@@ -57,6 +59,7 @@ enterprise_controls:
   artifact_organization: business_department_risk_month_task_type
   operational_learning: review_to_candidate_then_replay_verify_and_human_promote
   api_agent_deployment: E1_E2_E3_E4_selected_by_two_questions
+  model_collaboration: evidence_first_l3_only_l4_human_required
 
 runtime_defaults:
   mode: plan
