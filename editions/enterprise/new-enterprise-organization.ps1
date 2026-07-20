@@ -19,7 +19,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $enterpriseRoot = $PSScriptRoot
-$projectRoot = (Resolve-Path (Join-Path $enterpriseRoot '..')).Path
+$projectRoot = (Resolve-Path (Join-Path $enterpriseRoot '..\..')).Path
 $text = Get-Content -LiteralPath (Join-Path $enterpriseRoot 'onboarding-text.zh-CN.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 if ([string]::IsNullOrWhiteSpace($CompanyName)) { $CompanyName = Read-Host $text.prompts.company_name }
 if ([string]::IsNullOrWhiteSpace($OwnerName)) { $OwnerName = Read-Host $text.prompts.owner_name }

@@ -9,7 +9,7 @@ param([switch]$PassThru)
 
 $ErrorActionPreference = 'Stop'
 $enterpriseRoot = $PSScriptRoot
-$projectRoot = (Resolve-Path (Join-Path $enterpriseRoot '..')).Path
+$projectRoot = (Resolve-Path (Join-Path $enterpriseRoot '..\..')).Path
 $runnerRegistryPath = Join-Path $projectRoot '.qianlima\execution-runners.json'
 $cases = [System.Collections.Generic.List[object]]::new()
 

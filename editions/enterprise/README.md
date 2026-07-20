@@ -10,25 +10,25 @@ and deployment settings here.
 Windows:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File '.\enterprise 企业版\start-enterprise.ps1'
+powershell -NoProfile -ExecutionPolicy Bypass -File '.\editions/enterprise\start-enterprise.ps1'
 ```
 
 Administrator deployment on a new Windows machine:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File '.\enterprise 企业版\install-enterprise-environment.ps1' -Install -AcceptDockerDesktopLicense
+powershell -NoProfile -ExecutionPolicy Bypass -File '.\editions/enterprise\install-enterprise-environment.ps1' -Install -AcceptDockerDesktopLicense
 ```
 
 macOS/Linux:
 
 ```bash
-bash 'enterprise 企业版/start-enterprise.sh'
+bash 'editions/enterprise/start-enterprise.sh'
 ```
 
 Administrator deployment on a new macOS machine:
 
 ```bash
-bash 'enterprise 企业版/install-enterprise-environment.sh' --install --accept-docker-license
+bash 'editions/enterprise/install-enterprise-environment.sh' --install --accept-docker-license
 ```
 
 Every Enterprise start runs the mandatory environment gate before loading the
@@ -72,15 +72,15 @@ through an ordinary user start.
 - `obsidian-connector-contract.json`: Reserved Obsidian knowledge connector; selected Markdown reads only by default, with Vault references instead of raw host paths.
 - `obsidian-connector-registry.example.json`: Disabled-by-default Vault registration example.
 - `invoke-obsidian-connector-gate.ps1`: Offline admission gate for note scope, file type, task Grant, and L4 write separation.
-- `../.qianlima/enterprise-data-admission-contract.json`: Policy-first evidence admission; identity and Grant checks precede ranking and Top-K.
-- `../.qianlima/scripts/invoke-enterprise-data-admission.ps1`: Produces minimum sanitized Evidence Packs; external Agents receive no knowledge-search capability.
-- `../.qianlima/skill-intake-contract.json`: On-demand Skill/MCP installation intake with immutable provenance, offline static evidence, capability diff, and rescan triggers.
-- `../.qianlima/scripts/invoke-skill-intake-gate.ps1`: Returns `approved`, `conditional`, or `denied`; approval still requires human confirmation, isolated trial, and a task Grant.
+- `../../.qianlima/enterprise-data-admission-contract.json`: Policy-first evidence admission; identity and Grant checks precede ranking and Top-K.
+- `../../.qianlima/scripts/invoke-enterprise-data-admission.ps1`: Produces minimum sanitized Evidence Packs; external Agents receive no knowledge-search capability.
+- `../../.qianlima/skill-intake-contract.json`: On-demand Skill/MCP installation intake with immutable provenance, offline static evidence, capability diff, and rescan triggers.
+- `../../.qianlima/scripts/invoke-skill-intake-gate.ps1`: Returns `approved`, `conditional`, or `denied`; approval still requires human confirmation, isolated trial, and a task Grant.
 
 Skill Intake never runs during ordinary conversation or startup. Static scanning is defense in depth, not a sandbox. Dependency-network checks and source-code LLM review remain disabled unless separately approved for the data classification.
 
-- `../.qianlima/improvement-evaluation-card-schema.json`: Required evaluation card for every improvement candidate, including baseline, frozen replay, independent verification, canary scope, rollback conditions, approver, and effective version.
-- `../.qianlima/scripts/invoke-improvement-governance-pipeline.ps1`: Enterprise improvement entrypoint. It can recommend canary or rollback states but cannot release or edit production.
+- `../../.qianlima/improvement-evaluation-card-schema.json`: Required evaluation card for every improvement candidate, including baseline, frozen replay, independent verification, canary scope, rollback conditions, approver, and effective version.
+- `../../.qianlima/scripts/invoke-improvement-governance-pipeline.ps1`: Enterprise improvement entrypoint. It can recommend canary or rollback states but cannot release or edit production.
 - `mcp-server-registry.example.json`: Disabled-by-default generic MCP Server Passport example.
 - `invoke-enterprise-mcp-gate.ps1`: Generic MCP admission, version, data, budget, and write gate.
 - `direct-mcp-session-contract.json`: Business-approved low-latency Agent-to-MCP session contract.
@@ -95,10 +95,10 @@ Skill Intake never runs during ordinary conversation or startup. Static scanning
 - `deployment-mode-policy.json`: E1-E4 matrix for enterprise/BYOK API and fixed/employee-selected Agents.
 - `select-enterprise-deployment-mode.ps1`: Two-question beginner selector; it grants no runtime permissions.
 - `test-deployment-modes.ps1`: Offline regression for all four mappings and their hard boundaries.
-- `../.qianlima/model-portfolio.yaml`: Model Passport fields, routing tiers, evidence metrics, and trust boundaries.
-- `../.qianlima/fusion-plan-schema.yaml`: Evidence-first multi-model Fusion Plan contract.
-- `../.qianlima/scripts/validate-fusion-plan.ps1`: Validates risk, independence, data, verifier, and human-approval requirements.
-- `../.qianlima/scripts/test-model-fusion.ps1`: Offline regression for L0-L4 fusion admission.
+- `../../.qianlima/model-portfolio.yaml`: Model Passport fields, routing tiers, evidence metrics, and trust boundaries.
+- `../../.qianlima/fusion-plan-schema.yaml`: Evidence-first multi-model Fusion Plan contract.
+- `../../.qianlima/scripts/validate-fusion-plan.ps1`: Validates risk, independence, data, verifier, and human-approval requirements.
+- `../../.qianlima/scripts/test-model-fusion.ps1`: Offline regression for L0-L4 fusion admission.
 - `new-employee-lifecycle-request.ps1`: Creates a lifecycle request without changing identity or access.
 - `invoke-employee-lifecycle-gate.ps1`: Produces the mandatory revoke, handover, and recovery action plan.
 - `员工增减与调岗指南.md`: Beginner guide for managers, HR, and employees.
@@ -122,7 +122,7 @@ of duties. A Personal classification is never accepted as Enterprise authority.
 For first-time setup, run:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File '.\enterprise 企业版\new-enterprise-organization.ps1'
+powershell -NoProfile -ExecutionPolicy Bypass -File '.\editions/enterprise\new-enterprise-organization.ps1'
 ```
 
 The wizard writes private organization configuration under

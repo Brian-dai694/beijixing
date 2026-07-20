@@ -2,17 +2,17 @@ edition:
   id: enterprise
   version: 0.1.0
   product_profile: enterprise-governed
-  shared_core_root: ..
+  shared_core_root: ../..
   do_not_fork_harness: true
 
 shared_contracts:
-  business_capability_catalog: ../.qianlima/specifications/business-capability-catalog.json
-  mcp_capability_port_map: ../.qianlima/specifications/mcp-capability-port-map.json
-  north_star: ../.qianlima/specifications/north-star-protocol.json
-  governance_framework: ../.qianlima/enterprise-governance-framework.json
-  runtime_policy: ../.qianlima/agent-runtime-policy.yaml
-  runner_registry: ../.qianlima/execution-runners.json
-  harness_boundary: ../.qianlima/harness-boundary.json
+  business_capability_catalog: ../../.qianlima/specifications/business-capability-catalog.json
+  mcp_capability_port_map: ../../.qianlima/specifications/mcp-capability-port-map.json
+  north_star: ../../.qianlima/specifications/north-star-protocol.json
+  governance_framework: ../../.qianlima/enterprise-governance-framework.json
+  runtime_policy: ../../.qianlima/agent-runtime-policy.yaml
+  runner_registry: ../../.qianlima/execution-runners.json
+  harness_boundary: ../../.qianlima/harness-boundary.json
   deployment_policy: ./deployment-policy.yaml
   task_level_policy: ./task-level-policy.json
   organization_role_templates: ./organization-role-templates.json
@@ -30,23 +30,23 @@ shared_contracts:
   employee_lifecycle: ./employee-lifecycle-policy.json
   file_organization: ./file-organization-policy.json
   review_compounding: ./review-compounding-policy.json
-  model_portfolio: ../.qianlima/model-portfolio.yaml
-  fusion_plan: ../.qianlima/fusion-plan-schema.yaml
-  claim_pack: ../.qianlima/claim-pack-schema.yaml
-  evidence_market: ../.qianlima/evidence-market-policy.json
-  shadow_fusion_receipt: ../.qianlima/shadow-fusion-receipt-schema.yaml
-  shadow_fusion_runtime: ../.qianlima/scripts/invoke-shadow-fusion.ps1
-  employee_agent_collaboration: ../.qianlima/employee-agent-collaboration-schema.yaml
-  shadow_candidate_registry: ../.qianlima/shadow-candidate-provider-registry.json
-  shadow_candidate_dispatch_gate: ../.qianlima/scripts/invoke-shadow-candidate-dispatch-gate.ps1
-  blindspot_observation: ../.qianlima/blindspot-observation-schema.yaml
-  collaboration_outcome_receipt: ../.qianlima/collaboration-outcome-receipt-schema.yaml
-  error_independence_gate: ../.qianlima/scripts/evaluate-error-independence.ps1
-  governed_collaboration_fan_in: ../.qianlima/scripts/invoke-governed-collaboration-fan-in.ps1
-  enterprise_data_admission: ../.qianlima/enterprise-data-admission-contract.json
-  skill_intake: ../.qianlima/skill-intake-contract.json
-  improvement_evaluation_card: ../.qianlima/improvement-evaluation-card-schema.json
-  improvement_governance_pipeline: ../.qianlima/scripts/invoke-improvement-governance-pipeline.ps1
+  model_portfolio: ../../.qianlima/model-portfolio.yaml
+  fusion_plan: ../../.qianlima/fusion-plan-schema.yaml
+  claim_pack: ../../.qianlima/claim-pack-schema.yaml
+  evidence_market: ../../.qianlima/evidence-market-policy.json
+  shadow_fusion_receipt: ../../.qianlima/shadow-fusion-receipt-schema.yaml
+  shadow_fusion_runtime: ../../.qianlima/scripts/invoke-shadow-fusion.ps1
+  employee_agent_collaboration: ../../.qianlima/employee-agent-collaboration-schema.yaml
+  shadow_candidate_registry: ../../.qianlima/shadow-candidate-provider-registry.json
+  shadow_candidate_dispatch_gate: ../../.qianlima/scripts/invoke-shadow-candidate-dispatch-gate.ps1
+  blindspot_observation: ../../.qianlima/blindspot-observation-schema.yaml
+  collaboration_outcome_receipt: ../../.qianlima/collaboration-outcome-receipt-schema.yaml
+  error_independence_gate: ../../.qianlima/scripts/evaluate-error-independence.ps1
+  governed_collaboration_fan_in: ../../.qianlima/scripts/invoke-governed-collaboration-fan-in.ps1
+  enterprise_data_admission: ../../.qianlima/enterprise-data-admission-contract.json
+  skill_intake: ../../.qianlima/skill-intake-contract.json
+  improvement_evaluation_card: ../../.qianlima/improvement-evaluation-card-schema.json
+  improvement_governance_pipeline: ../../.qianlima/scripts/invoke-improvement-governance-pipeline.ps1
   deployment_modes: ./deployment-mode-policy.json
 
 enterprise_controls:

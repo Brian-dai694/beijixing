@@ -29,10 +29,7 @@ jobs:
       - name: Enterprise offline regression
         shell: powershell
         run: |
-          $enterpriseRoot = Get-ChildItem -LiteralPath . -Directory |
-            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'edition.yaml') } |
-            Select-Object -First 1
-          if ($null -eq $enterpriseRoot) { throw 'Enterprise overlay directory was not found.' }
+          $enterpriseRoot = Get-Item -LiteralPath '.\editions\enterprise'
           $tests = Get-ChildItem -LiteralPath $enterpriseRoot.FullName -Filter 'test-*.ps1' -File |
             Where-Object { $_.Name -ne 'test-enterprise-environment.ps1' }
           foreach ($test in $tests) {
@@ -40,6 +37,20 @@ jobs:
             & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $test.FullName -PassThru
             if ($LASTEXITCODE -ne 0) { throw ("Enterprise regression failed: " + $test.Name) }
           }
+
+      - name: Personal edition regression
+        shell: powershell
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\editions\personal\test-personal-profile.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Personal profile regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-personal-experience.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Personal experience regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-personal-skill-gate.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Personal Skill gate regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-edition-memory-learning-boundary.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Edition memory boundary regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-edition-separation.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Edition separation regression failed.' }
 
       - name: Model fusion regression
         shell: powershell

@@ -101,10 +101,10 @@
     "production_authority": "none"
   },
   "obsidian_connector_overlay": {
-    "contract": "../enterprise 企业版/obsidian-connector-contract.json",
-    "registry_example": "../enterprise 企业版/obsidian-connector-registry.example.json",
-    "gate": "../enterprise 企业版/invoke-obsidian-connector-gate.ps1",
-    "regression": "../enterprise 企业版/test-obsidian-connector-interface.ps1",
+    "contract": "../editions/enterprise/obsidian-connector-contract.json",
+    "registry_example": "../editions/enterprise/obsidian-connector-registry.example.json",
+    "gate": "../editions/enterprise/invoke-obsidian-connector-gate.ps1",
+    "regression": "../editions/enterprise/test-obsidian-connector-interface.ps1",
     "default_enabled": false,
     "default_mode": "allowlist_read_only",
     "vault_path": "reference_only",

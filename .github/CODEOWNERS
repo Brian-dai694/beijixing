@@ -1,0 +1,8 @@
+# Shared governance core requires explicit review.
+/.qianlima/ @Brian-dai694
+/AGENTS.md @Brian-dai694
+/start-qianlima.ps1 @Brian-dai694
+
+# Edition overlays remain independently reviewable.
+/editions/personal/ @Brian-dai694
+/editions/enterprise/ @Brian-dai694

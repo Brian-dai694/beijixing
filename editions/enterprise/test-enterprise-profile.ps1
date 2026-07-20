@@ -10,7 +10,8 @@ param([switch]$PassThru)
 $ErrorActionPreference = 'Stop'
 $enterpriseRoot = $PSScriptRoot
 $enterpriseDirectoryName = Split-Path -Leaf $enterpriseRoot
-$projectRoot = (Resolve-Path (Join-Path $enterpriseRoot '..')).Path
+$enterpriseRelativePath = 'editions/enterprise'
+$projectRoot = (Resolve-Path (Join-Path $enterpriseRoot '..\..')).Path
 $editionPath = Join-Path $enterpriseRoot 'edition.yaml'
 $configPath = Join-Path $enterpriseRoot 'config.example.yaml'
 $trustPath = Join-Path $enterpriseRoot 'trust-policy.yaml'
@@ -205,7 +206,7 @@ Add-Case $cases 'improvement_pipeline_requires_evaluation_card_and_canary' ($edi
 Add-Case $cases 'automatic_improvement_release_is_denied' ($edition.Contains('automatic_improvement_release: deny'))
 Add-Case $cases 'personal_and_enterprise_share_all_capabilities' ($businessCatalog.profiles.personal.capabilities -eq 'all' -and $businessCatalog.profiles.enterprise.capabilities -eq 'all' -and @($businessCatalog.capabilities).Count -ge 10)
 Add-Case $cases 'business_periods_and_profit_views_defined' (@($businessCatalog.periods.PSObject.Properties.Name).Count -eq 5 -and @($businessCatalog.capabilities | Where-Object { $_.id -eq 'profit_accounting' }).standard_views.Count -ge 4)
-Add-Case $cases 'enterprise_overlay_allowed' ((& $boundaryChecker -CandidatePath ($enterpriseDirectoryName + '/edition.yaml') -PassThru | ConvertFrom-Json).status -eq 'pass')
+Add-Case $cases 'enterprise_overlay_allowed' ((& $boundaryChecker -CandidatePath ($enterpriseRelativePath + '/edition.yaml') -PassThru | ConvertFrom-Json).status -eq 'pass')
 
 $failed = @($cases | Where-Object { -not $_.passed })
 $result = [PSCustomObject]@{

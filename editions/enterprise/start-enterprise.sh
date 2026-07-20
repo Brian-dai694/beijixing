@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 if ! command -v pwsh >/dev/null 2>&1; then
   echo "Qianlima Enterprise Edition requires PowerShell 7 (pwsh)." >&2
@@ -9,4 +9,4 @@ if ! command -v pwsh >/dev/null 2>&1; then
   exit 127
 fi
 
-exec pwsh -NoProfile -File "$project_root/enterprise 企业版/start-enterprise.ps1" "$@"
+exec pwsh -NoProfile -File "$project_root/editions/enterprise/start-enterprise.ps1" "$@"

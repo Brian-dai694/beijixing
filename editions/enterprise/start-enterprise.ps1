@@ -14,7 +14,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $enterpriseRoot = $PSScriptRoot
-$projectRoot = (Resolve-Path (Join-Path $enterpriseRoot '..')).Path
+$projectRoot = (Resolve-Path (Join-Path $enterpriseRoot '..\..')).Path
 $profilePath = Join-Path $enterpriseRoot 'edition.yaml'
 $coreStart = Join-Path $projectRoot 'start-qianlima.ps1'
 $profileTest = Join-Path $enterpriseRoot 'test-enterprise-profile.ps1'

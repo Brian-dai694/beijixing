@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "repository_id": "beijixing",
+  "product_version": "v2.7.6",
+  "shared_core": ".qianlima",
+  "editions": {
+    "personal": "editions/personal",
+    "enterprise": "editions/enterprise"
+  },
+  "invariants": [
+    "Personal and Enterprise have separate manifests, configuration examples, documentation, and profile tests.",
+    "The core Harness exists once and is referenced read-only by both editions.",
+    "Edition code must not silently fork protected Harness files.",
+    "Private runtime data, credentials, traces, and local preferences are never committed."
+  ]
+}
