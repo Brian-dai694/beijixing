@@ -2,11 +2,12 @@
   "schema_version": 1,
   "boundary_id": "qianlima-core-harness-freeze",
   "mode": "core_read_only_overlay_extensions_allowed",
+  "hash_mode": "sha256_utf8_text_normalized_to_lf_without_bom",
   "rule": "Governance, Runner, scanner, and incident improvements must be implemented in approved Overlay paths. Core Harness changes require a separate explicit release decision.",
   "protected_files": [
     {"path": "AGENTS.md", "sha256": "b03f4d4b73fa6dacf4651a698ec791e4fa1224bc25191f0178ec686a1ed26e6b"},
     {"path": ".qianlima/CODEX_BOOT.md", "sha256": "577d7ef3d2dcac243de7fb1cc0a93acb4ac2f402e2c0eaf59a79a7906915876d"},
-    {"path": "start-qianlima.ps1", "sha256": "d174576238469d2d94ffe70d5d8f3eb10a9663a675764992d5c5694871205e6a"},
+    {"path": "start-qianlima.ps1", "sha256": "1a3a503eba7afe82656a09ec2641031b3ca00b4b377d12757e6abc800fbee021"},
     {"path": ".qianlima/risk-rules.yaml", "sha256": "92a6e425158bad1e24a59a0d2d52a4b828b79b0fd42f3c8a275a0d0af1925846"},
     {"path": ".qianlima/agent-runtime-policy.yaml", "sha256": "a59f1ba529040afa1fa82f3d7734860f4c7a6009ff15bc2e2ec3fcac61b2d8f7"},
     {"path": ".qianlima/agent-runtime-adapters.yaml", "sha256": "bf610781f07a1b39775bc817744eabb1e09166cf7e1cf421ae5134ddcca54904"},
@@ -66,6 +67,6 @@
     ".qianlima/working/restricted-skills/*",
     ".qianlima/scripts/test-*.ps1"
   ],
-  "captured_at": "2026-07-17T06:00:00Z",
+  "captured_at": "2026-07-20T08:00:00Z",
   "capture_rule": "Baseline is the current reviewed workspace state; do not refresh it implicitly."
 }

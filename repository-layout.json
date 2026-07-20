@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "repository_id": "beijixing",
-  "product_version": "v2.7.7",
+  "product_version": "v2.7.8",
   "shared_core": ".qianlima",
   "editions": {
     "personal": "editions/personal",

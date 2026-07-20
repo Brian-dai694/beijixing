@@ -16,10 +16,18 @@ $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $manifestPath = Join-Path $projectRoot '.qianlima\harness-boundary.json'
 $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $violations = [System.Collections.Generic.List[string]]::new()
+function Get-CanonicalTextHash([string]$Path) {
+  $text = [IO.File]::ReadAllText($Path, [Text.UTF8Encoding]::new($false))
+  $normalized = $text.Replace("`r`n", "`n").Replace("`r", "`n")
+  $bytes = [Text.UTF8Encoding]::new($false).GetBytes($normalized)
+  $sha = [Security.Cryptography.SHA256]::Create()
+  try { return ([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-', '').ToLowerInvariant() }
+  finally { $sha.Dispose() }
+}
 foreach ($entry in @($manifest.protected_files)) {
   $fullPath = Join-Path $projectRoot ($entry.path -replace '/', '\')
   if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) { [void]$violations.Add("missing:$($entry.path)"); continue }
-  $actual = (Get-FileHash -LiteralPath $fullPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  $actual = Get-CanonicalTextHash $fullPath
   if ($actual -ne $entry.sha256) { [void]$violations.Add("changed:$($entry.path)") }
 }
 if ($CandidatePath) {

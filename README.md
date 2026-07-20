@@ -1,10 +1,10 @@
-# 北极星 Agent 治理框架
+﻿# 北极星 Agent 治理框架
 
 [中文](README.md) · [English](README.en.md)
 
 [![CI](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml/badge.svg)](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-v2.7.7-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v2.7.8-blue.svg)](CHANGELOG.md)
 
 北极星不是通用 Agent，也不替代 Codex、Claude Code、CodeWhale、MCP 或专业 Skill。它提供共享的本地优先治理核心，决定谁能做什么、能看到什么数据、预算多少、结果如何核验，以及何时撤销、冻结或回滚。
 
@@ -71,3 +71,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\editions\enterprise\test-
 - 私有数据、凭据、运行轨迹、账本和本地偏好由 `.gitignore` 排除。
 
 许可证见 [LICENSE](LICENSE)。
+
