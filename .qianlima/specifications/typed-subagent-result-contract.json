@@ -1,0 +1,39 @@
+{
+  "contract": "typed-subagent-result-contract",
+  "schema_version": 1,
+  "purpose": "Return structured, scope-bound subagent output without allowing prose or child status to become enterprise truth.",
+  "required": [
+    "result_id",
+    "parent_work_node_id",
+    "child_work_node_id",
+    "parent_action_id",
+    "trace_id",
+    "grant_id",
+    "agent_id",
+    "schema_ref",
+    "status",
+    "payload_hash",
+    "artifact_refs",
+    "created_at"
+  ],
+  "status_values": ["returned", "partial", "timeout", "rejected", "accepted_for_review"],
+  "field_contract": {
+    "schema_ref": "Versioned JSON Schema or equivalent contract used to validate the payload.",
+    "payload_hash": "sha256 of a sanitized structured payload; raw hidden reasoning is never stored.",
+    "artifact_refs": "Workspace-relative or governed logical references, never unrestricted content copies.",
+    "parent_action_id": "The parent Action Receipt that authorized this child call.",
+    "child_work_node_id": "A new Work Node id when the child performs independent work; it is never the parent node id."
+  },
+  "scope_rules": {
+    "child_grant": "Child Grant is issued by the Broker and is a strict subset of the parent Grant.",
+    "same_trace": true,
+    "same_goal": true,
+    "max_depth_from_grant": true
+  },
+  "invariants": [
+    "A returned or accepted_for_review result is not verification evidence by itself.",
+    "A child cannot write directly to the parent Work Node state.",
+    "A prose-only result without schema validation is rejected before parent synthesis.",
+    "Result correction creates a new result_id and preserves the prior result reference."
+  ]
+}

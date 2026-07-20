@@ -158,3 +158,33 @@ adapters:
     command_contract: unverified
     availability: discover_only
     default_mode: dry_run
+  - id: pi_worker
+    role: bounded_agent_harness_worker
+    command: pi
+    arguments: [--mode, rpc]
+    mode: worker
+    can_write: false
+    network_access: none
+    risk_ceiling: L2
+    output: ndjson_events
+    allowed_actions: [inspect_selected_artifacts, produce_candidate_artifact, produce_typed_subagent_result, checkpoint, resume, verify_receipt]
+    command_contract: unverified
+    availability: discover_only
+    default_mode: dry_run
+    sandbox_provider: required_external
+    runtime_contract: specifications/runtime-adapter-contract.json
+  - id: oh_my_pi_worker
+    role: bounded_agent_harness_worker
+    command: omp
+    arguments: [--mode, rpc]
+    mode: worker
+    can_write: false
+    network_access: none
+    risk_ceiling: L2
+    output: ndjson_events
+    allowed_actions: [inspect_selected_artifacts, produce_candidate_artifact, produce_typed_subagent_result, checkpoint, resume, reviewer_advice, verify_receipt]
+    command_contract: unverified
+    availability: discover_only
+    default_mode: dry_run
+    sandbox_provider: required_external
+    runtime_contract: specifications/runtime-adapter-contract.json

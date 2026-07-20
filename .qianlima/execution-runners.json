@@ -54,6 +54,32 @@
       "requires_attestation": true,
       "receipt_format": "qianlima-runner-receipt-v1",
       "note": "Reserved until Docker isolation probes, credential injection, and signed attestations are implemented."
+    },
+    {
+      "runner_id": "pi_omp_local_mock",
+      "provider": "contract_only",
+      "mode": "dry_run_mock",
+      "enabled": false,
+      "execution_enabled": false,
+      "trust_zone": "zone_1_local_controlled",
+      "supported_agents": ["pi_worker", "oh_my_pi_worker"],
+      "allowed_images": ["local/pi-omp-runner:contract-only"],
+      "image_policy": "local_allowlist_only",
+      "isolation": {
+        "host_workspace_mounted": false,
+        "task_workspace_only": true,
+        "root_required": false
+      },
+      "network_policy": "none",
+      "mcp_policy": "allowlist_read_only",
+      "secret_policy": "secret_ref_only",
+      "file_export": false,
+      "web_access": false,
+      "erp_access": false,
+      "requires_attestation": true,
+      "receipt_format": "qianlima-runner-receipt-v1",
+      "runtime_contract": "specifications/runtime-adapter-contract.json",
+      "note": "Contract-only registration. It never starts pi, omp, Docker, or a vendor process; a task-bound verified Sandbox Attestation is still required."
     }
   ]
 }

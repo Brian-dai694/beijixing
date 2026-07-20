@@ -11,6 +11,7 @@ param(
   [Parameter(Mandatory)] [ValidatePattern('^[a-z0-9][a-z0-9_-]*$')] [string]$WorkNodeId,
   [Parameter(Mandatory)] [string]$GrantId,
   [Parameter(Mandatory)] [string]$ToolName,
+  [ValidatePattern('^[a-zA-Z0-9._:/-]+$')] [string]$TraceId = '',
   [Parameter(Mandatory)] [ValidateRange(0, 100000)] [int]$Sequence,
   [ValidateSet('allow','deny','freeze')] [string]$Decision = 'allow',
   [Parameter(Mandatory)] [ValidatePattern('^sha256:[0-9a-f]{64}$')] [string]$InputHash,
@@ -23,6 +24,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($TraceId)) { $TraceId = "work-node:$WorkNodeId" }
 $traceRoot = Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')).Path 'run-traces'
 $nodeDir = Join-Path $traceRoot (Join-Path 'action-receipts' $WorkNodeId)
 if (-not (Test-Path -LiteralPath $nodeDir -PathType Container)) {
@@ -65,6 +67,7 @@ $receipt = [ordered]@{
   action_id         = $ActionId
   work_node_id      = $WorkNodeId
   grant_id          = $GrantId
+  trace_id          = $TraceId
   tool_name         = $ToolName
   sequence          = $Sequence
   decision          = $Decision

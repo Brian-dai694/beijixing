@@ -1,0 +1,60 @@
+{
+  "contract": "runtime-adapter-contract",
+  "schema_version": 1,
+  "purpose": "A runtime-neutral lifecycle boundary for Pi, oh-my-pi, Claude, Codex, and future Agent executors.",
+  "required": [
+    "adapter_id",
+    "runtime_name",
+    "runtime_version_ref",
+    "launch_mode",
+    "input_contract",
+    "output_contract",
+    "capabilities",
+    "isolation",
+    "lifecycle",
+    "budget",
+    "event_contract",
+    "status"
+  ],
+  "launch_modes": ["embedded", "rpc", "acp", "cli"],
+  "lifecycle": ["discover_only", "planned", "prepared", "running", "paused", "aborted", "closed", "rejected"],
+  "input_contract": {
+    "required_refs": ["work_node_id", "grant_id", "trace_id", "policy_hash", "acceptance_criteria"],
+    "secret_policy": "Secrets remain in managed credential references and never enter prompts, runtime args, receipts, or output payloads.",
+    "scope_rule": "Runtime receives only the Work Node scope and the minimum sanitized context required for the next action."
+  },
+  "output_contract": {
+    "required_events": ["session_started", "tool_requested", "tool_completed_or_denied", "artifact_proposed", "session_closed"],
+    "result_rule": "A runtime result is a candidate artifact or typed subagent result; it cannot be a verification or adoption decision.",
+    "traceability": ["trace_id", "work_node_id", "grant_id", "action_receipt_refs", "artifact_refs"]
+  },
+  "capabilities": {
+    "allowed": ["tool_calling", "stream_events", "checkpoint", "resume", "typed_subagents", "reviewer_advice"],
+    "broker_only": ["grant_issue", "grant_revoke", "budget_change", "verify", "adopt", "external_send", "business_write"],
+    "nested_call_rule": "Every nested kernel, subagent, reviewer, or RPC callback reuses the active Grant and emits a new Action Receipt."
+  },
+  "isolation": {
+    "required": true,
+    "provider_ref": "verified_runner_attestation",
+    "network_access": "deny_by_default",
+    "workspace": "Work Node scope only",
+    "host_direct_execution": "deny"
+  },
+  "budget": {
+    "inherited_from": "delegation_grant",
+    "fields": ["max_tool_calls", "max_cost_usd", "timeout_ms", "max_subagents", "max_nested_depth"],
+    "fallback_rule": "Runtime fallback chains cannot expand budget, scope, model policy, or risk ceiling."
+  },
+  "event_contract": {
+    "append_only": true,
+    "prohibited": ["raw_prompt", "hidden_reasoning", "secret_value", "full_tool_parameters", "raw_private_data"],
+    "failure_default": "deny_or_freeze"
+  },
+  "status": "discover_only",
+  "invariants": [
+    "Changing the runtime adapter never changes work_node_id, grant_id, trace_id, scope, or verification result.",
+    "The runtime cannot mark a Work Node verified or accepted.",
+    "A runtime version drift resets trust and requires a new Broker admission decision.",
+    "A runtime may report candidate output, but only an independent verifier can satisfy acceptance criteria."
+  ]
+}

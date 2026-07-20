@@ -1,0 +1,40 @@
+{
+  "contract": "sandbox-attestation-contract",
+  "schema_version": 1,
+  "purpose": "Bind a verified isolated Runner to exactly one Agent, Work Node, Grant, and task workspace.",
+  "verified_required_fields": [
+    "attestation_id",
+    "runner_id",
+    "provider",
+    "agent_id",
+    "task_id",
+    "grant_id",
+    "status",
+    "sandbox_type",
+    "isolation_root",
+    "host_workspace_mounted",
+    "agent_network",
+    "mcp_mode",
+    "mcp_servers",
+    "file_export",
+    "web_access",
+    "erp_access",
+    "secret_mode",
+    "policy_hash",
+    "expires_at",
+    "evidence_hash",
+    "issued_at",
+    "issuer_ref"
+  ],
+  "candidate_status": "pending",
+  "verified_status": "verified",
+  "invariants": [
+    "A pending candidate is metadata only and cannot pass the Runner dispatch gate.",
+    "A verified attestation must be issued by a registered Runner or approved isolation provider; a manual switch is not evidence.",
+    "runner_id, agent_id, task_id, and grant_id are exact bindings, not descriptive labels.",
+    "The isolation root is inside the task-specific sandbox workspace and is not the host workspace root.",
+    "The attestation expires no later than the Grant and cannot outlive the Work Node execution window.",
+    "Verification rejects network, host mounts, file export, web, ERP, arbitrary MCP, and non-reference secrets.",
+    "Evidence hash is a reference to provider evidence; it is not a hash of a self-authored assertion."
+  ]
+}

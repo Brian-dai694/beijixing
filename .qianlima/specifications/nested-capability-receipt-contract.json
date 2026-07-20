@@ -1,0 +1,15 @@
+{
+  "contract": "nested-capability-receipt-contract",
+  "schema_version": 1,
+  "purpose": "Keep Python/Bun kernels, subagents, reviewer models, RPC, and ACP callbacks inside the parent Grant boundary.",
+  "required": ["trace_id", "work_node_id", "grant_id", "parent_action_id", "nested_action_id", "depth", "capability", "decision", "created_at"],
+  "decision_values": ["allow", "deny", "freeze"],
+  "limits": ["max_nested_depth", "max_nested_tool_calls", "max_nested_cost_usd"],
+  "invariants": [
+    "Nested callbacks preserve trace_id, work_node_id, and Grant scope.",
+    "A child callback cannot issue, widen, or transfer authority.",
+    "Nested calls count against the parent Grant budget and produce ordinary Action Receipts.",
+    "A callback after Grant revocation is denied even when the parent runtime session is still alive.",
+    "A nested reviewer is advisory; only the independent Broker verification gate can adopt an artifact."
+  ]
+}

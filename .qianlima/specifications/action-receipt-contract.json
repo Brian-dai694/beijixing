@@ -9,6 +9,7 @@
     "action_id",
     "work_node_id",
     "grant_id",
+    "trace_id",
     "tool_name",
     "sequence",
     "decision",
@@ -19,6 +20,7 @@
     "action_id": "Unique per tool-call. Pattern ^[a-zA-Z0-9._-]+$.",
     "work_node_id": "The Work Node this action serves. Ties the receipt into the projection.",
     "grant_id": "The active Grant that authorized this call. Verifier confirms it was not revoked/expired at call time.",
+    "trace_id": "Trace envelope shared by every action and nested callback in this Work Node.",
     "tool_name": "The capability invoked (e.g. fff, claude_code_worker, edit_file).",
     "sequence": "Monotonic index of this call within the node (0-based). Detects gaps/reordering.",
     "decision": "allow | deny | freeze. deny/freeze receipts prove a governed refusal (e.g. revoked grant).",
@@ -42,5 +44,6 @@
     "input_hash and output_hash never contain raw data; they hash a sanitized summary.",
     "sequence must be contiguous from 0; a gap means a call was made without a receipt (verification fails).",
     "Receipts are immutable; a correction creates a new action_id referencing the prior one via connector_receipt."
+    ,"Nested callbacks must preserve trace_id, work_node_id, and Grant scope; they cannot create authority by re-entering a tool loop."
   ]
 }

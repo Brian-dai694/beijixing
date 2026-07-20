@@ -1,0 +1,47 @@
+{
+  "contract": "artifact-precondition-contract",
+  "schema_version": 1,
+  "purpose": "Prevent stale, out-of-scope, or unverified edits from reaching a Work Node workspace.",
+  "required": [
+    "artifact_id",
+    "work_node_id",
+    "grant_id",
+    "trace_id",
+    "target_ref",
+    "base_hash",
+    "proposed_hash",
+    "edit_strategy",
+    "precondition_checks",
+    "status",
+    "created_at"
+  ],
+  "edit_strategies": ["hashline", "lsp", "ast", "patch", "generated_file"],
+  "status_values": ["proposed", "stale", "out_of_scope", "rejected", "ready_for_verification", "verified"],
+  "precondition_checks": [
+    "base_hash_matches",
+    "target_under_work_node_scope",
+    "excluded_paths_clear",
+    "policy_version_matches",
+    "artifact_scan_passed",
+    "required_tests_passed"
+  ],
+  "field_contract": {
+    "base_hash": "Hash of the exact target snapshot observed before editing.",
+    "proposed_hash": "Hash of the candidate artifact or diff after editing.",
+    "target_ref": "Workspace-relative target or governed artifact reference.",
+    "edit_strategy": "The deterministic edit mechanism used by the runtime (Hashline, LSP, AST, patch, or generated file)."
+  },
+  "failure_actions": {
+    "base_hash_mismatch": "reject_without_write_and_emit_deny_receipt",
+    "scope_mismatch": "reject_without_write_and_freeze_node",
+    "policy_drift": "reject_without_write_and_require_new_grant",
+    "artifact_scan_failure": "reject_artifact_and_freeze",
+    "test_failure": "remain_ready_for_verification_false"
+  },
+  "invariants": [
+    "A stale artifact cannot be force-applied by an Agent or runtime adapter.",
+    "An artifact marked verified here still requires the Broker verification gate before Work Node adoption.",
+    "Preview, accept, and discard actions are separately receipted; preview is not a write.",
+    "A correction creates a new artifact_id and preserves the rejected or stale artifact reference."
+  ]
+}

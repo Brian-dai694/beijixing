@@ -66,7 +66,7 @@ $adaptersPath = Join-Path $projectRoot '.qianlima\agent-runtime-adapters.yaml'
 $adapterId = 'unknown'
 if (Test-Path -LiteralPath $adaptersPath -PathType Leaf) {
   $adapterContent = Get-Content -LiteralPath $adaptersPath -Raw
-  if ($adapterContent -match 'id:\s*(codex_supervisor|codewhale_worker|claude_code_worker|raven_worker)') {
+  if ($adapterContent -match 'id:\s*(codex_supervisor|codewhale_worker|claude_code_worker|raven_worker|pi_worker|oh_my_pi_worker)') {
     $adapterId = $Matches[1]
   }
 }
@@ -142,4 +142,3 @@ if ($AsJson) { $result | ConvertTo-Json -Depth 8 } else {
     Write-Host "  [$icon] $($_.Key): $($_.Value.detail)"
   }
 }
-

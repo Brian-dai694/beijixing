@@ -72,6 +72,15 @@ through an ordinary user start.
 - `../.qianlima/scripts/verify-work-node.ps1`: Independent P0 verification gate for test results, scoped diffs, Grant validity, and receipt continuity.
 - `../.qianlima/scripts/new-manager-projection.ps1`: Generates the verified-only owner report; it never exposes Agent conversation or self-reported completion.
 - `../.qianlima/scripts/test-rd-p0-governance.ps1`: Read-only P0 contract regression.
+- `../.qianlima/specifications/runtime-adapter-contract.json`: Runtime-neutral lifecycle boundary for Pi, oh-my-pi, Claude, Codex, and future executors.
+- `../.qianlima/specifications/typed-subagent-result-contract.json`: Schema-validated subagent result boundary; child output is never verification by itself.
+- `../.qianlima/specifications/artifact-precondition-contract.json`: Hash/LSP/AST/patch preconditions that reject stale or out-of-scope writes.
+- `../.qianlima/specifications/nested-capability-receipt-contract.json`: Grant and trace continuity for Python, Bun, subagents, reviewer models, RPC, and ACP callbacks.
+- `../.qianlima/scripts/test-pi-shadow-admission.ps1`: Read-only Pi/oh-my-pi admission preflight; it never starts a vendor process or Docker.
+- `../.qianlima/specifications/sandbox-attestation-contract.json`: Separates pending metadata candidates from verified, task-bound isolation evidence.
+- `../.qianlima/scripts/new-pi-omp-attestation-candidate.ps1`: Creates only a `pending` candidate; it never probes or starts Pi, oh-my-pi, Docker, or MCP.
+- `../.qianlima/scripts/verify-sandbox-attestation.ps1`: Pure Runner/Work Order/Grant/expiry/isolation validator; pending candidates are rejected.
+- `../.qianlima/scripts/test-sandbox-attestation-contract.ps1`: Read-only rejection regression for unknown Runner, pending, expired, and mismatched Attestations.
 - `commerce-deliverable-contract.json`: Profitability, title, main image, five bullets, and long-description outcome contract.
 - `new-commerce-deliverable-pack.ps1`: Creates a pending product deliverable pack without uploading or changing price.
 - `commerce-operating-model.json`: Reports, plans, profit settlement, sourcing, logistics, inventory, traffic, ads, promotions, after-sales, and review lifecycle.
