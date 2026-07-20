@@ -46,6 +46,12 @@ jobs:
         run: |
           powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-model-fusion.ps1' -PassThru
           if ($LASTEXITCODE -ne 0) { throw 'Model fusion regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-fusion-governance-loop.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Fusion governance loop regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-evidence-market.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Evidence market regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-shadow-fusion-runtime.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Shadow fusion runtime regression failed.' }
 
       - name: Runtime checks
         shell: powershell

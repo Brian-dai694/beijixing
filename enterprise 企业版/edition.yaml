@@ -31,6 +31,10 @@ shared_contracts:
   review_compounding: ./review-compounding-policy.json
   model_portfolio: ../.qianlima/model-portfolio.yaml
   fusion_plan: ../.qianlima/fusion-plan-schema.yaml
+  claim_pack: ../.qianlima/claim-pack-schema.yaml
+  evidence_market: ../.qianlima/evidence-market-policy.json
+  shadow_fusion_receipt: ../.qianlima/shadow-fusion-receipt-schema.yaml
+  shadow_fusion_runtime: ../.qianlima/scripts/invoke-shadow-fusion.ps1
   deployment_modes: ./deployment-mode-policy.json
 
 enterprise_controls:
@@ -60,6 +64,9 @@ enterprise_controls:
   operational_learning: review_to_candidate_then_replay_verify_and_human_promote
   api_agent_deployment: E1_E2_E3_E4_selected_by_two_questions
   model_collaboration: evidence_first_l3_only_l4_human_required
+  fusion_loop: claim_pack_receipt_revoke_freeze_shadow_only
+  evidence_market: disagreement_budget_signal_no_vote_authority
+  shadow_runtime: validated_claim_packs_only_no_adoption_authority
 
 runtime_defaults:
   mode: plan

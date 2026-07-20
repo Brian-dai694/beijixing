@@ -38,6 +38,10 @@ $fileOrganizationPath = Join-Path $enterpriseRoot 'file-organization-policy.json
 $reviewCompoundingPath = Join-Path $enterpriseRoot 'review-compounding-policy.json'
 $modelPortfolioPath = Join-Path $projectRoot '.qianlima\model-portfolio.yaml'
 $fusionPlanPath = Join-Path $projectRoot '.qianlima\fusion-plan-schema.yaml'
+$claimPackPath = Join-Path $projectRoot '.qianlima\claim-pack-schema.yaml'
+$evidenceMarketPath = Join-Path $projectRoot '.qianlima\evidence-market-policy.json'
+$shadowReceiptPath = Join-Path $projectRoot '.qianlima\shadow-fusion-receipt-schema.yaml'
+$shadowRuntimePath = Join-Path $projectRoot '.qianlima\scripts\invoke-shadow-fusion.ps1'
 $deploymentModePath = Join-Path $enterpriseRoot 'deployment-mode-policy.json'
 $businessCatalogPath = Join-Path $projectRoot '.qianlima\specifications\business-capability-catalog.json'
 $boundaryChecker = Join-Path $projectRoot '.qianlima\scripts\check-harness-boundary.ps1'
@@ -74,6 +78,10 @@ if (-not (Test-Path -LiteralPath $reviewCompoundingPath -PathType Leaf)) { throw
 if (-not (Test-Path -LiteralPath $deploymentModePath -PathType Leaf)) { throw 'Missing API and Agent deployment mode policy.' }
 if (-not (Test-Path -LiteralPath $modelPortfolioPath -PathType Leaf)) { throw 'Missing model portfolio policy.' }
 if (-not (Test-Path -LiteralPath $fusionPlanPath -PathType Leaf)) { throw 'Missing fusion plan schema.' }
+if (-not (Test-Path -LiteralPath $claimPackPath -PathType Leaf)) { throw 'Missing claim pack schema.' }
+if (-not (Test-Path -LiteralPath $evidenceMarketPath -PathType Leaf)) { throw 'Missing evidence market policy.' }
+if (-not (Test-Path -LiteralPath $shadowReceiptPath -PathType Leaf)) { throw 'Missing shadow fusion receipt schema.' }
+if (-not (Test-Path -LiteralPath $shadowRuntimePath -PathType Leaf)) { throw 'Missing shadow fusion runtime.' }
 if (-not (Test-Path -LiteralPath $businessCatalogPath -PathType Leaf)) { throw 'Missing shared business capability catalog.' }
 if (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'start-qianlima.ps1') -PathType Leaf)) { throw 'Missing shared core start script.' }
 
@@ -145,6 +153,9 @@ Add-Case $cases 'four_api_agent_modes_defined' (@($deploymentModes.modes.PSObjec
 Add-Case $cases 'E4_is_restricted_by_default' ($deploymentModes.modes.E4.initial_trust_ceiling -eq 'T1' -and $deploymentModes.modes.E4.credential_mode -eq 'byok_secret_ref_only')
 Add-Case $cases 'deployment_mode_never_grants_business_authority' (@($deploymentModes.invariants | Where-Object { $_ -match 'L4' }).Count -gt 0 -and @($deploymentModes.invariants | Where-Object { $_ -match 'never grants MCP' }).Count -gt 0)
 Add-Case $cases 'model_fusion_contracts_present' ((Test-Path -LiteralPath $modelPortfolioPath -PathType Leaf) -and (Test-Path -LiteralPath $fusionPlanPath -PathType Leaf))
+Add-Case $cases 'claim_pack_contract_present' (Test-Path -LiteralPath $claimPackPath -PathType Leaf)
+Add-Case $cases 'evidence_market_contract_present' ((Test-Path -LiteralPath $evidenceMarketPath -PathType Leaf) -and (Test-Path -LiteralPath $shadowReceiptPath -PathType Leaf))
+Add-Case $cases 'shadow_fusion_runtime_present' (Test-Path -LiteralPath $shadowRuntimePath -PathType Leaf)
 Add-Case $cases 'personal_and_enterprise_share_all_capabilities' ($businessCatalog.profiles.personal.capabilities -eq 'all' -and $businessCatalog.profiles.enterprise.capabilities -eq 'all' -and @($businessCatalog.capabilities).Count -ge 10)
 Add-Case $cases 'business_periods_and_profit_views_defined' (@($businessCatalog.periods.PSObject.Properties.Name).Count -eq 5 -and @($businessCatalog.capabilities | Where-Object { $_.id -eq 'profit_accounting' }).standard_views.Count -ge 4)
 Add-Case $cases 'enterprise_overlay_allowed' ((& $boundaryChecker -CandidatePath ($enterpriseDirectoryName + '/edition.yaml') -PassThru | ConvertFrom-Json).status -eq 'pass')
