@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "contract_id": "qianlima-enterprise-collaboration-scale-gate",
+  "purpose": "Scale employee-Agent collaboration through quotas, queues, isolation, evidence, approval, and group revocation without granting execution authority.",
+  "default_action": "reject",
+  "decisions": ["admitted", "paused", "rejected"],
+  "required_request_fields": ["collaboration_id", "tenant_id", "organization_id", "department_id", "project_id", "task_id", "risk_level", "coordinator_employee_id", "participants", "direct_agent_to_agent", "requested_budget", "status"],
+  "participant_required_fields": ["employee_id", "agent_id", "agent_version", "role", "work_order_id", "grant_id", "grant_status", "grant_expires_at", "grant_task_id", "grant_employee_id", "grant_agent_id", "grant_department_id", "allowed_tools", "can_delegate", "evidence_pack_ref", "data_classification", "budget"],
+  "limits": {
+    "max_parallel_agents_per_task": 8,
+    "max_parallel_agents_per_employee": 4,
+    "max_parallel_agents_per_department": 20,
+    "max_parallel_agents_per_organization": 100,
+    "max_pending_verifications_per_department": 20,
+    "max_pending_approvals_per_manager": 30
+  },
+  "hard_invariants": [
+    "Every participant has a unique work order and unique task-scoped Grant.",
+    "Grant task, employee, Agent, and department bindings must match the collaboration request exactly.",
+    "A participant receives one minimum Evidence Pack and never global enterprise search authority.",
+    "Coordinator, child, verifier, and approver permissions are not inherited from each other.",
+    "Direct Agent-to-Agent connection is denied; all fan-out and fan-in pass through the Broker.",
+    "Credentials are references only and never enter prompts, memory, Agent Cards, events, or receipts.",
+    "Capacity admission never issues a Grant or authorizes execution.",
+    "L3 requires manager approval and an independent verifier.",
+    "L4 remains candidate-only and requires a distinct named human approver.",
+    "Writes, external sends, and budget increases require a new action-specific approval and Grant.",
+    "Cancellation, suspension, transfer, offboarding, expiry, or policy failure revokes the entire collaboration Grant set before another action."
+  ],
+  "backpressure": {
+    "capacity_exceeded": "pause_without_permission_expansion",
+    "verification_backlog": "pause_new_delegations",
+    "approval_backlog": "pause_new_L3_L4_delegations",
+    "audit_unavailable": "reject_L3_L4_and_pause_lower_risk",
+    "budget_exhausted": "freeze_and_revoke"
+  },
+  "batch_approval": {
+    "allowed_profiles": ["routine_reversible", "technical_production", "financial_material"],
+    "denied_profiles": ["data_external", "governance_critical"],
+    "required_bindings": ["batch_approval_id", "approver_id", "profile", "organization_id", "department_id", "project_id", "valid_from", "expires_at", "aggregate_limit", "units_used"],
+    "scope_must_match_exactly": true,
+    "authority_expansion": "deny"
+  },
+  "approval_evidence": {
+    "manager_required_for": ["L3", "L4"],
+    "manager_required_fields": ["approval_id", "approver_employee_id", "approver_role", "organization_id", "department_id", "project_id", "task_id", "decision", "valid_from", "expires_at"],
+    "manager_roles": ["department_manager", "business_owner"],
+    "L4_human_required_fields": ["approval_id", "approver_employee_id", "approver_role", "organization_id", "department_id", "project_id", "task_id", "decision", "valid_from", "expires_at"],
+    "scope_must_match_exactly": true,
+    "decision_must_be": "approved",
+    "approver_must_be_distinct_from_coordinator_and_participants": true
+  },
+  "revocation_manifest": {
+    "includes": ["collaboration_id", "task_id", "participant_grant_ids", "direct_mcp_session_refs", "reason", "requested_at"],
+    "order": ["stop_new_work", "revoke_participant_grants", "revoke_direct_mcp_sessions", "freeze_unverified_artifacts", "preserve_append_only_events", "handoff_or_close"],
+    "partial_revocation_success": "keep_collaboration_frozen_until_all_targets_confirmed"
+  },
+  "revocation_confirmation_validator": "scripts/validate-enterprise-collaboration-revocation.ps1",
+  "production_authority": "none",
+  "external_calls": false
+}

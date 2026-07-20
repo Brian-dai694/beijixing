@@ -64,6 +64,11 @@ $capabilityClassificationPath = Join-Path $projectRoot '.qianlima\capability-exe
 $visibleExecutionPath = Join-Path $projectRoot '.qianlima\visible-execution-event-contract.json'
 $capabilityClassTestPath = Join-Path $projectRoot '.qianlima\scripts\test-capability-execution-classes.ps1'
 $visibleExecutionTestPath = Join-Path $projectRoot '.qianlima\scripts\test-visible-execution-contract.ps1'
+$collaborationScalePath = Join-Path $projectRoot '.qianlima\enterprise-collaboration-scale-contract.json'
+$collaborationScaleGatePath = Join-Path $projectRoot '.qianlima\scripts\invoke-enterprise-collaboration-scale-gate.ps1'
+$collaborationOutcomePath = Join-Path $projectRoot '.qianlima\enterprise-collaboration-outcome-contract.json'
+$collaborationOutcomeValidatorPath = Join-Path $projectRoot '.qianlima\scripts\validate-enterprise-collaboration-outcome.ps1'
+$collaborationRevocationValidatorPath = Join-Path $projectRoot '.qianlima\scripts\validate-enterprise-collaboration-revocation.ps1'
 $deploymentModePath = Join-Path $enterpriseRoot 'deployment-mode-policy.json'
 $businessCatalogPath = Join-Path $projectRoot '.qianlima\specifications\business-capability-catalog.json'
 $boundaryChecker = Join-Path $projectRoot '.qianlima\scripts\check-harness-boundary.ps1'
@@ -125,6 +130,11 @@ if (-not (Test-Path -LiteralPath $capabilityClassificationPath -PathType Leaf)) 
 if (-not (Test-Path -LiteralPath $visibleExecutionPath -PathType Leaf)) { throw 'Missing visible execution event contract.' }
 if (-not (Test-Path -LiteralPath $capabilityClassTestPath -PathType Leaf)) { throw 'Missing capability execution class regression.' }
 if (-not (Test-Path -LiteralPath $visibleExecutionTestPath -PathType Leaf)) { throw 'Missing visible execution event regression.' }
+if (-not (Test-Path -LiteralPath $collaborationScalePath -PathType Leaf)) { throw 'Missing enterprise collaboration scale contract.' }
+if (-not (Test-Path -LiteralPath $collaborationScaleGatePath -PathType Leaf)) { throw 'Missing enterprise collaboration scale gate.' }
+if (-not (Test-Path -LiteralPath $collaborationOutcomePath -PathType Leaf)) { throw 'Missing enterprise collaboration outcome contract.' }
+if (-not (Test-Path -LiteralPath $collaborationOutcomeValidatorPath -PathType Leaf)) { throw 'Missing enterprise collaboration outcome validator.' }
+if (-not (Test-Path -LiteralPath $collaborationRevocationValidatorPath -PathType Leaf)) { throw 'Missing enterprise collaboration revocation validator.' }
 if (-not (Test-Path -LiteralPath $businessCatalogPath -PathType Leaf)) { throw 'Missing shared business capability catalog.' }
 if (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'start-qianlima.ps1') -PathType Leaf)) { throw 'Missing shared core start script.' }
 
@@ -156,6 +166,8 @@ $deploymentModes = Get-Content -LiteralPath $deploymentModePath -Raw -Encoding U
 $businessCatalog = Get-Content -LiteralPath $businessCatalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $evidencePackLayering = Get-Content -LiteralPath $evidencePackLayeringPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $visibleExecution = Get-Content -LiteralPath $visibleExecutionPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$collaborationScale = Get-Content -LiteralPath $collaborationScalePath -Raw -Encoding UTF8 | ConvertFrom-Json
+$collaborationOutcome = Get-Content -LiteralPath $collaborationOutcomePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $cases = [System.Collections.Generic.List[object]]::new()
 Add-Case $cases 'shared_core_reference' ($edition -match '(?m)^\s*shared_core_root:\s*\.\.')
 Add-Case $cases 'no_harness_fork' ($edition -match '(?m)^\s*do_not_fork_harness:\s*true\s*$')
@@ -222,6 +234,11 @@ Add-Case $cases 'three_execution_classes_are_mandatory' ((Get-Content -LiteralPa
 Add-Case $cases 'ordinary_chat_does_not_load_runtime' ($edition.Contains('ordinary_chat_runtime_loading: deny'))
 Add-Case $cases 'child_grant_is_not_inherited' ($edition.Contains('child_grant_inheritance: deny') -and @($visibleExecution.governance_invariants | Where-Object { $_ -match 'never inherited' }).Count -eq 1)
 Add-Case $cases 'visible_execution_excludes_sensitive_payloads' (@($visibleExecution.prohibited_payload_fields) -contains 'hidden_reasoning' -and @($visibleExecution.prohibited_payload_fields) -contains 'credential_value')
+Add-Case $cases 'collaboration_capacity_never_grants_authority' ($edition.Contains('capacity_grants_authority: false') -and $collaborationScale.production_authority -eq 'none')
+Add-Case $cases 'collaboration_scale_has_four_quota_scopes' (@($collaborationScale.limits.PSObject.Properties.Name).Count -ge 4 -and $edition.Contains('task_employee_department_organization_quota_and_backpressure'))
+Add-Case $cases 'collaboration_group_revocation_required' ($edition.Contains('whole_grant_set_before_next_action') -and @($collaborationScale.revocation_manifest.order) -contains 'revoke_participant_grants')
+Add-Case $cases 'collaboration_revocation_confirmation_is_mechanical' (Test-Path -LiteralPath $collaborationRevocationValidatorPath -PathType Leaf)
+Add-Case $cases 'blocked_and_failed_are_distinct' ($edition.Contains('blocked_is_failed: false') -and $collaborationOutcome.status_semantics.blocked -match 'unavailable' -and $collaborationOutcome.status_semantics.failed -match 'failed')
 Add-Case $cases 'personal_and_enterprise_share_all_capabilities' ($businessCatalog.profiles.personal.capabilities -eq 'all' -and $businessCatalog.profiles.enterprise.capabilities -eq 'all' -and @($businessCatalog.capabilities).Count -ge 10)
 Add-Case $cases 'business_periods_and_profit_views_defined' (@($businessCatalog.periods.PSObject.Properties.Name).Count -eq 5 -and @($businessCatalog.capabilities | Where-Object { $_.id -eq 'profit_accounting' }).standard_views.Count -ge 4)
 Add-Case $cases 'enterprise_overlay_allowed' ((& $boundaryChecker -CandidatePath ($enterpriseRelativePath + '/edition.yaml') -PassThru | ConvertFrom-Json).status -eq 'pass')

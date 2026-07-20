@@ -33,3 +33,8 @@ runtime_defaults:
   external_a2a: disabled
   secret_mode: secret_ref_only
   automatic_permission_expansion: false
+  background_tasks: disabled_until_user_starts
+  collaboration_default: single_agent
+  delegation: only_for_independent_goal_evidence_or_review
+  enterprise_queue_and_multi_tenant_services: not_loaded
+  memory_control: user_visible_editable_deletable_and_revertible

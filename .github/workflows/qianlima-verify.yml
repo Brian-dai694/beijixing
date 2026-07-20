@@ -81,6 +81,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Capability execution class regression failed.' }
           powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-visible-execution-contract.ps1' -PassThru
           if ($LASTEXITCODE -ne 0) { throw 'Visible execution contract regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-enterprise-collaboration-scale-gate.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Enterprise collaboration scale gate regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-enterprise-collaboration-outcome.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Enterprise collaboration outcome regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-enterprise-collaboration-revocation.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Enterprise collaboration revocation regression failed.' }
 
       - name: Runtime checks
         shell: powershell

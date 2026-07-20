@@ -53,6 +53,9 @@ shared_contracts:
   on_demand_knowledge_evaluation: ../../.qianlima/evaluation-templates/on-demand-knowledge-eval.json
   independent_delegation_evaluation: ../../.qianlima/evaluation-templates/independent-delegation-eval.json
   visible_execution_events: ../../.qianlima/visible-execution-event-contract.json
+  collaboration_scale: ../../.qianlima/enterprise-collaboration-scale-contract.json
+  collaboration_outcome: ../../.qianlima/enterprise-collaboration-outcome-contract.json
+  collaboration_revocation_validator: ../../.qianlima/scripts/validate-enterprise-collaboration-revocation.ps1
   deployment_modes: ./deployment-mode-policy.json
 
 enterprise_controls:
@@ -102,6 +105,11 @@ enterprise_controls:
   ordinary_chat_runtime_loading: deny
   child_grant_inheritance: deny
   visible_execution: structured_events_without_prompts_reasoning_or_credentials
+  collaboration_capacity: task_employee_department_organization_quota_and_backpressure
+  capacity_grants_authority: false
+  collaboration_revocation: whole_grant_set_before_next_action
+  outcome_states: completed_blocked_failed_needs_human_frozen_cancelled
+  blocked_is_failed: false
 
 runtime_defaults:
   mode: plan

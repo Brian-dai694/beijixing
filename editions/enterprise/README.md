@@ -87,6 +87,9 @@ Skill Intake never runs during ordinary conversation or startup. Static scanning
 - `../../.qianlima/capability-execution-classification.yaml`: Classifies every current Skill and workflow as deterministic tool, on-demand knowledge, or independent delegation. Ordinary chat and same-goal follow-ups do not load runtime.
 - `../../.qianlima/evaluation-templates/`: Minimum fixture, evidence, isolation, revocation, latency, and cost evaluations for the three execution classes.
 - `../../.qianlima/visible-execution-event-contract.json`: Structured UI/audit events for coordinator and child state, tool confirmation, receipts, disagreements, revocation, completion, and freeze. Prompts, hidden reasoning, credentials, and raw private content are prohibited.
+- `../../.qianlima/enterprise-collaboration-scale-contract.json`: Enterprise-only task, employee, department, and organization capacity gate. Capacity admission never grants execution; quota or verifier/approval backlog pauses without expanding permissions.
+- `../../.qianlima/enterprise-collaboration-outcome-contract.json`: Structured decision, Claim, Evidence Receipt, uncertainty, scope, Grant, budget, approval, reversibility, and terminal status. `blocked` means evidence or prerequisites are unavailable; `failed` requires observed failure evidence.
+- `../../.qianlima/scripts/validate-enterprise-collaboration-revocation.ps1`: Confirms every child Grant and direct MCP session in a collaboration has been revoked; partial confirmation keeps the whole collaboration frozen.
 - `mcp-server-registry.example.json`: Disabled-by-default generic MCP Server Passport example.
 - `invoke-enterprise-mcp-gate.ps1`: Generic MCP admission, version, data, budget, and write gate.
 - `direct-mcp-session-contract.json`: Business-approved low-latency Agent-to-MCP session contract.

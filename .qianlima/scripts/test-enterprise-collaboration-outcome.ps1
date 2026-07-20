@@ -1,0 +1,15 @@
+param([switch]$PassThru)
+$ErrorActionPreference='Stop';$root=(Resolve-Path(Join-Path $PSScriptRoot '..')).Path;$tmp=Join-Path $root ('tmp\enterprise-outcome-'+[Guid]::NewGuid().ToString('n'));New-Item -ItemType Directory -Path $tmp -Force|Out-Null;$validator=Join-Path $PSScriptRoot 'validate-enterprise-collaboration-outcome.ps1'
+function Base($status){[ordered]@{outcome_id="outcome-$status";collaboration_id='collab-1';task_id='task-1';decision='candidate';claims=@([ordered]@{claim_id='claim-1';statement='verified test claim';evidence_receipt_refs=@('receipt:1');confidence=.8;uncertainty='test';falsifiers=@('new evidence')});evidence_receipts=@('receipt:1');uncertainties=@('test');data_scope='internal_sanitized';grant_ids=@('grant:1','grant:2');budget_authorized=[ordered]@{cost_usd=10;tool_calls=10};budget_used=[ordered]@{cost_usd=2;tool_calls=2};approval_required=$false;reversible=$true;final_status=$status;risk_level='L3';created_at=[DateTimeOffset]::UtcNow.ToString('o')}}
+function Run($name,$o){$p=Join-Path $tmp "$name.json";[IO.File]::WriteAllText($p,($o|ConvertTo-Json -Depth 10),[Text.UTF8Encoding]::new($false));$x=& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $validator -OutcomePath $p -PassThru 2>&1;[pscustomobject]@{code=$LASTEXITCODE;r=(($x-join"`n")|ConvertFrom-Json)}}
+$cases=[System.Collections.Generic.List[object]]::new();function C($n,$p){$cases.Add([pscustomobject]@{name=$n;passed=[bool]$p})}
+$o=Base 'blocked';$o.blocker_reasons=@('source_not_observable');$a=Run blocked $o;C 'blocked_is_valid_without_failure_claim'($a.code-eq0)
+$o=Base 'blocked';$o.blocker_reasons=@('source_not_observable');$o.failure_evidence_receipt_refs=@('failure:1');$b=Run blocked_bad $o;C 'blocked_cannot_impersonate_fail'($b.code-eq2)
+$o=Base 'failed';$c=Run failed_missing $o;C 'failed_requires_observed_failure_evidence'($c.code-eq2)
+$o=Base 'failed';$o.failure_evidence_receipt_refs=@('failure:1');$d=Run failed $o;C 'observed_failure_is_valid_fail'($d.code-eq0)
+$o=Base 'completed';$o.verification_passed=$true;$e=Run completed $o;C 'completed_requires_verified_claims'($e.code-eq0-and$e.r.production_authority-eq'none')
+$o=Base 'completed';$o.verification_passed=$true;$o.risk_level='L4';$o.candidate_only=$false;$f=Run l4_execute $o;C 'L4_outcome_cannot_claim_execution'($f.code-eq2)
+$o=Base 'completed';$o.verification_passed=$true;$o.budget_used.cost_usd=11;$g=Run over_budget $o;C 'over_budget_outcome_rejected'($g.code-eq2)
+$o=Base 'completed';$o.verification_passed=$true;$o.claims[0].evidence_receipt_refs=@('receipt:missing');$missing=Run missing_receipt $o;C 'claim_requires_existing_evidence_receipt'($missing.code-eq2)
+$o=Base 'cancelled';$h=Run cancel_no_revoke $o;C 'cancel_requires_revocation_confirmation'($h.code-eq2)
+$failed=@($cases|Where-Object{-not$_.passed});$result=[pscustomobject]@{passed=($failed.Count-eq0);cases=@($cases);external_calls=$false;permissions_granted=$false};if($PassThru){$result|ConvertTo-Json -Depth 7}else{$cases|Format-Table -AutoSize};if($failed.Count){throw('Enterprise collaboration outcome regression failed: '+($failed.name-join', '))}

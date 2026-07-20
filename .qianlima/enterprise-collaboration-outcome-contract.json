@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "contract_id": "qianlima-enterprise-collaboration-outcome",
+  "required_fields": ["outcome_id", "collaboration_id", "task_id", "decision", "claims", "evidence_receipts", "uncertainties", "data_scope", "grant_ids", "budget_authorized", "budget_used", "approval_required", "reversible", "final_status", "created_at"],
+  "final_statuses": ["completed", "blocked", "failed", "needs_human", "frozen", "cancelled"],
+  "status_semantics": {
+    "completed": "Contract outputs and required verification are present; this does not itself authorize a business write.",
+    "blocked": "Required evidence, approval, capacity, or an observable prerequisite is unavailable; no claim of execution failure is made.",
+    "failed": "An attempted or observed execution, contract, tool, or verification step failed and has failure evidence.",
+    "needs_human": "Evidence or disagreement requires a named human decision.",
+    "frozen": "Policy, revocation, integrity, or incident control prevents further action.",
+    "cancelled": "The requester cancelled and all unexecuted Grants must be revoked."
+  },
+  "claim_required_fields": ["claim_id", "statement", "evidence_receipt_refs", "confidence", "uncertainty", "falsifiers"],
+  "invariants": [
+    "Every material claim references at least one Evidence Receipt.",
+    "Blocked requires blocker reasons and cannot contain an observed failure assertion.",
+    "Failed requires a failure Evidence Receipt and cannot be inferred from missing evidence alone.",
+    "Budget used cannot exceed the authorized task budget.",
+    "L4 completed means candidate completed, not business action executed.",
+    "Irreversible or externally visible outcomes require a named approval reference and rollback or compensation reference.",
+    "Outcome acceptance does not issue Grants, expand data scope, or mutate enterprise memory.",
+    "A later correction creates a superseding outcome version and never overwrites this record."
+  ],
+  "production_authority": "none"
+}

@@ -9,7 +9,9 @@
     "tool_requested", "tool_confirmation_required", "tool_allowed", "tool_denied",
     "artifact_created", "evidence_verified", "disagreement_recorded", "grant_revoked",
     "child_completed", "fan_in_started", "human_approval_required", "result_completed",
-    "task_frozen", "rollback_required"
+    "task_frozen", "rollback_required", "collaboration_admission_checked",
+    "collaboration_paused", "collaboration_rejected", "revocation_manifest_created",
+    "outcome_blocked", "outcome_failed"
   ],
   "actor_types": ["user", "broker", "coordinator", "child_agent", "tool", "verifier", "approver", "system"],
   "terminal_events": ["result_completed", "task_frozen", "rollback_required"],
