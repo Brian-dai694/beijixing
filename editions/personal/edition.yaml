@@ -1,6 +1,6 @@
 edition:
   id: personal
-  version: 2.7.6
+  version: 2.7.7
   product_profile: personal-local-first
   shared_core_root: ../..
   do_not_fork_harness: true

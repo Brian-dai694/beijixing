@@ -73,7 +73,8 @@ Add-Case 'preference_can_be_edited' ($edit.status -eq 'preference_edited' -and $
 Add-Case 'disabled_preference_is_not_active' ($disable.status -eq 'preference_disabled' -and $disable.selected_by_runtime -eq $false)
 Add-Case 'preference_is_visible' (@($preferences.preferences | Where-Object { $_.key -eq 'response_style' -and $_.state -eq 'disabled' -and $_.user_confirmed -eq $true }).Count -eq 1 -and $preferences.sensitive_values_returned -eq $false)
 Add-Case 'preference_can_be_forgotten' ($removal.status -eq 'preference_removed' -and $removal2.status -eq 'preference_removed' -and $removal3.status -eq 'preference_removed')
-Add-Case 'sensitive_correction_is_rejected' (Invoke-ExpectedFailure $recordScript @('-CorrectionText', 'remember token: abcdefghijklmnop', '-PassThru') 'Sensitive or credential-like')
+$syntheticSensitiveCorrection = 'remember token: ' + ('a' * 16)
+Add-Case 'sensitive_correction_is_rejected' (Invoke-ExpectedFailure $recordScript @('-CorrectionText', $syntheticSensitiveCorrection, '-PassThru') 'Sensitive or credential-like')
 Add-Case 'policy_keeps_permissions_outside_learning' (@($policy.preference_limits.cannot_change) -contains 'delete' -and @($policy.preference_limits.cannot_change) -contains 'network' -and $policy.learning.permission_change_allowed -eq $false)
 
 $failed = @($cases | Where-Object { -not $_.passed })

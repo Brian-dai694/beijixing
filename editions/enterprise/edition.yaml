@@ -1,6 +1,6 @@
 edition:
   id: enterprise
-  version: 0.1.0
+  version: 2.7.7
   product_profile: enterprise-governed
   shared_core_root: ../..
   do_not_fork_harness: true
