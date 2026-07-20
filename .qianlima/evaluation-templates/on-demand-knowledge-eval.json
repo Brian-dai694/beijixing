@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "class": "on_demand_knowledge",
+  "required_fields": ["evaluation_id", "capability_id", "version", "task_match_cases", "source_traceability", "freshness_results", "classification_results", "retrieval_metrics", "context_budget", "exclusion_results", "result"],
+  "required_checks": [
+    "not_loaded_for_ordinary_chat_follow_up_or_learning",
+    "every_selected_chunk_has_source_version_and_time_scope",
+    "tenant_grant_and_classification_filter_precede_ranking",
+    "revoked_expired_and_superseded_evidence_is_excluded",
+    "top_k_is_within_context_budget",
+    "external_agent_receives_sanitized_evidence_pack_without_search_authority"
+  ],
+  "promotion_gate": "all_hard_filters_pass_and_retrieval_improves_or_matches_baseline"
+}

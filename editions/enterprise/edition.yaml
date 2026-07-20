@@ -48,6 +48,11 @@ shared_contracts:
   skill_intake: ../../.qianlima/skill-intake-contract.json
   improvement_evaluation_card: ../../.qianlima/improvement-evaluation-card-schema.json
   improvement_governance_pipeline: ../../.qianlima/scripts/invoke-improvement-governance-pipeline.ps1
+  capability_execution_classification: ../../.qianlima/capability-execution-classification.yaml
+  deterministic_tool_evaluation: ../../.qianlima/evaluation-templates/deterministic-tool-eval.json
+  on_demand_knowledge_evaluation: ../../.qianlima/evaluation-templates/on-demand-knowledge-eval.json
+  independent_delegation_evaluation: ../../.qianlima/evaluation-templates/independent-delegation-eval.json
+  visible_execution_events: ../../.qianlima/visible-execution-event-contract.json
   deployment_modes: ./deployment-mode-policy.json
 
 enterprise_controls:
@@ -93,6 +98,10 @@ enterprise_controls:
   skill_intake_startup_path: never
   improvement_entrypoint: evaluation_card_replay_verify_human_canary_monitor
   automatic_improvement_release: deny
+  capability_routing: deterministic_tool_then_on_demand_knowledge_then_independent_delegation
+  ordinary_chat_runtime_loading: deny
+  child_grant_inheritance: deny
+  visible_execution: structured_events_without_prompts_reasoning_or_credentials
 
 runtime_defaults:
   mode: plan

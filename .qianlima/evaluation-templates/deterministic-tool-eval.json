@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "class": "deterministic_tool",
+  "required_fields": ["evaluation_id", "capability_id", "version", "fixtures", "expected_schema", "failure_codes", "latency_budget_ms", "side_effect_assertions", "result"],
+  "required_checks": [
+    "fixtures_cover_valid_boundary_and_invalid_inputs",
+    "output_matches_exact_value_or_schema",
+    "failure_codes_are_stable",
+    "latency_is_within_budget",
+    "no_unauthorized_file_network_memory_or_delegation_side_effect"
+  ],
+  "promotion_gate": "all_required_checks_pass_and_human_approval_when_behavior_changes"
+}

@@ -48,6 +48,22 @@
     "automatic_production_change": false,
     "production_authority": "none"
   },
+  "capability_execution_overlay": {
+    "classification": "capability-execution-classification.yaml",
+    "validator": "scripts/validate-capability-execution-class.ps1",
+    "classification_regression": "scripts/test-capability-execution-classes.ps1",
+    "evaluation_templates": [
+      "evaluation-templates/deterministic-tool-eval.json",
+      "evaluation-templates/on-demand-knowledge-eval.json",
+      "evaluation-templates/independent-delegation-eval.json"
+    ],
+    "visible_execution_contract": "visible-execution-event-contract.json",
+    "visible_execution_regression": "scripts/test-visible-execution-contract.ps1",
+    "routing_order": ["deterministic_tool", "on_demand_knowledge", "independent_delegation"],
+    "ordinary_chat_runtime": "not_loaded",
+    "child_permission_inheritance": "deny",
+    "production_authority": "none"
+  },
   "model_fusion_overlay": {
     "model_portfolio": "model-portfolio.yaml",
     "fusion_plan_schema": "fusion-plan-schema.yaml",
@@ -265,7 +281,7 @@
     "rollback": "immediate_rollback_preserve_evidence_and_new_revision"
   },
   "control_status": {
-    "implemented": ["deny_by_default", "task_grants", "revocation", "A2A_local_contract", "CLI_adapter_plan_gate", "command_safety", "protected_invariants", "append_only_audit", "mock_runner_gate", "artifact_content_scan", "local_incident_containment_drill", "task_scoped_memory_read_gate", "complexity_admission_gate", "fusion_plan_validator", "evidence_first_fusion_regression", "employee_agent_separation_of_duties", "immutable_blindspot_observations", "error_independence_routing_gate", "governed_collaboration_fan_in"],
+    "implemented": ["deny_by_default", "task_grants", "revocation", "A2A_local_contract", "CLI_adapter_plan_gate", "command_safety", "protected_invariants", "append_only_audit", "mock_runner_gate", "artifact_content_scan", "local_incident_containment_drill", "task_scoped_memory_read_gate", "complexity_admission_gate", "fusion_plan_validator", "evidence_first_fusion_regression", "employee_agent_separation_of_duties", "immutable_blindspot_observations", "error_independence_routing_gate", "governed_collaboration_fan_in", "capability_execution_classification", "minimum_class_evaluation_templates", "visible_execution_event_contract"],
     "partially_implemented": ["Docker_isolation_probe", "MCP_gateway_runtime", "credential_rotation", "incident_notification", "production_runner_execution", "shadow_fusion_runtime", "evidence_market_shadow_receipts"],
     "not_enabled": ["external_A2A_network", "external_shadow_candidate_dispatch", "business_system_write_runner", "automatic_policy_promotion", "multi_tenant_external_exposure"]
   },

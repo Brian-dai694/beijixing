@@ -84,6 +84,9 @@ Skill Intake never runs during ordinary conversation or startup. Static scanning
 
 - `../../.qianlima/improvement-evaluation-card-schema.json`: Required evaluation card for every improvement candidate, including baseline, frozen replay, independent verification, canary scope, rollback conditions, approver, and effective version.
 - `../../.qianlima/scripts/invoke-improvement-governance-pipeline.ps1`: Enterprise improvement entrypoint. It can recommend canary or rollback states but cannot release or edit production.
+- `../../.qianlima/capability-execution-classification.yaml`: Classifies every current Skill and workflow as deterministic tool, on-demand knowledge, or independent delegation. Ordinary chat and same-goal follow-ups do not load runtime.
+- `../../.qianlima/evaluation-templates/`: Minimum fixture, evidence, isolation, revocation, latency, and cost evaluations for the three execution classes.
+- `../../.qianlima/visible-execution-event-contract.json`: Structured UI/audit events for coordinator and child state, tool confirmation, receipts, disagreements, revocation, completion, and freeze. Prompts, hidden reasoning, credentials, and raw private content are prohibited.
 - `mcp-server-registry.example.json`: Disabled-by-default generic MCP Server Passport example.
 - `invoke-enterprise-mcp-gate.ps1`: Generic MCP admission, version, data, budget, and write gate.
 - `direct-mcp-session-contract.json`: Business-approved low-latency Agent-to-MCP session contract.

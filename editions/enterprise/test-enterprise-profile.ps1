@@ -60,6 +60,10 @@ $skillIntakeContractPath = Join-Path $projectRoot '.qianlima\skill-intake-contra
 $skillIntakeGatePath = Join-Path $projectRoot '.qianlima\scripts\invoke-skill-intake-gate.ps1'
 $improvementEvaluationCardPath = Join-Path $projectRoot '.qianlima\improvement-evaluation-card-schema.json'
 $improvementPipelinePath = Join-Path $projectRoot '.qianlima\scripts\invoke-improvement-governance-pipeline.ps1'
+$capabilityClassificationPath = Join-Path $projectRoot '.qianlima\capability-execution-classification.yaml'
+$visibleExecutionPath = Join-Path $projectRoot '.qianlima\visible-execution-event-contract.json'
+$capabilityClassTestPath = Join-Path $projectRoot '.qianlima\scripts\test-capability-execution-classes.ps1'
+$visibleExecutionTestPath = Join-Path $projectRoot '.qianlima\scripts\test-visible-execution-contract.ps1'
 $deploymentModePath = Join-Path $enterpriseRoot 'deployment-mode-policy.json'
 $businessCatalogPath = Join-Path $projectRoot '.qianlima\specifications\business-capability-catalog.json'
 $boundaryChecker = Join-Path $projectRoot '.qianlima\scripts\check-harness-boundary.ps1'
@@ -117,6 +121,10 @@ if (-not (Test-Path -LiteralPath $skillIntakeContractPath -PathType Leaf)) { thr
 if (-not (Test-Path -LiteralPath $skillIntakeGatePath -PathType Leaf)) { throw 'Missing enterprise Skill Intake gate.' }
 if (-not (Test-Path -LiteralPath $improvementEvaluationCardPath -PathType Leaf)) { throw 'Missing improvement evaluation card.' }
 if (-not (Test-Path -LiteralPath $improvementPipelinePath -PathType Leaf)) { throw 'Missing improvement governance pipeline.' }
+if (-not (Test-Path -LiteralPath $capabilityClassificationPath -PathType Leaf)) { throw 'Missing capability execution classification.' }
+if (-not (Test-Path -LiteralPath $visibleExecutionPath -PathType Leaf)) { throw 'Missing visible execution event contract.' }
+if (-not (Test-Path -LiteralPath $capabilityClassTestPath -PathType Leaf)) { throw 'Missing capability execution class regression.' }
+if (-not (Test-Path -LiteralPath $visibleExecutionTestPath -PathType Leaf)) { throw 'Missing visible execution event regression.' }
 if (-not (Test-Path -LiteralPath $businessCatalogPath -PathType Leaf)) { throw 'Missing shared business capability catalog.' }
 if (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'start-qianlima.ps1') -PathType Leaf)) { throw 'Missing shared core start script.' }
 
@@ -147,6 +155,7 @@ $reviewCompounding = Get-Content -LiteralPath $reviewCompoundingPath -Raw -Encod
 $deploymentModes = Get-Content -LiteralPath $deploymentModePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $businessCatalog = Get-Content -LiteralPath $businessCatalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $evidencePackLayering = Get-Content -LiteralPath $evidencePackLayeringPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$visibleExecution = Get-Content -LiteralPath $visibleExecutionPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $cases = [System.Collections.Generic.List[object]]::new()
 Add-Case $cases 'shared_core_reference' ($edition -match '(?m)^\s*shared_core_root:\s*\.\.')
 Add-Case $cases 'no_harness_fork' ($edition -match '(?m)^\s*do_not_fork_harness:\s*true\s*$')
@@ -209,6 +218,10 @@ Add-Case $cases 'skill_intake_is_install_update_only' ($edition.Contains('skill_
 Add-Case $cases 'skill_intake_never_runs_on_startup' ($edition.Contains('skill_intake_startup_path: never'))
 Add-Case $cases 'improvement_pipeline_requires_evaluation_card_and_canary' ($edition.Contains('improvement_entrypoint: evaluation_card_replay_verify_human_canary_monitor') -and (Test-Path -LiteralPath $improvementPipelinePath -PathType Leaf))
 Add-Case $cases 'automatic_improvement_release_is_denied' ($edition.Contains('automatic_improvement_release: deny'))
+Add-Case $cases 'three_execution_classes_are_mandatory' ((Get-Content -LiteralPath $capabilityClassificationPath -Raw -Encoding UTF8) -match 'deterministic_tool' -and $edition.Contains('deterministic_tool_then_on_demand_knowledge_then_independent_delegation'))
+Add-Case $cases 'ordinary_chat_does_not_load_runtime' ($edition.Contains('ordinary_chat_runtime_loading: deny'))
+Add-Case $cases 'child_grant_is_not_inherited' ($edition.Contains('child_grant_inheritance: deny') -and @($visibleExecution.governance_invariants | Where-Object { $_ -match 'never inherited' }).Count -eq 1)
+Add-Case $cases 'visible_execution_excludes_sensitive_payloads' (@($visibleExecution.prohibited_payload_fields) -contains 'hidden_reasoning' -and @($visibleExecution.prohibited_payload_fields) -contains 'credential_value')
 Add-Case $cases 'personal_and_enterprise_share_all_capabilities' ($businessCatalog.profiles.personal.capabilities -eq 'all' -and $businessCatalog.profiles.enterprise.capabilities -eq 'all' -and @($businessCatalog.capabilities).Count -ge 10)
 Add-Case $cases 'business_periods_and_profit_views_defined' (@($businessCatalog.periods.PSObject.Properties.Name).Count -eq 5 -and @($businessCatalog.capabilities | Where-Object { $_.id -eq 'profit_accounting' }).standard_views.Count -ge 4)
 Add-Case $cases 'enterprise_overlay_allowed' ((& $boundaryChecker -CandidatePath ($enterpriseRelativePath + '/edition.yaml') -PassThru | ConvertFrom-Json).status -eq 'pass')

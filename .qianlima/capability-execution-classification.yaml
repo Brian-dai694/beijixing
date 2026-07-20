@@ -1,0 +1,124 @@
+schema_version: 1
+contract_id: qianlima-capability-execution-classification
+default_action: deny_unclassified
+
+runtime_shortcuts:
+  ordinary_chat: no_runtime
+  same_goal_follow_up: inherit_conversation_without_runtime
+  learning_or_brainstorming: no_runtime
+  L2_L3_business_task: load_only_matched_capability
+  L4_or_configuration_change: full_governed_runtime_and_human_approval
+
+routing_order:
+  - deterministic_tool
+  - on_demand_knowledge
+  - independent_delegation
+
+classes:
+  deterministic_tool:
+    purpose: bounded computation, parsing, validation, or exact system query
+    entry_conditions:
+      - single_bounded_input_output
+      - no_independent_goal
+      - deterministic_or_fixture_testable
+    invariants:
+      memory_inheritance: deny
+      secondary_delegation: deny
+      unauthorized_side_effects: deny
+      prefer_code_or_rules_over_agent: true
+    evaluation_template: evaluation-templates/deterministic-tool-eval.json
+
+  on_demand_knowledge:
+    purpose: task-matched knowledge or evidence retrieval for an L2/L3 task
+    entry_conditions:
+      - matched_task_intent
+      - minimum_evidence_pack_available
+      - source_and_time_scope_declared
+    invariants:
+      startup_loading: deny
+      ordinary_chat_loading: deny
+      full_workspace_scan: deny
+      global_memory_search: deny
+      external_agent_search_authority: deny
+      revoked_or_expired_evidence: exclude
+    evaluation_template: evaluation-templates/on-demand-knowledge-eval.json
+
+  independent_delegation:
+    purpose: independent goal, evidence collection, implementation, or review with measurable value
+    entry_conditions:
+      - independent_goal_or_evidence_or_review
+      - benefit_exceeds_coordination_cost
+      - named_fan_in_owner
+    invariants:
+      child_work_order_required: true
+      child_grant_required: true
+      parent_permission_inheritance: deny
+      child_to_child_direct_connection: deny
+      credentials_in_prompt_memory_or_agent_card: deny
+      fan_in_via_broker: required
+      disagreement_preservation: required
+    evaluation_template: evaluation-templates/independent-delegation-eval.json
+
+escalation_rules:
+  - from: deterministic_tool
+    to: on_demand_knowledge
+    only_when: source_evidence_is_required
+  - from: on_demand_knowledge
+    to: independent_delegation
+    only_when: independent_goal_evidence_or_review_has_measurable_value
+  - action: write_external_send_or_budget_change
+    result: require_new_human_approval_and_new_grant
+
+improvement_and_memory:
+  every_change_requires_replay_before_promotion: true
+  production_auto_promotion: deny
+  memory_updates_are_versioned: true
+  silent_memory_overwrite: deny
+
+classified_assets:
+  deterministic_tool:
+    skills:
+      - profit_check
+      - amazon_payment_reconciliation
+    workflows:
+      - profit_check
+      - qianlima_eval
+  on_demand_knowledge:
+    skills:
+      - skill_management
+      - skill_path_planning
+      - keyword_rank_scan
+      - daily_ad_report
+      - listing_optimization
+      - amazon_product_development
+      - amazon_seasonal_replenishment
+      - knowledge_digest
+      - traffic_anomaly_diagnosis
+    workflows:
+      - daily_ad_report
+      - bid_suggestion_review
+      - sales_ledger
+      - inventory_alert
+      - profit_review
+      - listing_optimization
+      - keyword_monitoring
+      - keyword_rank_scan
+      - traffic_anomaly_diagnosis
+      - knowledge_digest
+      - keyword_demand_lifecycle_timing
+      - skill_evolution
+      - seasonal_replenishment_review
+      - strategy_exploration
+  independent_delegation:
+    skills:
+      - competitor_comparison
+      - product_discovery
+    workflows:
+      - competitor_comparison
+      - product_discovery
+
+classification_note: >
+  The asset class selects the default execution shape, not business authority.
+  A deterministic or knowledge capability still passes task risk, data, Grant,
+  and approval gates. A workflow may be promoted to independent delegation only
+  through a versioned change, replay evaluation, and human approval.

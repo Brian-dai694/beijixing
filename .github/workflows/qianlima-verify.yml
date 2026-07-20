@@ -77,6 +77,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Skill Intake Gate regression failed.' }
           powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-improvement-governance-pipeline.ps1' -PassThru
           if ($LASTEXITCODE -ne 0) { throw 'Improvement governance pipeline regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-capability-execution-classes.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Capability execution class regression failed.' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\.qianlima\scripts\test-visible-execution-contract.ps1' -PassThru
+          if ($LASTEXITCODE -ne 0) { throw 'Visible execution contract regression failed.' }
 
       - name: Runtime checks
         shell: powershell

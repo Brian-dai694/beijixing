@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "contract_id": "qianlima-visible-execution-events",
+  "purpose": "Expose governed execution state without exposing private reasoning or credentials.",
+  "required_fields": ["event_id", "trace_id", "task_id", "parent_task_id", "work_order_id", "grant_id", "actor_type", "actor_id", "event_type", "timestamp", "policy_version", "risk_level", "data_classification", "artifact_refs", "status"],
+  "allowed_events": [
+    "task_received", "policy_checked", "grant_issued", "coordinator_started",
+    "child_work_order_created", "child_grant_issued", "child_started",
+    "tool_requested", "tool_confirmation_required", "tool_allowed", "tool_denied",
+    "artifact_created", "evidence_verified", "disagreement_recorded", "grant_revoked",
+    "child_completed", "fan_in_started", "human_approval_required", "result_completed",
+    "task_frozen", "rollback_required"
+  ],
+  "actor_types": ["user", "broker", "coordinator", "child_agent", "tool", "verifier", "approver", "system"],
+  "terminal_events": ["result_completed", "task_frozen", "rollback_required"],
+  "visibility_requirements": {
+    "coordinator_and_child_threads": true,
+    "tool_requests_and_confirmations": true,
+    "artifact_and_evidence_receipts": true,
+    "disagreements": true,
+    "terminal_or_frozen_state": true
+  },
+  "governance_invariants": [
+    "Coordinator has no global data permission.",
+    "Every child has a separate work order and minimum task Grant.",
+    "Child permissions are never inherited from the parent or siblings.",
+    "External A2A receives only a sanitized Evidence Pack.",
+    "Write, external send, and budget change require a new human approval and Grant.",
+    "Cancellation or Grant revocation must be visible before the next action is denied."
+  ],
+  "prohibited_payload_fields": ["raw_prompt", "hidden_reasoning", "chain_of_thought", "credential", "credential_value", "secret", "raw_private_content", "unrestricted_tool_parameters"],
+  "append_only": true
+}
