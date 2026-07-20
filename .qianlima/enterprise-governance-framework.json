@@ -118,6 +118,19 @@
     "external_agent_input": "sanitized_minimum_evidence_pack_only",
     "production_authority": "none"
   },
+  "skill_intake_overlay": {
+    "contract": "skill-intake-contract.json",
+    "gate": "scripts/invoke-skill-intake-gate.ps1",
+    "regression": "scripts/test-skill-intake-gate.ps1",
+    "trigger": "install_or_update_only",
+    "ordinary_conversation": "never_run",
+    "scanner_mode": "offline_static_first",
+    "decisions": ["approved", "conditional", "denied"],
+    "approved_effect": "minimum_capability_contract_pending_human_confirmation",
+    "global_mcp_install": "deny",
+    "scan_is_sandbox": false,
+    "production_authority": "none"
+  },
   "memory_broker_overlay": {
     "contract": "specifications/memory-read-contract.json",
     "validator": "scripts/validate-memory-read.ps1",

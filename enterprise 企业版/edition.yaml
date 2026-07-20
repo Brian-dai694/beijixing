@@ -44,6 +44,7 @@ shared_contracts:
   error_independence_gate: ../.qianlima/scripts/evaluate-error-independence.ps1
   governed_collaboration_fan_in: ../.qianlima/scripts/invoke-governed-collaboration-fan-in.ps1
   enterprise_data_admission: ../.qianlima/enterprise-data-admission-contract.json
+  skill_intake: ../.qianlima/skill-intake-contract.json
   deployment_modes: ./deployment-mode-policy.json
 
 enterprise_controls:
@@ -84,6 +85,8 @@ enterprise_controls:
   collaboration_entrypoint: governed_collaboration_fan_in
   data_admission: identity_grant_policy_filter_rank_topk_sanitize_receipt
   external_agent_knowledge_search: deny_evidence_pack_only
+  skill_intake_gate: install_update_only_offline_static_first
+  skill_intake_startup_path: never
 
 runtime_defaults:
   mode: plan
