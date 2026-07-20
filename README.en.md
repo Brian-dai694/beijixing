@@ -2,7 +2,7 @@
 
 [中文](README.md) · [English](README.en.md)
 
-[![Version](https://img.shields.io/badge/version-v2.8.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v2.8.1-blue.svg)](CHANGELOG.md)
 
 Beijixing is an enterprise Agent tiered-trust governance framework for Codex, Claude Code, CodeWhale, MCP servers, Skills, and specialist Agents. It governs admission, minimum task grants, evidence, budgets, audit, revocation, and rollback without replacing the execution runtime.
 
