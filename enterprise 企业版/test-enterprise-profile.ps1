@@ -43,6 +43,8 @@ $evidenceMarketPath = Join-Path $projectRoot '.qianlima\evidence-market-policy.j
 $shadowReceiptPath = Join-Path $projectRoot '.qianlima\shadow-fusion-receipt-schema.yaml'
 $shadowRuntimePath = Join-Path $projectRoot '.qianlima\scripts\invoke-shadow-fusion.ps1'
 $employeeCollaborationPath = Join-Path $projectRoot '.qianlima\employee-agent-collaboration-schema.yaml'
+$shadowProviderRegistryPath = Join-Path $projectRoot '.qianlima\shadow-candidate-provider-registry.json'
+$shadowDispatchGatePath = Join-Path $projectRoot '.qianlima\scripts\invoke-shadow-candidate-dispatch-gate.ps1'
 $deploymentModePath = Join-Path $enterpriseRoot 'deployment-mode-policy.json'
 $businessCatalogPath = Join-Path $projectRoot '.qianlima\specifications\business-capability-catalog.json'
 $boundaryChecker = Join-Path $projectRoot '.qianlima\scripts\check-harness-boundary.ps1'
@@ -84,6 +86,8 @@ if (-not (Test-Path -LiteralPath $evidenceMarketPath -PathType Leaf)) { throw 'M
 if (-not (Test-Path -LiteralPath $shadowReceiptPath -PathType Leaf)) { throw 'Missing shadow fusion receipt schema.' }
 if (-not (Test-Path -LiteralPath $shadowRuntimePath -PathType Leaf)) { throw 'Missing shadow fusion runtime.' }
 if (-not (Test-Path -LiteralPath $employeeCollaborationPath -PathType Leaf)) { throw 'Missing employee Agent collaboration contract.' }
+if (-not (Test-Path -LiteralPath $shadowProviderRegistryPath -PathType Leaf)) { throw 'Missing shadow candidate provider registry.' }
+if (-not (Test-Path -LiteralPath $shadowDispatchGatePath -PathType Leaf)) { throw 'Missing shadow candidate dispatch gate.' }
 if (-not (Test-Path -LiteralPath $businessCatalogPath -PathType Leaf)) { throw 'Missing shared business capability catalog.' }
 if (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'start-qianlima.ps1') -PathType Leaf)) { throw 'Missing shared core start script.' }
 
@@ -159,6 +163,7 @@ Add-Case $cases 'claim_pack_contract_present' (Test-Path -LiteralPath $claimPack
 Add-Case $cases 'evidence_market_contract_present' ((Test-Path -LiteralPath $evidenceMarketPath -PathType Leaf) -and (Test-Path -LiteralPath $shadowReceiptPath -PathType Leaf))
 Add-Case $cases 'shadow_fusion_runtime_present' (Test-Path -LiteralPath $shadowRuntimePath -PathType Leaf)
 Add-Case $cases 'employee_agent_collaboration_contract_present' (Test-Path -LiteralPath $employeeCollaborationPath -PathType Leaf)
+Add-Case $cases 'shadow_candidate_dispatch_disabled_by_default' (((Get-Content -LiteralPath $shadowProviderRegistryPath -Raw -Encoding UTF8|ConvertFrom-Json).network_dispatch_enabled -eq $false) -and (Test-Path -LiteralPath $shadowDispatchGatePath -PathType Leaf))
 Add-Case $cases 'personal_and_enterprise_share_all_capabilities' ($businessCatalog.profiles.personal.capabilities -eq 'all' -and $businessCatalog.profiles.enterprise.capabilities -eq 'all' -and @($businessCatalog.capabilities).Count -ge 10)
 Add-Case $cases 'business_periods_and_profit_views_defined' (@($businessCatalog.periods.PSObject.Properties.Name).Count -eq 5 -and @($businessCatalog.capabilities | Where-Object { $_.id -eq 'profit_accounting' }).standard_views.Count -ge 4)
 Add-Case $cases 'enterprise_overlay_allowed' ((& $boundaryChecker -CandidatePath ($enterpriseDirectoryName + '/edition.yaml') -PassThru | ConvertFrom-Json).status -eq 'pass')
