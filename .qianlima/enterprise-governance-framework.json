@@ -170,6 +170,16 @@
     "scan_is_sandbox": false,
     "production_authority": "none"
   },
+  "oneskills_overlay": {
+    "contract": "../editions/enterprise/oneskills-adapter-contract.json",
+    "gate": "../editions/enterprise/invoke-oneskills-admission-gate.ps1",
+    "regression": "../editions/enterprise/test-oneskills-admission.ps1",
+    "initial_mode": "proposal_only",
+    "fastmcp_http": "disabled",
+    "streamable_http": "disabled",
+    "executor": "L4_dedicated_runner_candidate_only",
+    "production_authority": "none"
+  },
   "memory_broker_overlay": {
     "contract": "specifications/memory-read-contract.json",
     "validator": "scripts/validate-memory-read.ps1",

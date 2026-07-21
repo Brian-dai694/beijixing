@@ -101,6 +101,9 @@ through an ordinary user start.
 HiLS is used only as a governance design analogy. Enterprise Beijixing does not install or require its model checkpoints, Python/PyTorch/CUDA stack, SGLang HSA backend, or GPU training environment.
 - `../../.qianlima/skill-intake-contract.json`: On-demand Skill/MCP installation intake with immutable provenance, offline static evidence, capability diff, and rescan triggers.
 - `../../.qianlima/scripts/invoke-skill-intake-gate.ps1`: Returns `approved`, `conditional`, or `denied`; approval still requires human confirmation, isolated trial, and a task Grant.
+- `oneskills-adapter-contract.json`: Enterprise-only OneSkills candidate overlay. Resource and expert Skills are limited to Brokered proposals; FastMCP HTTP and Streamable HTTP stay disabled.
+- `invoke-oneskills-admission-gate.ps1`: Offline gate for scanned proposal input and L4 executor candidates. It never installs a Skill, starts a process, opens a listener, or dispatches a Work Order.
+- `test-oneskills-admission.ps1`: Ten static/offline checks for FastMCP transport denial, evidence-pack minimization, proposal-only operation, and L4 executor preconditions.
 
 Skill Intake never runs during ordinary conversation or startup. Static scanning is defense in depth, not a sandbox. Dependency-network checks and source-code LLM review remain disabled unless separately approved for the data classification.
 

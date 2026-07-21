@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "adapter_id": "qianlima-enterprise-oneskills-overlay",
+  "status": "candidate_ecosystem_not_installed",
+  "source_model": "resource_and_expert_proposals_are_untrusted_inputs; broker_is_the_only_authority",
+  "admission": {
+    "required_prior_gate": "../../.qianlima/scripts/invoke-skill-intake-gate.ps1",
+    "accepted_artifact_type": "skill",
+    "pinned_provenance_required": ["source_ref", "commit_sha", "content_sha256", "dependency_manifest_hash"],
+    "initial_mode": "proposal_only",
+    "isolated_trial_required": true,
+    "global_install": "deny",
+    "global_mcp_install": "deny"
+  },
+  "transport": {
+    "fastmcp_http": "disabled",
+    "streamable_http": "disabled",
+    "public_bind": "deny",
+    "unauthenticated_http": "deny",
+    "future_http_prerequisites": ["oidc_or_jwt", "broker_task_grant", "tool_scope_check", "restricted_read_only_tools", "evidence_receipt", "audit", "task_end_revocation"]
+  },
+  "data_boundary": {
+    "accepted_input": "sanitized_minimum_evidence_pack_only",
+    "raw_sensitive_data": "deny",
+    "full_memory": "deny",
+    "secrets": "deny_secret_reference_only",
+    "agent_to_agent_direct": "deny"
+  },
+  "modes": {
+    "resource_proposal": {"levels": ["L2", "L3"], "authority": "proposal_only", "tools": "none", "network": "none", "write": "none"},
+    "expert_proposal": {"levels": ["L2", "L3"], "authority": "proposal_only", "tools": "none", "network": "none", "write": "none"},
+    "executor": {"level": "L4", "authority": "dedicated_runner_candidate_only", "requires": ["active_task_grant", "explicit_human_approval", "preflight_evidence", "independent_verifier", "verified_runner_attestation", "bounded_work_order"], "automatic_execution": "deny"}
+  },
+  "required_receipt": ["task_id", "grant_id", "work_order_id", "artifact_hash", "evidence_refs", "verification_status", "budget_snapshot", "terminal_state"],
+  "failure_response": "freeze_revoke_preserve_receipts",
+  "production_authority": "none"
+}
