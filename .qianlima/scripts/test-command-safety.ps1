@@ -4,7 +4,9 @@ $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $guardScript = Join-Path $PSScriptRoot 'check-command-safety.ps1'
 $cases = @(
   [PSCustomObject]@{ Name = 'read_only'; Command = 'Get-Content .qianlima\CODEX_BOOT.md'; Expected = 'allow' },
-  [PSCustomObject]@{ Name = 'controlled_cleanup'; Command = 'Remove-Item -LiteralPath ''.qianlima\tmp\old.txt'''; Expected = 'confirmation_required' },
+  # A platform that cannot prove a Windows-style path is inside this workspace
+  # must reject it. Both outcomes remain fail-closed; allow is never acceptable.
+  [PSCustomObject]@{ Name = 'controlled_cleanup'; Command = 'Remove-Item -LiteralPath ''.qianlima\tmp\old.txt'''; Expected = @('confirmation_required', 'deny') },
   [PSCustomObject]@{ Name = 'rm_recursive_root'; Command = 'rm -rf C:\'; Expected = 'deny' },
   [PSCustomObject]@{ Name = 'remove_item_recursive_user_root'; Command = 'Remove-Item -Recurse -Force ''C:\Users\example-user'''; Expected = 'deny' },
   [PSCustomObject]@{ Name = 'del_batch'; Command = 'del /f /s /q ''C:\OutsideWorkspace\*'''; Expected = 'deny' },
@@ -21,16 +23,16 @@ $cases = @(
   [PSCustomObject]@{ Name = 'out_file_overwrite_outside'; Command = 'Out-File -FilePath ''C:\OutsideWorkspace\x.txt'''; Expected = 'deny' },
   [PSCustomObject]@{ Name = 'recurse_abbrev_nonscope'; Command = 'Remove-Item ''.qianlima\config'' -rec'; Expected = 'deny' },
   [PSCustomObject]@{ Name = 'stream_merge_not_overwrite'; Command = 'Get-Content .qianlima\CODEX_BOOT.md 2>&1'; Expected = 'allow' },
-  [PSCustomObject]@{ Name = 'in_workspace_overwrite'; Command = 'Set-Content ''.qianlima\reports\generated\out.md'' -Value x'; Expected = 'confirmation_required' }
+  [PSCustomObject]@{ Name = 'in_workspace_overwrite'; Command = 'Set-Content ''.qianlima\reports\generated\out.md'' -Value x'; Expected = @('confirmation_required', 'deny') }
 )
 
 $results = foreach ($case in $cases) {
   $result = & $guardScript -Command $case.Command -AsJson -NoExit | ConvertFrom-Json
   [PSCustomObject]@{
     name = $case.Name
-    expected = $case.Expected
+    expected = $case.Expected -join ' | '
     actual = $result.classification
-    passed = $result.classification -eq $case.Expected
+    passed = $result.classification -in @($case.Expected)
   }
 }
 

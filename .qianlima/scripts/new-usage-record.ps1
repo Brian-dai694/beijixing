@@ -276,9 +276,9 @@ cost:
   estimated_savings: $computedSavings
   estimated_savings_rate_pct: $computedSavingsRate
   cost_limit: $CostLimit
-  cost_status: $(ConvertTo-YamlScalar $computedCostStatus)
+  cost_status: $computedCostStatus
   savings_source: $(ConvertTo-YamlScalar $SavingsSource)
-  continue_or_stop: $(ConvertTo-YamlScalar $ContinueOrStop)
+  continue_or_stop: $ContinueOrStop
   note: Replace placeholder values when exact model metering is available.
 
 billing_reconciliation:
@@ -311,7 +311,7 @@ realtime_cost_card:
   estimated_savings: $computedSavings
   estimated_savings_rate_pct: $computedSavingsRate
   primary_savings_source: $(ConvertTo-YamlScalar $SavingsSource)
-  continue_or_stop: $(ConvertTo-YamlScalar $ContinueOrStop)
+  continue_or_stop: $ContinueOrStop
 
 context:
   startup_profile: unknown
