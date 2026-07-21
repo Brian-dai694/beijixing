@@ -10,10 +10,6 @@
                             "tenant_id",
                             "organization_id",
                             "user_id",
-                            "agent_id",
-                            "agent_version",
-                            "task_id",
-                            "grant_id",
                             "trace_id",
                             "policy_version",
                             "decision"

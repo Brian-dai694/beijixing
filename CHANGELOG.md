@@ -2,6 +2,14 @@
 
 本项目遵循语义化版本。日期为公开模板仓的发布日。
 
+## [v2.9.0] - 2026-07-21
+- 吸收学习分支的安全门修复：补齐破坏性别名、覆盖写入与递归参数识别，并修复含空格绝对路径解析。
+- A2A 增加 Broker 中介的子委派语义、父子 Grant 严格子集校验和可重复 Artifact 哈希回放。
+- 新增 Work Node、Action Receipt、Manager Projection 与 Goal Work Graph，经理视图只采纳独立核验后的证据。
+- 新增 Pi/oh-my-pi Runtime 影子准入与任务级 Sandbox Attestation；默认保持 discover-only、无网络、无写入。
+- 统一 Usage Ledger 标量转义和模型有效成本计算，缺失价格字段改为失败关闭，并补齐 Pester/CI 回归。
+- 显式升级 Harness：仅扩展 discover-only Runtime 注册与审计 accept/reject 决策，并更新规范化边界哈希。
+
 ## [v2.8.1] - 2026-07-20
 - 修复 Windows GitHub Actions 在 Windows PowerShell 5.1 下读取无 BOM 中文 Obsidian fixture 时产生的解析失败；测试路径改为等价 ASCII fixture，不改变连接器策略。
 - 保留 v2.8.0 的企业单版本、角色管理与用户管理能力，重新执行企业离线回归和跨平台 CI。

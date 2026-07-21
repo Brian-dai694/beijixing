@@ -10,12 +10,12 @@
     {"path": "start-qianlima.ps1", "sha256": "1a3a503eba7afe82656a09ec2641031b3ca00b4b377d12757e6abc800fbee021"},
     {"path": ".qianlima/risk-rules.yaml", "sha256": "92a6e425158bad1e24a59a0d2d52a4b828b79b0fd42f3c8a275a0d0af1925846"},
     {"path": ".qianlima/agent-runtime-policy.yaml", "sha256": "a59f1ba529040afa1fa82f3d7734860f4c7a6009ff15bc2e2ec3fcac61b2d8f7"},
-    {"path": ".qianlima/agent-runtime-adapters.yaml", "sha256": "bf610781f07a1b39775bc817744eabb1e09166cf7e1cf421ae5134ddcca54904"},
+    {"path": ".qianlima/agent-runtime-adapters.yaml", "sha256": "8baaa32edec834513b46ddf3474ae39c262609767c8cf35af120aa7b1eceedbe"},
     {"path": ".qianlima/protected-invariants.yaml", "sha256": "ca7cf5e58de6f28c6de4b3826ec63b0076c7128010e1349a8c4a8cd2e2681ffa"},
     {"path": ".qianlima/sandbox-attestation-schema.yaml", "sha256": "28754412741b12eff3798c4264c2749c18dd71b8a4b21ef0613e17ce6af62ebc"},
     {"path": ".qianlima/scripts/invoke-governed-cli.ps1", "sha256": "72f5e14e2bbafffc2a7bc48e68238da0f5f23e02a9984be22724a73d923a6d1e"},
     {"path": ".qianlima/scripts/new-sandbox-attestation.ps1", "sha256": "ffe609708295e17341fb6888752b26767b965dfa0f35cb8fc2911f7286d8615e"},
-    {"path": ".qianlima/scripts/write-audit-event.ps1", "sha256": "32eca5d7ba778420cd0e6b1b1e6e05bfb54a18941374ed538e07710a404de8bb"}
+    {"path": ".qianlima/scripts/write-audit-event.ps1", "sha256": "374ba08130bbe0e503626c77fd9f0c4bc2ecfb1fc0241c34fe5334fc264e0e16"}
   ],
   "allowed_overlay_roots": [
     "editions/enterprise/*",
@@ -56,6 +56,12 @@
     ".qianlima/working/restricted-skills/*",
     ".qianlima/scripts/test-*.ps1"
   ],
-  "captured_at": "2026-07-20T08:00:00Z",
+  "release_authorization": {
+    "version": "v2.9.0",
+    "reason": "discover_only_pi_runtime_and_accept_reject_audit_decisions",
+    "approved_scope": [".qianlima/agent-runtime-adapters.yaml", ".qianlima/scripts/write-audit-event.ps1"],
+    "authority_expanded": false
+  },
+  "captured_at": "2026-07-21T04:00:00Z",
   "capture_rule": "Baseline is the current reviewed workspace state; do not refresh it implicitly."
 }

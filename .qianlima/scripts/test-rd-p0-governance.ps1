@@ -25,12 +25,9 @@ $nestedContract = Read-Json (Join-Path $projectRoot '.qianlima\specifications\ne
 $attestationContract = Read-Json (Join-Path $projectRoot '.qianlima\specifications\sandbox-attestation-contract.json')
 $piAdmissionSource = Read-Source '.qianlima\scripts\test-pi-shadow-admission.ps1'
 $attestationTestSource = Read-Source '.qianlima\scripts\test-sandbox-attestation-contract.ps1'
-$enterpriseGoalContract = @(Get-ChildItem -LiteralPath $projectRoot -Directory | ForEach-Object {
-  $candidate = Join-Path $_.FullName 'goal-work-graph-contract.json'
-  if (Test-Path -LiteralPath $candidate -PathType Leaf) { $candidate }
-})
-Require ($enterpriseGoalContract.Count -eq 1) 'Expected exactly one Enterprise goal-work-graph contract.'
-$goalContract = Read-Json $enterpriseGoalContract[0]
+$enterpriseGoalContract = Join-Path $projectRoot 'editions\enterprise\goal-work-graph-contract.json'
+Require (Test-Path -LiteralPath $enterpriseGoalContract -PathType Leaf) 'Expected the Enterprise goal-work-graph contract.'
+$goalContract = Read-Json $enterpriseGoalContract
 
 Require (@($actionContract.required) -contains 'sequence') 'P0 Action Receipt must require a sequence.'
 Require ((@($actionContract.invariants) -match 'sequence must be contiguous').Count -gt 0) 'P0 Action Receipt must require a contiguous chain.'
