@@ -14,7 +14,7 @@
 提交前必须运行公开安全校验:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\verify-qianlima.ps1"
+pwsh -NoProfile -File "./.qianlima/scripts/verify-qianlima.ps1"
 ```
 
 `Issues: 0` 才可提交;`WARN: Private local file exists` 是提醒你确认这些文件已被忽略,不是错误。
@@ -25,6 +25,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\.qianlima\scripts\verify-
 2. 按 `AI_START_HERE.md` 读取启动包,不要一次性读整个工作区
 3. 改动只针对公开模板层;高危动作(改价/预算/删除/外发)默认被运行时策略拦截
 4. commit 前跑 `verify-qianlima.ps1`;CI(`.github/workflows/qianlima-verify.yml`)会复跑校验 + 高危动作负测试
+
+## 跨平台脚本标准
+
+北极星的共享自动化统一以 PowerShell 7 (`pwsh`) 为主执行层，并同时支持 Windows、macOS 和 Linux。
+
+- 共享逻辑使用 `.ps1`；`.sh` 只作为 macOS/Linux 薄启动包装，不复制治理逻辑。
+- 不硬编码 `powershell.exe`、盘符、反斜杠路径或固定安装目录。子进程优先复用当前 PowerShell Host。
+- 文件路径使用 `Join-Path`、`Resolve-Path` 和仓库相对路径；命令参数使用 `-LiteralPath` 处理空格与特殊字符。
+- 必须依赖操作系统能力的行为放入平台适配器，并保持相同输入、输出、失败状态和审计字段。
+- 不通过关闭 TLS 校验、写入明文 Token 或放宽权限来解决平台差异。
+- Windows 与 macOS GitHub Actions 必须同时通过；任一平台失败都不得视为可发布。
 
 ## 文档导航
 
