@@ -62,12 +62,12 @@ Describe 'new-usage-record cost guard' {
   }
   It 'appends the YAML evidence to the canonical versioned JSONL ledger' {
     Make @{ RunId = 'canonical'; TaskSuccess = $true; InputTokens = 10; OutputTokens = 2; EstimatedCost = 0.1; Currency = 'CNY'; Force = $true }
-    $json = @(CanonicalLedger -split "`r?`n" | Where-Object { $_ } | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.run_id -eq 'canonical' })[0]
-    $json | Should -Not -BeNullOrEmpty
-    [int]$json.schema_version | Should -Be 2
-    $json.run_id | Should -Be 'canonical'
-    $json.currency | Should -Be 'CNY'
-    [decimal]$json.estimated_cost | Should -Be ([decimal]0.1)
+    $record = @(CanonicalLedger -split "`r?`n" | Where-Object { $_ -match '"run_id":"canonical"' })[0]
+    $record | Should -Not -BeNullOrEmpty
+    $record | Should -Match '"schema_version":2'
+    $record | Should -Match '"run_id":"canonical"'
+    $record | Should -Match '"currency":"CNY"'
+    $record | Should -Match '"estimated_cost":0\.1(?:,|\})'
   }
   It 'rejects cached input or reasoning tokens outside the declared totals' {
     { & $script:ScriptPath -Root $script:TmpDir -RunId 'bad-cache' -InputTokens 1 -CachedInputTokens 2 -Force } | Should -Throw

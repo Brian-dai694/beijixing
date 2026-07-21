@@ -167,8 +167,8 @@ jobs:
       - name: Enterprise launcher fails closed without deployment prerequisites
         shell: bash
         run: |
-          enterprise_dir="$(find . -maxdepth 1 -type d -print0 | xargs -0 -n1 sh -c 'test -f "$0/start-enterprise.sh" && printf "%s\n" "$0"' | head -n1)"
-          test -n "$enterprise_dir"
+          enterprise_dir="./editions/enterprise"
+          test -f "$enterprise_dir/start-enterprise.sh"
           chmod +x "$enterprise_dir/start-enterprise.sh"
           set +e
           output="$(bash "$enterprise_dir/start-enterprise.sh" -SkipValidation -Quiet 2>&1)"
