@@ -2,6 +2,12 @@
 
 本项目遵循语义化版本。日期为公开模板仓的发布日。
 
+## [v2.9.2] - 2026-07-22
+- 建立共享自动化的跨平台脚本标准：统一使用 PowerShell 7 (`pwsh`) 承载治理逻辑，并要求 Windows/macOS CI 同时通过。
+- 新增企业 Open Interpreter Runner 治理 Overlay，提供结构化 Runner Contract 与 Plan/Execute 双阶段离线门禁。
+- Open Interpreter 保持 `discover_only`、未安装且无生产执行权；初始 Plan 仅允许 L1/L2 本地只读数据处理，真实 Execute 始终机械拒绝。
+- 新增 10 项离线回归并纳入企业 Profile，确认不启动进程或监听器、不联网、不写文件、不读取密钥、不授予权限，且命令成功不等于业务核验通过。
+
 ## [v2.9.1] - 2026-07-21
 - 修复使用账本的 YAML 枚举序列化，成本保护状态保持可机器匹配的无引号值；JSONL 账本仍使用版本化数值记录。
 - 修复 macOS 命令安全回归：无法证明 Windows 风格路径位于工作区时允许拒绝，绝不把破坏性操作降级为放行。
