@@ -67,6 +67,10 @@ $openInterpreterContractPath = Join-Path $enterpriseRoot 'open-interpreter-runne
 $openInterpreterGatePath = Join-Path $enterpriseRoot 'invoke-open-interpreter-gate.ps1'
 $declarativePlanContractPath = Join-Path $enterpriseRoot 'declarative-change-plan-contract.json'
 $declarativePlanGatePath = Join-Path $enterpriseRoot 'invoke-declarative-change-plan-gate.ps1'
+$serviceBoundaryContractPath = Join-Path $enterpriseRoot 'enterprise-service-boundary-contract.json'
+$serviceBoundaryGatePath = Join-Path $enterpriseRoot 'invoke-enterprise-service-gate.ps1'
+$runtimeSelfCheckContractPath = Join-Path $enterpriseRoot 'runtime-self-check-contract.json'
+$runtimeSelfCheckGatePath = Join-Path $enterpriseRoot 'invoke-runtime-self-check-gate.ps1'
 $improvementEvaluationCardPath = Join-Path $projectRoot '.qianlima\improvement-evaluation-card-schema.json'
 $improvementPipelinePath = Join-Path $projectRoot '.qianlima\scripts\invoke-improvement-governance-pipeline.ps1'
 $capabilityClassificationPath = Join-Path $projectRoot '.qianlima\capability-execution-classification.yaml'
@@ -142,6 +146,10 @@ if (-not (Test-Path -LiteralPath $openInterpreterContractPath -PathType Leaf)) {
 if (-not (Test-Path -LiteralPath $openInterpreterGatePath -PathType Leaf)) { throw 'Missing enterprise Open Interpreter gate.' }
 if (-not (Test-Path -LiteralPath $declarativePlanContractPath -PathType Leaf)) { throw 'Missing declarative change plan contract.' }
 if (-not (Test-Path -LiteralPath $declarativePlanGatePath -PathType Leaf)) { throw 'Missing declarative change plan gate.' }
+if (-not (Test-Path -LiteralPath $serviceBoundaryContractPath -PathType Leaf)) { throw 'Missing enterprise service boundary contract.' }
+if (-not (Test-Path -LiteralPath $serviceBoundaryGatePath -PathType Leaf)) { throw 'Missing enterprise service boundary gate.' }
+if (-not (Test-Path -LiteralPath $runtimeSelfCheckContractPath -PathType Leaf)) { throw 'Missing runtime self-check contract.' }
+if (-not (Test-Path -LiteralPath $runtimeSelfCheckGatePath -PathType Leaf)) { throw 'Missing runtime self-check gate.' }
 if (-not (Test-Path -LiteralPath $improvementEvaluationCardPath -PathType Leaf)) { throw 'Missing improvement evaluation card.' }
 if (-not (Test-Path -LiteralPath $improvementPipelinePath -PathType Leaf)) { throw 'Missing improvement governance pipeline.' }
 if (-not (Test-Path -LiteralPath $capabilityClassificationPath -PathType Leaf)) { throw 'Missing capability execution classification.' }
@@ -187,6 +195,9 @@ $businessCatalog = Get-Content -LiteralPath $businessCatalogPath -Raw -Encoding 
 $evidencePackLayering = Get-Content -LiteralPath $evidencePackLayeringPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $oneSkills = Get-Content -LiteralPath $oneSkillsContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $declarativePlan = Get-Content -LiteralPath $declarativePlanContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$serviceBoundary = Get-Content -LiteralPath $serviceBoundaryContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$runtimeSelfCheck = Get-Content -LiteralPath $runtimeSelfCheckContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$enterpriseDataAdmission = Get-Content -LiteralPath $enterpriseDataAdmissionPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $openInterpreter = Get-Content -LiteralPath $openInterpreterContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $visibleExecution = Get-Content -LiteralPath $visibleExecutionPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $collaborationScale = Get-Content -LiteralPath $collaborationScalePath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -253,6 +264,10 @@ Add-Case $cases 'hils_is_design_pattern_not_runtime_dependency' ($edition.Contai
 Add-Case $cases 'memory_evidence_preference_policy_do_not_auto_promote' ($evidencePackLayering.automatic_cross_layer_promotion -eq 'deny' -and @($evidencePackLayering.separation).Count -eq 4)
 Add-Case $cases 'skill_intake_is_install_update_only' ($edition.Contains('skill_intake_gate: install_update_only_offline_static_first') -and (Test-Path -LiteralPath $skillIntakeGatePath -PathType Leaf))
 Add-Case $cases 'declarative_change_plan_is_offline_and_execute_disabled' ($declarativePlan.status -eq 'offline_plan_only' -and $declarativePlan.authority.execution_enabled -eq $false -and $declarativePlan.authority.production_authority -eq 'none')
+Add-Case $cases 'source_attribution_is_corrected' ($declarativePlan.design_sources.helmsman_pattern -match 'disk_ANNS' -and $declarativePlan.design_sources.open_seo_pattern -match 'service_repository_MCP')
+Add-Case $cases 'service_boundary_keeps_oauth_below_task_grant' ($serviceBoundary.mcp_oauth -eq 'required_but_never_sufficient_for_task_authority' -and $serviceBoundary.production_authority -eq 'none')
+Add-Case $cases 'runtime_self_check_is_non_destructive_and_preemptible' ($runtimeSelfCheck.non_destructive -eq $true -and $runtimeSelfCheck.background_priority -eq 0 -and $runtimeSelfCheck.background_preemptible -eq $true)
+Add-Case $cases 'retrieval_authorizes_before_vector_recall' ($enterpriseDataAdmission.retrieval_architecture.authorization_before_vector_recall -eq $true -and $enterpriseDataAdmission.retrieval_architecture.helmsman_runtime_dependency -eq 'none')
 Add-Case $cases 'skill_intake_never_runs_on_startup' ($edition.Contains('skill_intake_startup_path: never'))
 Add-Case $cases 'oneskills_is_proposal_only_with_http_disabled' ($edition.Contains('oneskills_integration: proposal_only_fastmcp_http_disabled_executor_L4_runner_candidate') -and $oneSkills.transport.fastmcp_http -eq 'disabled' -and $oneSkills.transport.streamable_http -eq 'disabled' -and $oneSkills.modes.executor.automatic_execution -eq 'deny')
 Add-Case $cases 'open_interpreter_is_discover_only_and_execute_disabled' ($edition.Contains('open_interpreter_integration: discover_only_plan_gate_execute_disabled') -and $openInterpreter.status -eq 'discover_only_not_installed' -and $openInterpreter.two_phase_gate.execute.current_release -eq 'deny_real_execution' -and $openInterpreter.business_authority -eq 'none')

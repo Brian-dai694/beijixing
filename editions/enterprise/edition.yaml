@@ -1,6 +1,6 @@
 edition:
   id: enterprise
-  version: 2.10.0
+  version: 2.11.0
   product_profile: enterprise-governed
   shared_core_root: ../..
   do_not_fork_harness: true
@@ -55,6 +55,10 @@ shared_contracts:
   open_interpreter_gate: ./invoke-open-interpreter-gate.ps1
   declarative_change_plan: ./declarative-change-plan-contract.json
   declarative_change_plan_gate: ./invoke-declarative-change-plan-gate.ps1
+  enterprise_service_boundary: ./enterprise-service-boundary-contract.json
+  enterprise_service_gate: ./invoke-enterprise-service-gate.ps1
+  runtime_self_check: ./runtime-self-check-contract.json
+  runtime_self_check_gate: ./invoke-runtime-self-check-gate.ps1
   improvement_evaluation_card: ../../.qianlima/improvement-evaluation-card-schema.json
   improvement_governance_pipeline: ../../.qianlima/scripts/invoke-improvement-governance-pipeline.ps1
   capability_execution_classification: ../../.qianlima/capability-execution-classification.yaml
@@ -113,6 +117,10 @@ enterprise_controls:
   oneskills_integration: proposal_only_fastmcp_http_disabled_executor_L4_runner_candidate
   open_interpreter_integration: discover_only_plan_gate_execute_disabled
   declarative_change_plan: offline_desired_state_diff_plan_preview_execute_disabled
+  business_service_boundary: UI_MCP_scheduler_to_service_repository_approved_adapter
+  scheduled_agent_identity: independent_service_identity_task_grant_and_budget
+  runtime_self_check: startup_background_L4_preflight_non_destructive
+  evidence_retrieval: authorization_before_hot_metadata_recall_then_cold_evidence
   improvement_entrypoint: evaluation_card_replay_verify_human_canary_monitor
   automatic_improvement_release: deny
   capability_routing: deterministic_tool_then_on_demand_knowledge_then_independent_delegation

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "contract_id": "beijixing-enterprise-service-repository-mcp",
+  "status": "offline_boundary_defined",
+  "purpose": "Expose one governed business service layer to UI, MCP, and scheduled Agents without bypassing project ownership, task Grants, cost controls, or adapter boundaries.",
+  "callers": ["ui_user", "mcp_agent", "scheduled_agent"],
+  "layers": ["ui_or_mcp_or_scheduler", "business_service", "repository", "approved_data_adapter", "external_provider"],
+  "scope_required": ["organization_id", "project_id", "store_id", "marketplace", "product_line"],
+  "project_ownership_check": "required_before_service_dispatch",
+  "grant_check": "required_after_identity_and_before_every_adapter_call",
+  "mcp_oauth": "required_but_never_sufficient_for_task_authority",
+  "scheduled_identity": {
+    "required": ["service_identity_id", "schedule_id", "task_id", "grant_id", "budget"],
+    "inherits_employee_session": false,
+    "standing_business_write_authority": false
+  },
+  "secret_policy": "secret_reference_only",
+  "cost_receipt_required": ["provider", "capability", "request_cost", "cache_hit", "result_count", "budget_snapshot"],
+  "repository_rules": [
+    "UI, MCP, and scheduled callers share business services, not direct repositories.",
+    "Provider-specific payloads are normalized before business workflows consume them.",
+    "Google SEO domain/page/backlink entities are not reused as Amazon ASIN/variation/keyword/advertising entities.",
+    "Hosted and self-hosted authentication modes terminate at the same project and Grant checks.",
+    "A scheduler identity has its own budget and short-lived Grant."
+  ],
+  "production_authority": "none"
+}

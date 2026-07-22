@@ -4,9 +4,11 @@
   "status": "offline_plan_only",
   "purpose": "Describe current state, desired state, evidence-backed differences, and a reviewable plan without granting execution authority.",
   "design_sources": {
-    "helmsman_pattern": "desired_state_diff_plan_verify",
-    "open_seo_pattern": "evidence_content_publish_observe_iterate",
-    "apollo_11_pattern": "explicit_constraints_reproducible_calculation_independent_verification",
+    "declarative_plan_origin": "beijixing_internal_governance_pattern",
+    "helmsman_pattern": "disk_ANNS_hot_routing_cold_vector_storage_not_declarative_planning",
+    "open_seo_pattern": "service_repository_MCP_project_scope_cost_tracking_not_content_generation",
+    "apollo_11_pattern": "runtime_self_check_alarm_restart_and_recovery_from_transcribed_AGC_source",
+    "source_verification": "github_README_API_tree_and_selected_source_2026-07-22",
     "runtime_dependencies": "none"
   },
   "supported_domains": ["governance_policy", "listing_growth", "advertising", "profitability", "inventory", "procurement_logistics"],

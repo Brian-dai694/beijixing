@@ -155,7 +155,9 @@
     "original_content_read": "new_just_in_time_grant_and_policy_recheck",
     "learned_end_to_end_selector": "deny",
     "HiLS_runtime_dependency": "none_governance_pattern_only",
-    "production_authority": "none"
+    "production_authority": "none",
+    "retrieval_pattern": "policy_filter_then_hot_metadata_recall_then_cold_evidence_JIT",
+    "helmsman_runtime_dependency": "none"
   },
   "skill_intake_overlay": {
     "contract": "skill-intake-contract.json",
@@ -197,6 +199,23 @@
     "purpose": "desired_state_current_state_diff_plan_preview_evidence",
     "execution": "disabled_in_this_release",
     "L4": "candidate_only_needs_human",
+    "production_authority": "none",
+    "source_attribution": "internal_contract_corrected_after_source_verification"
+  },
+  "enterprise_service_boundary_overlay": {
+    "contract": "../editions/enterprise/enterprise-service-boundary-contract.json",
+    "gate": "../editions/enterprise/invoke-enterprise-service-gate.ps1",
+    "regression": "../editions/enterprise/test-source-verified-patterns.ps1",
+    "mcp_oauth": "required_but_not_task_authority",
+    "scheduled_identity": "independent_short_lived_grant_and_budget",
+    "production_authority": "none"
+  },
+  "runtime_self_check_overlay": {
+    "contract": "../editions/enterprise/runtime-self-check-contract.json",
+    "gate": "../editions/enterprise/invoke-runtime-self-check-gate.ps1",
+    "regression": "../editions/enterprise/test-source-verified-patterns.ps1",
+    "tiers": ["startup", "background", "L4_preflight"],
+    "background": "priority_zero_preemptible_non_destructive",
     "production_authority": "none"
   },
   "memory_broker_overlay": {

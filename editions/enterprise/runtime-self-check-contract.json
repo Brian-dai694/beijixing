@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "contract_id": "beijixing-enterprise-runtime-self-check",
+  "status": "offline_policy_defined",
+  "tiers": {
+    "startup": ["contract_references", "policy_versions", "route_index", "required_files"],
+    "background": ["workflow_references", "memory_expiry_conflicts", "evidence_index_metadata", "source_freshness"],
+    "L4_preflight": ["fresh_authoritative_sources", "calculation_basis", "grant_scope", "rollback_path", "revocation_path"]
+  },
+  "background_priority": 0,
+  "background_preemptible": true,
+  "non_destructive": true,
+  "restore_original_state_after_probe": true,
+  "failure_receipt_required": ["check_id", "tier", "failure_location", "context_ref", "source_ref", "cumulative_count", "recovery_action", "terminal_state"],
+  "restart_table": {
+    "recoverable": ["restore", "retry_bounded", "degrade_capability"],
+    "insufficient_evidence": ["freeze", "revoke", "fresh_start"],
+    "never": ["hide_alarm", "continue_with_false_certainty", "expand_permission"]
+  },
+  "control_execution_separation": "self_check_reports_to_broker_and_cannot_approve_business_output",
+  "production_authority": "none"
+}

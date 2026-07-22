@@ -110,6 +110,9 @@ HiLS is used only as a governance design analogy. Enterprise Beijixing does not 
 - declarative-change-plan-contract.json: Enterprise contract for current state, desired state, evidence-backed diff, plan preview, reproducible verification, and immutable revisions.
 - invoke-declarative-change-plan-gate.ps1: Offline declaration gate. It validates plans without executing them; L4 plans remain human-review candidates and external writes are disabled in this release.
 - `test-declarative-change-plan.ps1`: Ten offline checks for missing evidence, self-verification, replayability, L4 review, execution claims, and external-write denial.
+- `enterprise-service-boundary-contract.json` and `invoke-enterprise-service-gate.ps1`: Shared UI/MCP/scheduler business-service boundary with project ownership, short-lived Grants, Secret References, and cost receipts.
+- `runtime-self-check-contract.json` and `invoke-runtime-self-check-gate.ps1`: Startup, zero-priority background, and L4 preflight checks with non-destructive restore, alarms, recovery, freeze, and revocation.
+- `test-source-verified-patterns.ps1`: Source-corrected offline regression for OAuth-vs-Grant separation, scheduler identity, scoped retrieval, and Apollo-style self-check recovery.
 
 Skill Intake never runs during ordinary conversation or startup. Static scanning is defense in depth, not a sandbox. Dependency-network checks and source-code LLM review remain disabled unless separately approved for the data classification.
 

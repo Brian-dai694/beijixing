@@ -9,6 +9,16 @@
   "mandatory_filter_order": ["grant", "classification", "organization", "scope", "revocation", "validity", "retention", "source", "verification"],
   "ranking_dimensions": ["relevance_score", "evidence_quality", "freshness_score", "retrieval_cost", "exposure_risk"],
   "ranking_formula": "0.40*relevance + 0.25*evidence_quality + 0.15*freshness - 0.10*retrieval_cost - 0.10*exposure_risk",
+  "retrieval_architecture": {
+    "pattern": "hot_authorized_metadata_then_cold_evidence",
+    "partitions": ["tenant", "department", "project", "store", "data_domain"],
+    "authorization_before_vector_recall": true,
+    "index_metadata_bound_to": ["source_version", "content_hash", "classification", "validity", "revocation"],
+    "resource_controls": ["query_budget", "top_k", "concurrency", "queue_backpressure"],
+    "index_build_separated_from_online_query": true,
+    "helmsman_runtime_dependency": "none",
+    "spdk_nvme_cpp_adoption": "deferred_until_million_scale_and_measured_IO_bottleneck"
+  },
   "invariants": [
     "Mandatory policy filtering runs before ranking and Top-K selection.",
     "A denied candidate never enters the ranked candidate set.",
