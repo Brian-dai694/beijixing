@@ -107,6 +107,9 @@ HiLS is used only as a governance design analogy. Enterprise Beijixing does not 
 - `open-interpreter-runner-contract.json`: Discover-only Open Interpreter Runner candidate. It defines Plan/Execute separation, task authority intersection, structured step results, command audit, and revocation without granting host access.
 - `invoke-open-interpreter-gate.ps1`: Offline Plan/Execute gate. The initial release accepts only L1/L2 local read-only planning and always rejects real execution.
 - `test-open-interpreter-gate.ps1`: Ten offline checks proving no process, listener, network, write, secret access, browser/ERP authority, or business verification authority is granted.
+- declarative-change-plan-contract.json: Enterprise contract for current state, desired state, evidence-backed diff, plan preview, reproducible verification, and immutable revisions.
+- invoke-declarative-change-plan-gate.ps1: Offline declaration gate. It validates plans without executing them; L4 plans remain human-review candidates and external writes are disabled in this release.
+- `test-declarative-change-plan.ps1`: Ten offline checks for missing evidence, self-verification, replayability, L4 review, execution claims, and external-write denial.
 
 Skill Intake never runs during ordinary conversation or startup. Static scanning is defense in depth, not a sandbox. Dependency-network checks and source-code LLM review remain disabled unless separately approved for the data classification.
 

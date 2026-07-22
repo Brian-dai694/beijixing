@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "contract_id": "beijixing-enterprise-declarative-change-plan",
+  "status": "offline_plan_only",
+  "purpose": "Describe current state, desired state, evidence-backed differences, and a reviewable plan without granting execution authority.",
+  "design_sources": {
+    "helmsman_pattern": "desired_state_diff_plan_verify",
+    "open_seo_pattern": "evidence_content_publish_observe_iterate",
+    "apollo_11_pattern": "explicit_constraints_reproducible_calculation_independent_verification",
+    "runtime_dependencies": "none"
+  },
+  "supported_domains": ["governance_policy", "listing_growth", "advertising", "profitability", "inventory", "procurement_logistics"],
+  "required_fields": ["plan_id", "plan_version", "task_id", "workflow_id", "workflow_version", "policy_version", "domain", "risk_level", "current_state", "desired_state", "diff", "plan_preview", "evidence_pack", "verification", "execution"],
+  "current_state_required": ["snapshot_id", "snapshot_hash", "observed_at", "source_refs", "data_time_range"],
+  "desired_state_required": ["target_id", "target_version", "constraints", "success_criteria"],
+  "diff_item_required": ["diff_id", "field", "current_value", "desired_value", "evidence_refs", "candidate_action", "risk_level", "reversible"],
+  "plan_step_required": ["step_id", "diff_refs", "action_class", "expected_effect", "verification_method", "stop_conditions"],
+  "evidence_pack_required": ["source_refs", "data_time_range", "formula_or_method_ref", "assumptions", "pending_verification", "artifact_hash"],
+  "verification_required": ["producer_id", "independent_verifier_id", "replayable", "result_status"],
+  "growth_loop": ["keyword_evidence", "content_candidate", "fact_and_compliance_check", "pre_publish_diff", "observed_traffic_conversion_advertising", "review", "next_version_candidate"],
+  "authority": {
+    "plan_preview_is_execution_authority": false,
+    "execution_enabled": false,
+    "L4_output": "candidate_only_needs_human",
+    "external_write": "deny_in_this_release",
+    "production_authority": "none"
+  },
+  "immutable_history": "A revision creates a new plan_id or plan_version and references the prior artifact; verified history is never overwritten.",
+  "success_semantics": "A generated plan or successful command is not a verified business outcome."
+}

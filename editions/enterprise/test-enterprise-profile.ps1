@@ -65,6 +65,8 @@ $oneSkillsContractPath = Join-Path $enterpriseRoot 'oneskills-adapter-contract.j
 $oneSkillsGatePath = Join-Path $enterpriseRoot 'invoke-oneskills-admission-gate.ps1'
 $openInterpreterContractPath = Join-Path $enterpriseRoot 'open-interpreter-runner-contract.json'
 $openInterpreterGatePath = Join-Path $enterpriseRoot 'invoke-open-interpreter-gate.ps1'
+$declarativePlanContractPath = Join-Path $enterpriseRoot 'declarative-change-plan-contract.json'
+$declarativePlanGatePath = Join-Path $enterpriseRoot 'invoke-declarative-change-plan-gate.ps1'
 $improvementEvaluationCardPath = Join-Path $projectRoot '.qianlima\improvement-evaluation-card-schema.json'
 $improvementPipelinePath = Join-Path $projectRoot '.qianlima\scripts\invoke-improvement-governance-pipeline.ps1'
 $capabilityClassificationPath = Join-Path $projectRoot '.qianlima\capability-execution-classification.yaml'
@@ -138,6 +140,8 @@ if (-not (Test-Path -LiteralPath $oneSkillsContractPath -PathType Leaf)) { throw
 if (-not (Test-Path -LiteralPath $oneSkillsGatePath -PathType Leaf)) { throw 'Missing enterprise OneSkills admission gate.' }
 if (-not (Test-Path -LiteralPath $openInterpreterContractPath -PathType Leaf)) { throw 'Missing enterprise Open Interpreter Runner contract.' }
 if (-not (Test-Path -LiteralPath $openInterpreterGatePath -PathType Leaf)) { throw 'Missing enterprise Open Interpreter gate.' }
+if (-not (Test-Path -LiteralPath $declarativePlanContractPath -PathType Leaf)) { throw 'Missing declarative change plan contract.' }
+if (-not (Test-Path -LiteralPath $declarativePlanGatePath -PathType Leaf)) { throw 'Missing declarative change plan gate.' }
 if (-not (Test-Path -LiteralPath $improvementEvaluationCardPath -PathType Leaf)) { throw 'Missing improvement evaluation card.' }
 if (-not (Test-Path -LiteralPath $improvementPipelinePath -PathType Leaf)) { throw 'Missing improvement governance pipeline.' }
 if (-not (Test-Path -LiteralPath $capabilityClassificationPath -PathType Leaf)) { throw 'Missing capability execution classification.' }
@@ -182,6 +186,7 @@ $deploymentModes = Get-Content -LiteralPath $deploymentModePath -Raw -Encoding U
 $businessCatalog = Get-Content -LiteralPath $businessCatalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $evidencePackLayering = Get-Content -LiteralPath $evidencePackLayeringPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $oneSkills = Get-Content -LiteralPath $oneSkillsContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$declarativePlan = Get-Content -LiteralPath $declarativePlanContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $openInterpreter = Get-Content -LiteralPath $openInterpreterContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $visibleExecution = Get-Content -LiteralPath $visibleExecutionPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $collaborationScale = Get-Content -LiteralPath $collaborationScalePath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -247,6 +252,7 @@ Add-Case $cases 'external_agent_gets_evidence_pack_not_search' ($edition.Contain
 Add-Case $cases 'hils_is_design_pattern_not_runtime_dependency' ($edition.Contains('hils_runtime_dependency: none_governance_pattern_only') -and $evidencePackLayering.runtime_dependency_policy.HiLS_model_training -eq 'not_required_not_installed' -and $evidencePackLayering.runtime_dependency_policy.PyTorch_CUDA -eq 'not_required' -and $evidencePackLayering.runtime_dependency_policy.SGLang_HSA -eq 'not_required')
 Add-Case $cases 'memory_evidence_preference_policy_do_not_auto_promote' ($evidencePackLayering.automatic_cross_layer_promotion -eq 'deny' -and @($evidencePackLayering.separation).Count -eq 4)
 Add-Case $cases 'skill_intake_is_install_update_only' ($edition.Contains('skill_intake_gate: install_update_only_offline_static_first') -and (Test-Path -LiteralPath $skillIntakeGatePath -PathType Leaf))
+Add-Case $cases 'declarative_change_plan_is_offline_and_execute_disabled' ($declarativePlan.status -eq 'offline_plan_only' -and $declarativePlan.authority.execution_enabled -eq $false -and $declarativePlan.authority.production_authority -eq 'none')
 Add-Case $cases 'skill_intake_never_runs_on_startup' ($edition.Contains('skill_intake_startup_path: never'))
 Add-Case $cases 'oneskills_is_proposal_only_with_http_disabled' ($edition.Contains('oneskills_integration: proposal_only_fastmcp_http_disabled_executor_L4_runner_candidate') -and $oneSkills.transport.fastmcp_http -eq 'disabled' -and $oneSkills.transport.streamable_http -eq 'disabled' -and $oneSkills.modes.executor.automatic_execution -eq 'deny')
 Add-Case $cases 'open_interpreter_is_discover_only_and_execute_disabled' ($edition.Contains('open_interpreter_integration: discover_only_plan_gate_execute_disabled') -and $openInterpreter.status -eq 'discover_only_not_installed' -and $openInterpreter.two_phase_gate.execute.current_release -eq 'deny_real_execution' -and $openInterpreter.business_authority -eq 'none')

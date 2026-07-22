@@ -190,6 +190,15 @@
     "business_authority": "none",
     "production_authority": "none"
   },
+  "declarative_change_plan_overlay": {
+    "contract": "../editions/enterprise/declarative-change-plan-contract.json",
+    "gate": "../editions/enterprise/invoke-declarative-change-plan-gate.ps1",
+    "regression": "../editions/enterprise/test-declarative-change-plan.ps1",
+    "purpose": "desired_state_current_state_diff_plan_preview_evidence",
+    "execution": "disabled_in_this_release",
+    "L4": "candidate_only_needs_human",
+    "production_authority": "none"
+  },
   "memory_broker_overlay": {
     "contract": "specifications/memory-read-contract.json",
     "validator": "scripts/validate-memory-read.ps1",

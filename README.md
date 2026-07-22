@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml/badge.svg)](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-v2.9.2-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v2.10.0-blue.svg)](CHANGELOG.md)
 
 北极星是企业版 Agent 分级信任治理框架。它不是通用 Agent，也不替代 Codex、Claude Code、CodeWhale、MCP 或专业 Skill；它决定谁能做什么、能看到什么数据、预算多少、结果如何核验，以及何时撤销、冻结或回滚。
 
@@ -12,10 +12,11 @@
 
 ## 当前版本与迭代
 
-当前稳定版本：**v2.9.2（2026-07-22）**
+当前稳定版本：**v2.10.0（2026-07-22）**
 
 | 版本 | 日期 | 核心变化 | 权限影响 |
 |---|---|---|---|
+| `v2.10.0` | 2026-07-22 | 新增声明式变更计划：当前态、目标态、差异、Plan Preview、证据包和可复算核验；吸收 Helmsman、Open SEO 与 Apollo-11 的工程方法 | 不扩权；L4 仅候选待人工审核，外部写入仍禁用 |
 | `v2.9.2` | 2026-07-22 | 建立 Windows/macOS/Linux 跨平台脚本标准；新增 Open Interpreter 企业 Runner Contract、Plan/Execute 门禁和离线回归 | 不扩权；Runner 未安装，真实 Execute 继续禁用 |
 | `v2.9.1` | 2026-07-21 | 修复 macOS 命令安全回归和 Usage Ledger 序列化 | 不扩权；Pi / oh-my-pi 保持仅发现模式 |
 | `v2.9.0` | 2026-07-21 | 增加子委派、Work Node、Action Receipt、Manager Projection，以及受治理的 Runtime 影子准入 | 不授予生产执行权；高风险动作仍需 Grant、核验与审批 |

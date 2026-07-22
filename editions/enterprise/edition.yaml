@@ -1,6 +1,6 @@
 edition:
   id: enterprise
-  version: 2.9.2
+  version: 2.10.0
   product_profile: enterprise-governed
   shared_core_root: ../..
   do_not_fork_harness: true
@@ -53,6 +53,8 @@ shared_contracts:
   oneskills_admission_gate: ./invoke-oneskills-admission-gate.ps1
   open_interpreter_runner: ./open-interpreter-runner-contract.json
   open_interpreter_gate: ./invoke-open-interpreter-gate.ps1
+  declarative_change_plan: ./declarative-change-plan-contract.json
+  declarative_change_plan_gate: ./invoke-declarative-change-plan-gate.ps1
   improvement_evaluation_card: ../../.qianlima/improvement-evaluation-card-schema.json
   improvement_governance_pipeline: ../../.qianlima/scripts/invoke-improvement-governance-pipeline.ps1
   capability_execution_classification: ../../.qianlima/capability-execution-classification.yaml
@@ -110,6 +112,7 @@ enterprise_controls:
   skill_intake_startup_path: never
   oneskills_integration: proposal_only_fastmcp_http_disabled_executor_L4_runner_candidate
   open_interpreter_integration: discover_only_plan_gate_execute_disabled
+  declarative_change_plan: offline_desired_state_diff_plan_preview_execute_disabled
   improvement_entrypoint: evaluation_card_replay_verify_human_canary_monitor
   automatic_improvement_release: deny
   capability_routing: deterministic_tool_then_on_demand_knowledge_then_independent_delegation
