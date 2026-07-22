@@ -63,6 +63,8 @@ $skillIntakeContractPath = Join-Path $projectRoot '.qianlima\skill-intake-contra
 $skillIntakeGatePath = Join-Path $projectRoot '.qianlima\scripts\invoke-skill-intake-gate.ps1'
 $oneSkillsContractPath = Join-Path $enterpriseRoot 'oneskills-adapter-contract.json'
 $oneSkillsGatePath = Join-Path $enterpriseRoot 'invoke-oneskills-admission-gate.ps1'
+$openInterpreterContractPath = Join-Path $enterpriseRoot 'open-interpreter-runner-contract.json'
+$openInterpreterGatePath = Join-Path $enterpriseRoot 'invoke-open-interpreter-gate.ps1'
 $improvementEvaluationCardPath = Join-Path $projectRoot '.qianlima\improvement-evaluation-card-schema.json'
 $improvementPipelinePath = Join-Path $projectRoot '.qianlima\scripts\invoke-improvement-governance-pipeline.ps1'
 $capabilityClassificationPath = Join-Path $projectRoot '.qianlima\capability-execution-classification.yaml'
@@ -134,6 +136,8 @@ if (-not (Test-Path -LiteralPath $skillIntakeContractPath -PathType Leaf)) { thr
 if (-not (Test-Path -LiteralPath $skillIntakeGatePath -PathType Leaf)) { throw 'Missing enterprise Skill Intake gate.' }
 if (-not (Test-Path -LiteralPath $oneSkillsContractPath -PathType Leaf)) { throw 'Missing enterprise OneSkills adapter contract.' }
 if (-not (Test-Path -LiteralPath $oneSkillsGatePath -PathType Leaf)) { throw 'Missing enterprise OneSkills admission gate.' }
+if (-not (Test-Path -LiteralPath $openInterpreterContractPath -PathType Leaf)) { throw 'Missing enterprise Open Interpreter Runner contract.' }
+if (-not (Test-Path -LiteralPath $openInterpreterGatePath -PathType Leaf)) { throw 'Missing enterprise Open Interpreter gate.' }
 if (-not (Test-Path -LiteralPath $improvementEvaluationCardPath -PathType Leaf)) { throw 'Missing improvement evaluation card.' }
 if (-not (Test-Path -LiteralPath $improvementPipelinePath -PathType Leaf)) { throw 'Missing improvement governance pipeline.' }
 if (-not (Test-Path -LiteralPath $capabilityClassificationPath -PathType Leaf)) { throw 'Missing capability execution classification.' }
@@ -178,6 +182,7 @@ $deploymentModes = Get-Content -LiteralPath $deploymentModePath -Raw -Encoding U
 $businessCatalog = Get-Content -LiteralPath $businessCatalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $evidencePackLayering = Get-Content -LiteralPath $evidencePackLayeringPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $oneSkills = Get-Content -LiteralPath $oneSkillsContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$openInterpreter = Get-Content -LiteralPath $openInterpreterContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $visibleExecution = Get-Content -LiteralPath $visibleExecutionPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $collaborationScale = Get-Content -LiteralPath $collaborationScalePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $collaborationOutcome = Get-Content -LiteralPath $collaborationOutcomePath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -244,6 +249,7 @@ Add-Case $cases 'memory_evidence_preference_policy_do_not_auto_promote' ($eviden
 Add-Case $cases 'skill_intake_is_install_update_only' ($edition.Contains('skill_intake_gate: install_update_only_offline_static_first') -and (Test-Path -LiteralPath $skillIntakeGatePath -PathType Leaf))
 Add-Case $cases 'skill_intake_never_runs_on_startup' ($edition.Contains('skill_intake_startup_path: never'))
 Add-Case $cases 'oneskills_is_proposal_only_with_http_disabled' ($edition.Contains('oneskills_integration: proposal_only_fastmcp_http_disabled_executor_L4_runner_candidate') -and $oneSkills.transport.fastmcp_http -eq 'disabled' -and $oneSkills.transport.streamable_http -eq 'disabled' -and $oneSkills.modes.executor.automatic_execution -eq 'deny')
+Add-Case $cases 'open_interpreter_is_discover_only_and_execute_disabled' ($edition.Contains('open_interpreter_integration: discover_only_plan_gate_execute_disabled') -and $openInterpreter.status -eq 'discover_only_not_installed' -and $openInterpreter.two_phase_gate.execute.current_release -eq 'deny_real_execution' -and $openInterpreter.business_authority -eq 'none')
 Add-Case $cases 'improvement_pipeline_requires_evaluation_card_and_canary' ($edition.Contains('improvement_entrypoint: evaluation_card_replay_verify_human_canary_monitor') -and (Test-Path -LiteralPath $improvementPipelinePath -PathType Leaf))
 Add-Case $cases 'automatic_improvement_release_is_denied' ($edition.Contains('automatic_improvement_release: deny'))
 Add-Case $cases 'three_execution_classes_are_mandatory' ((Get-Content -LiteralPath $capabilityClassificationPath -Raw -Encoding UTF8) -match 'deterministic_tool' -and $edition.Contains('deterministic_tool_then_on_demand_knowledge_then_independent_delegation'))

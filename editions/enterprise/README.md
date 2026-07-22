@@ -104,6 +104,9 @@ HiLS is used only as a governance design analogy. Enterprise Beijixing does not 
 - `oneskills-adapter-contract.json`: Enterprise-only OneSkills candidate overlay. Resource and expert Skills are limited to Brokered proposals; FastMCP HTTP and Streamable HTTP stay disabled.
 - `invoke-oneskills-admission-gate.ps1`: Offline gate for scanned proposal input and L4 executor candidates. It never installs a Skill, starts a process, opens a listener, or dispatches a Work Order.
 - `test-oneskills-admission.ps1`: Ten static/offline checks for FastMCP transport denial, evidence-pack minimization, proposal-only operation, and L4 executor preconditions.
+- `open-interpreter-runner-contract.json`: Discover-only Open Interpreter Runner candidate. It defines Plan/Execute separation, task authority intersection, structured step results, command audit, and revocation without granting host access.
+- `invoke-open-interpreter-gate.ps1`: Offline Plan/Execute gate. The initial release accepts only L1/L2 local read-only planning and always rejects real execution.
+- `test-open-interpreter-gate.ps1`: Ten offline checks proving no process, listener, network, write, secret access, browser/ERP authority, or business verification authority is granted.
 
 Skill Intake never runs during ordinary conversation or startup. Static scanning is defense in depth, not a sandbox. Dependency-network checks and source-code LLM review remain disabled unless separately approved for the data classification.
 

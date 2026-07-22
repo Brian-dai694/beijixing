@@ -180,6 +180,16 @@
     "executor": "L4_dedicated_runner_candidate_only",
     "production_authority": "none"
   },
+  "open_interpreter_overlay": {
+    "contract": "../editions/enterprise/open-interpreter-runner-contract.json",
+    "gate": "../editions/enterprise/invoke-open-interpreter-gate.ps1",
+    "regression": "../editions/enterprise/test-open-interpreter-gate.ps1",
+    "initial_capabilities": "local_readonly_data_processing_only",
+    "plan": "brokered_no_tools_no_network_no_write",
+    "execute": "disabled_until_verified_runner_release",
+    "business_authority": "none",
+    "production_authority": "none"
+  },
   "memory_broker_overlay": {
     "contract": "specifications/memory-read-contract.json",
     "validator": "scripts/validate-memory-read.ps1",

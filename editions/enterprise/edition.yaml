@@ -51,6 +51,8 @@ shared_contracts:
   skill_intake: ../../.qianlima/skill-intake-contract.json
   oneskills_adapter: ./oneskills-adapter-contract.json
   oneskills_admission_gate: ./invoke-oneskills-admission-gate.ps1
+  open_interpreter_runner: ./open-interpreter-runner-contract.json
+  open_interpreter_gate: ./invoke-open-interpreter-gate.ps1
   improvement_evaluation_card: ../../.qianlima/improvement-evaluation-card-schema.json
   improvement_governance_pipeline: ../../.qianlima/scripts/invoke-improvement-governance-pipeline.ps1
   capability_execution_classification: ../../.qianlima/capability-execution-classification.yaml
@@ -107,6 +109,7 @@ enterprise_controls:
   skill_intake_gate: install_update_only_offline_static_first
   skill_intake_startup_path: never
   oneskills_integration: proposal_only_fastmcp_http_disabled_executor_L4_runner_candidate
+  open_interpreter_integration: discover_only_plan_gate_execute_disabled
   improvement_entrypoint: evaluation_card_replay_verify_human_canary_monitor
   automatic_improvement_release: deny
   capability_routing: deterministic_tool_then_on_demand_knowledge_then_independent_delegation

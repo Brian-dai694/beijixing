@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "adapter_id": "qianlima-enterprise-open-interpreter-runner",
+  "runtime_name": "open_interpreter",
+  "status": "discover_only_not_installed",
+  "trust_profile": "high_capability_low_default_trust",
+  "role": "replaceable_executor_under_qianlima_broker",
+  "business_authority": "none",
+  "interfaces": ["plan", "execute", "cancel", "collect_artifacts", "collect_audit_events"],
+  "two_phase_gate": {
+    "plan": {
+      "tools": "none",
+      "network": "none",
+      "write": "none",
+      "output": ["declared_steps", "commands", "path_scope", "expected_artifacts", "impact", "stop_conditions"],
+      "execution_authority": false
+    },
+    "execute": {
+      "requires": ["admitted_adapter_version", "active_task_grant", "matching_task_id", "bounded_work_order", "verified_sandbox_attestation", "budget", "audit_sink", "revocation_path"],
+      "current_release": "deny_real_execution",
+      "execution_authority": false
+    }
+  },
+  "initial_capability_allowlist": ["csv_readonly_analysis", "xlsx_readonly_analysis", "python_bounded_compute", "local_readonly_query"],
+  "always_denied": ["arbitrary_shell", "package_install", "user_home_access", "environment_secret_read", "network_request", "browser_control", "erp_write", "advertising_write", "file_delete", "agent_direct_delegation"],
+  "effective_authority": ["adapter_admission", "work_order", "employee_scope", "task_grant", "sandbox_attestation", "risk_policy"],
+  "data_policy": {
+    "allowed": ["public", "internal_sanitized"],
+    "confidential_reference_only": "hash_and_reference_only",
+    "restricted_secret": "deny",
+    "full_memory": "deny",
+    "host_workspace": "deny"
+  },
+  "process_policy": {
+    "network": "none",
+    "filesystem": "task_workspace_allowlist_only",
+    "child_process": "inherits_same_grant_and_sandbox",
+    "cpu_memory_time": "bounded_by_work_order",
+    "package_install": "deny"
+  },
+  "step_result": {
+    "required": ["step_id", "step_status", "source_refs", "rows_read", "computed_metrics", "warnings", "pending_verification", "artifact_hash", "action_receipt_refs"],
+    "success_semantics": "command_success_is_not_business_verification"
+  },
+  "audit_required": ["initiator", "planner_agent", "model_version", "command_digest", "read_paths", "write_paths", "network_attempted", "artifact_refs", "approval_ref", "terminal_state", "grant_revoked"],
+  "failure_default": "cancel_freeze_revoke_preserve_receipts",
+  "production_authority": "none"
+}
