@@ -10,6 +10,17 @@
 
 > 任何接入的 Agent，都必须经过准入、最小授权、证据核验、预算约束、审计与可撤销控制。
 
+## 当前版本与迭代
+
+当前稳定版本：**v2.9.2（2026-07-22）**
+
+| 版本 | 日期 | 核心变化 | 权限影响 |
+|---|---|---|---|
+| `v2.9.2` | 2026-07-22 | 建立 Windows/macOS/Linux 跨平台脚本标准；新增 Open Interpreter 企业 Runner Contract、Plan/Execute 门禁和离线回归 | 不扩权；Runner 未安装，真实 Execute 继续禁用 |
+| `v2.9.1` | 2026-07-21 | 修复 macOS 命令安全回归和 Usage Ledger 序列化 | 不扩权；Pi / oh-my-pi 保持仅发现模式 |
+| `v2.9.0` | 2026-07-21 | 增加子委派、Work Node、Action Receipt、Manager Projection，以及受治理的 Runtime 影子准入 | 不授予生产执行权；高风险动作仍需 Grant、核验与审批 |
+
+完整发布记录、升级边界与历史版本见 [CHANGELOG.md](CHANGELOG.md)。
 ## 仓库结构
 
 ```text
