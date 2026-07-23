@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "contract_id": "beijixing-enterprise-task-runtime-spec",
+  "purpose": "Compile a readable task workflow into machine-enforced runtime, evidence, verification, and governance boundaries.",
+  "dual_layer": {
+    "readable_spec": ["goal", "capability_profile", "data_scope", "budget", "state_machine", "confirmation_points", "required_evidence", "failure_policy"],
+    "machine_policy": ["identity_binding", "active_grant", "tool_allowlist", "sandbox_attestation", "data_classification", "budget_enforcement", "approval_gate", "audit", "revocation"],
+    "readable_spec_may_widen_machine_policy": false,
+    "prompt_may_override_machine_policy": false
+  },
+  "required_fields": ["spec_id", "spec_version", "task_id", "tenant_id", "organization_id", "project_id", "human_owner_id", "goal", "risk_level", "capability_profile", "data_scope", "budget", "state_machine", "confirmation_points", "required_evidence", "failure_policy", "verification", "governance", "execution", "improvement"],
+  "risk_levels": ["L1", "L2", "L3", "L4"],
+  "state_contract": {
+    "required_states": ["received", "planned", "executing", "verifying", "completed", "blocked", "frozen", "cancelled"],
+    "required_transitions": ["received->planned", "planned->executing", "executing->verifying", "verifying->completed"],
+    "terminal_states": ["completed", "blocked", "failed", "frozen", "cancelled"],
+    "unknown_transition": "deny"
+  },
+  "l4_controls": ["human_approval", "preflight_snapshot", "rollback_ref", "post_change_verification"],
+  "required_evidence": ["source_receipt", "output_receipt", "verification_receipt"],
+  "failure_requirements": ["blocked_when", "freeze_when", "revoke_when", "recovery_action"],
+  "improvement_loop": {
+    "mode": "candidate_only",
+    "required_sequence": ["static_check", "frozen_replay", "quality_latency_cost_risk_score", "independent_verification", "human_review", "canary", "monitor", "rollback_or_release_candidate"],
+    "auto_apply": false,
+    "production_release_authority": "none",
+    "forbidden_targets": ["risk-rules", "approval-policy", "audit-policy", "secret-config", "production-config", "grant-policy", "data-classification-policy"]
+  },
+  "authority": {
+    "spec_is_execution_authority": false,
+    "grant_is_required": true,
+    "l4_is_candidate_only": true,
+    "external_write": "deny_in_current_release",
+    "automatic_permission_expansion": false
+  },
+  "acceptance_matrix_ref": "etclovg-acceptance-matrix.json"
+}

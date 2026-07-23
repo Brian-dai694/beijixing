@@ -1,6 +1,6 @@
 edition:
   id: enterprise
-  version: 2.11.1
+  version: 2.14.0
   product_profile: enterprise-governed
   shared_core_root: ../..
   do_not_fork_harness: true
@@ -74,6 +74,12 @@ shared_contracts:
   api_access_gate: ./invoke-enterprise-api-access-gate.ps1
   tool_risk_policy: ./tool-risk-policy.json
   tool_profile_gate: ./invoke-enterprise-tool-profile-gate.ps1
+  etclovg_acceptance_matrix: ./etclovg-acceptance-matrix.json
+  task_runtime_spec: ./task-runtime-spec-contract.json
+  task_runtime_spec_gate: ./invoke-enterprise-task-runtime-spec-gate.ps1
+  intelligence_maturity: ./enterprise-intelligence-maturity.json
+  amazon_ad_diagnostic_v1: ./amazon-ad-diagnostic-v1-contract.json
+  amazon_ad_diagnostic_v1_gate: ./invoke-amazon-ad-diagnostic-v1-gate.ps1
 
 enterprise_controls:
   identity: external_sso_or_local_enterprise_identity
@@ -107,6 +113,11 @@ enterprise_controls:
   model_collaboration: evidence_first_l3_only_l4_human_required
   api_access: broker_only_field_allowlist_secret_ref_only_sanitized_verification
   professional_tools: tool_risk_profiles_explicit_resources_evidence_receipts_revocable_sessions
+  harness_acceptance: ETCLOVG_all_seven_dimensions_required
+  task_runtime_spec: readable_workflow_plus_machine_policy_no_prompt_override
+  intelligence_maturity: C_R_A_I_O_separate_from_task_risk_L0_L4
+  v1_production_loop: amazon_ad_diagnostic_action_card_grant_approval_execute_readback_review
+  meta_harness: candidate_static_replay_score_verify_human_canary_no_auto_apply
   fusion_loop: claim_pack_receipt_revoke_freeze_shadow_only
   evidence_market: disagreement_budget_signal_no_vote_authority
   shadow_runtime: internal_component_governed_fan_in_only

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Separate enterprise capability maturity from L0-L4 task risk classification.",
+  "task_risk_levels_are_not_maturity_levels": true,
+  "maturity_levels": [
+    {"id":"C","name":"conversation","acceptance":["single_turn_usable","scope_is_clear"]},
+    {"id":"R","name":"reasoning","acceptance":["claims_are_evidence_backed","uncertainty_is_explicit","independent_verification"]},
+    {"id":"A","name":"agent","acceptance":["task_runtime_spec","minimum_grant","evidence_receipt","revocation"]},
+    {"id":"I","name":"validated_innovation","acceptance":["hypothesis","experiment_or_plan","evidence","counterexample_search","revised_hypothesis","replayable_artifact"],"required_controls":["candidate_only","independent_verification","human_approval","rollback"],"technology_is_not_sufficient":["multimodal","multi_agent","reinforcement_learning","chain_of_thought","simulation"]},
+    {"id":"O","name":"organizational_intelligence","acceptance":["shared_business_world_model","explicit_authority_and_responsibility","human_agent_handoffs","resource_and_budget_governance","cross_task_versioned_memory","audit_review_and_policy_update","stable_operation_under_change"],"required_controls":["ontology_scope_is_explicit","verification","governance","no_automatic_authority_expansion"],"ontology_is_not_sufficient":true}
+  ],
+  "cross_cutting_requirements":["verification","governance","evidence_provenance","human_accountability","reversible_change"],
+  "evidence_classes":["publicly_verified","enterprise_verified","hypothesis","unverified_claim"],
+  "release_rule":"A maturity claim is blocked unless its acceptance evidence and applicable ETCLOVG dimensions pass. Capability technology alone cannot establish I or O maturity."
+}

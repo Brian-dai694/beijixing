@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "matrix_id": "beijixing-enterprise-etclovg",
+  "purpose": "Make execution, tooling, context, lifecycle, observability, verification, and governance mandatory release criteria rather than optional documentation.",
+  "dimensions": {
+    "E_execution": {
+      "controls": ["verified_sandbox_attestation", "isolated_process", "bounded_filesystem", "network_default_deny", "resource_limits", "cancel_and_terminate"],
+      "evidence": ["attestation_ref", "process_receipt", "filesystem_scope", "network_policy", "resource_usage", "termination_receipt"],
+      "failure_state": "freeze_and_revoke"
+    },
+    "T_tooling": {
+      "controls": ["admitted_tool_version", "capability_profile", "task_grant", "argument_scope", "no_direct_delegation"],
+      "evidence": ["tool_manifest_hash", "profile_ref", "grant_ref", "call_receipt"],
+      "failure_state": "deny_call"
+    },
+    "C_context": {
+      "controls": ["authorization_before_retrieval", "selected_sources_only", "classification_filter", "freshness", "provenance", "sanitization"],
+      "evidence": ["source_refs", "selection_receipt", "rejection_reasons", "data_time_range", "sanitization_receipt"],
+      "failure_state": "blocked_needs_source"
+    },
+    "L_lifecycle": {
+      "controls": ["explicit_state_machine", "valid_transitions", "pause", "resume", "cancel", "revoke", "terminal_states"],
+      "evidence": ["state_events", "handoff_receipts", "revocation_receipt", "terminal_status"],
+      "failure_state": "frozen"
+    },
+    "O_observability": {
+      "controls": ["latency", "cost", "tool_calls", "budget_remaining", "failure_signal", "visible_execution_events"],
+      "evidence": ["usage_receipt", "cost_status", "event_refs", "failure_location", "recovery_action"],
+      "failure_state": "partial_or_blocked"
+    },
+    "V_verification": {
+      "controls": ["independent_verifier", "source_replay", "artifact_hash", "acceptance_test", "blocked_not_failed"],
+      "evidence": ["claim_pack", "evidence_receipt", "replay_ref", "verification_receipt", "test_report"],
+      "failure_state": "needs_human_or_failed"
+    },
+    "G_governance": {
+      "controls": ["identity", "organization_scope", "least_privilege_grant", "approval", "budget", "audit", "responsible_owner", "rollback"],
+      "evidence": ["identity_ref", "grant_ref", "approval_ref", "budget_snapshot", "audit_event_refs", "rollback_ref"],
+      "failure_state": "deny_freeze_and_revoke"
+    }
+  },
+  "acceptance_rules": {
+    "required_dimensions": ["E_execution", "T_tooling", "C_context", "L_lifecycle", "O_observability", "V_verification", "G_governance"],
+    "missing_dimension": "release_blocked",
+    "self_report_is_evidence": false,
+    "prompt_rule_is_mechanical_control": false,
+    "unknown_metric": "record_unknown_never_invent",
+    "production_release": "all_dimensions_pass_and_human_approval"
+  },
+  "two_stage_retrieval": {
+    "stage_1": "low_cost_authorized_metadata_recall",
+    "stage_2": "high_quality_review_of_selected_evidence",
+    "permission_check": "before_both_stages",
+    "claimed_external_benchmark_is_product_sla": false
+  }
+}

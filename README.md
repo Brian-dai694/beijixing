@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml/badge.svg)](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-v2.12.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v2.14.0-blue.svg)](CHANGELOG.md)
 
 北极星是企业版 Agent 分级信任治理框架。它不是通用 Agent，也不替代 Codex、Claude Code、CodeWhale、MCP 或专业 Skill；它决定谁能做什么、能看到什么数据、预算多少、结果如何核验，以及何时撤销、冻结或回滚。
 
@@ -12,10 +12,11 @@
 
 ## 当前版本与迭代
 
-当前稳定版本：**v2.12.0（2026-07-23）**
+当前稳定版本：**v2.14.0（2026-07-23）**
 
 | 版本 | 日期 | 核心变化 | 权限影响 |
 |---|---|---|---|
+| `v2.13.0` | 2026-07-23 | 将 ETCLOVG 固化为七层验收矩阵，新增“可读工作流 + 机器策略”的 Task Runtime Spec 和受限 Meta-Harness 候选门禁 | 不扩权；规格不是 Grant，L4 仅人工候选，治理核心禁止被候选自动修改 |
 | `v2.12.0` | 2026-07-23 | 新增统一 Tool Risk Level 和专业工具 Profile：只读、分析、修改、调试/内存写入分级，强制资源绑定、审批预览、证据回执和会话撤销 | 不扩权；`reverse-debug` 当前版本默认拒绝，`reverse-edit` 只生成待确认计划 |
 | `v2.11.1` | 2026-07-23 | 新增 API 最小权限门禁：本地 Secret Reference、请求字段/写入 Body 白名单、响应投影、脱敏交叉核验和成本未知阻断 | 不扩权；Agent 不接触密钥值、全量后台或原始请求体，真实 API 调用仍由 Broker 控制 |
 | `v2.11.0` | 2026-07-22 | 源码级纠正三仓定位；新增 Service/Repository/MCP 边界、定时任务独立身份、三档非破坏性自检，以及授权前热元数据/冷证据检索 | 不扩权；OAuth 不替代 Grant，自检不写生产，SPDK/NVMe 不接入 |
@@ -81,6 +82,36 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\editions\enterprise\start
 当前版本中，R0/R1 只允许选定资源的有限读取和分析；R2 只能生成补丁/重命名/类型变更计划，执行前必须有人工审批、预检快照、回滚引用和事后验证；R3 的调试器、进程附加、任意代码、内存写入和 `py_eval` 默认拒绝。
 
 每次调用都要形成证据回执，记录样本哈希、工具版本、参数摘要、观察、模型主张、地址/函数/字符串引用、差异、验证状态、审批引用和撤销时间。进程、工作目录、调用次数、运行时间和输出大小独立受限，Grant 过期、版本漂移、超时、预算耗尽或越界后立即撤销并拒绝后续调用。
+
+## ETCLOVG 与任务运行规格
+
+北极星将 Execution、Tooling、Context、Lifecycle、Observability、Verification、Governance 七层设为生产验收必选项。任何一层缺失都不能发布；模型自报成功、Prompt 中的安全承诺和未知指标都不能替代机械证据。
+
+Task Runtime Spec 使用双层控制：可读层描述目标、能力包、数据范围、预算、状态机、确认点、证据和失败处理；机器层强制身份、Grant、工具白名单、沙箱、数据分级、预算、审批、审计和撤销。可读规格只能收窄机器策略，不能扩权。
+
+Harness 改进只允许形成候选，依次经过静态检查、冻结回放、质量/延迟/成本/风险评分、独立核验、人工审查、小流量验证和监控。风险规则、审批规则、审计规则、密钥、Grant、数据分级和生产配置禁止成为自动修改目标。
+
+## 企业智能成熟度
+
+企业任务继续使用 `L0-L4` 表示动作风险；能力成熟度单独使用 `C/R/A/I/O`，两套等级不能互相推导：
+
+```text
+C 对话：理解并回应人
+R 推理：形成可检查、证据化的分析
+A 智能体：调用工具完成受限任务闭环
+I 创新：提出假设、实验取证、寻找反例、修正并产出可复核成果
+O 组织：让人、Agent、数据、规则和责任持续协同并稳定演化
+```
+
+`I` 不是多模态、多 Agent、RL、CoT 或仿真的技术堆叠，最低证明是实验与反证闭环。`O` 不是超级对齐的别名，最低证明是共享业务世界模型、权限与责任、人机交接、预算治理、跨任务版本化记忆、审计复盘和制度更新。Ontology 是对象与约束层，不自动证明事实正确或组织治理完成。
+
+成熟度声明必须标注 `publicly_verified`、`enterprise_verified`、`hypothesis` 或 `unverified_claim`。`Verification` 与 `Governance` 是横切门槛；任何技术组合都不能自动提升 Grant 或宣称达到更高成熟度。合同见 `editions/enterprise/enterprise-intelligence-maturity.json`。
+
+## V1 生产闭环：亚马逊广告异常诊断
+
+北极星第一条可验证业务闭环固定为：广告数据读取 -> 千里马生成行动卡 -> 北极星风险预检与任务 Grant -> 负责人批准调价/预算 -> 受控执行 -> 回读 3/7 天结果 -> 证据归档与复盘。行动卡必须包含异常对象、原始证据、时间窗口、指标口径、建议动作、影响、权限、回滚和验证指标。
+
+读取阶段是 `L2`；竞价、预算和外部写回固定为 `L4`。行动卡不是执行权，批准前不得写入；批准后仍必须有前值快照、幂等键、回滚引用和事后回读。当前合同和离线 Gate 只生成受控 Runner 候选，不启动真实外部写入。
 
 ## 验证
 

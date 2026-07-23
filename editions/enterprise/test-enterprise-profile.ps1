@@ -87,6 +87,12 @@ $apiAccessPolicyPath = Join-Path $enterpriseRoot 'api-access-policy.json'
 $apiAccessGatePath = Join-Path $enterpriseRoot 'invoke-enterprise-api-access-gate.ps1'
 $toolRiskPolicyPath = Join-Path $enterpriseRoot 'tool-risk-policy.json'
 $toolProfileGatePath = Join-Path $enterpriseRoot 'invoke-enterprise-tool-profile-gate.ps1'
+$etclovgMatrixPath = Join-Path $enterpriseRoot 'etclovg-acceptance-matrix.json'
+$taskRuntimeSpecPath = Join-Path $enterpriseRoot 'task-runtime-spec-contract.json'
+$intelligenceMaturityPath = Join-Path $enterpriseRoot 'enterprise-intelligence-maturity.json'
+$adDiagnosticContractPath = Join-Path $enterpriseRoot 'amazon-ad-diagnostic-v1-contract.json'
+$adDiagnosticGatePath = Join-Path $enterpriseRoot 'invoke-amazon-ad-diagnostic-v1-gate.ps1'
+$taskRuntimeSpecGatePath = Join-Path $enterpriseRoot 'invoke-enterprise-task-runtime-spec-gate.ps1'
 $businessCatalogPath = Join-Path $projectRoot '.qianlima\specifications\business-capability-catalog.json'
 $boundaryChecker = Join-Path $projectRoot '.qianlima\scripts\check-harness-boundary.ps1'
 
@@ -130,6 +136,12 @@ if (-not (Test-Path -LiteralPath $apiAccessPolicyPath -PathType Leaf)) { throw '
 if (-not (Test-Path -LiteralPath $apiAccessGatePath -PathType Leaf)) { throw 'Missing enterprise API access gate.' }
 if (-not (Test-Path -LiteralPath $toolRiskPolicyPath -PathType Leaf)) { throw 'Missing professional tool risk policy.' }
 if (-not (Test-Path -LiteralPath $toolProfileGatePath -PathType Leaf)) { throw 'Missing professional tool Profile gate.' }
+if (-not (Test-Path -LiteralPath $etclovgMatrixPath -PathType Leaf)) { throw 'Missing ETCLOVG acceptance matrix.' }
+if (-not (Test-Path -LiteralPath $taskRuntimeSpecPath -PathType Leaf)) { throw 'Missing Task Runtime Spec contract.' }
+if (-not (Test-Path -LiteralPath $intelligenceMaturityPath -PathType Leaf)) { throw 'Missing enterprise intelligence maturity contract.' }
+if (-not (Test-Path -LiteralPath $adDiagnosticContractPath -PathType Leaf)) { throw 'Missing Amazon ad diagnostic V1 contract.' }
+if (-not (Test-Path -LiteralPath $adDiagnosticGatePath -PathType Leaf)) { throw 'Missing Amazon ad diagnostic V1 gate.' }
+if (-not (Test-Path -LiteralPath $taskRuntimeSpecGatePath -PathType Leaf)) { throw 'Missing Task Runtime Spec gate.' }
 if (-not (Test-Path -LiteralPath $modelPortfolioPath -PathType Leaf)) { throw 'Missing model portfolio policy.' }
 if (-not (Test-Path -LiteralPath $fusionPlanPath -PathType Leaf)) { throw 'Missing fusion plan schema.' }
 if (-not (Test-Path -LiteralPath $claimPackPath -PathType Leaf)) { throw 'Missing claim pack schema.' }
@@ -201,6 +213,10 @@ $reviewCompounding = Get-Content -LiteralPath $reviewCompoundingPath -Raw -Encod
 $deploymentModes = Get-Content -LiteralPath $deploymentModePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $apiAccessPolicy = Get-Content -LiteralPath $apiAccessPolicyPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $toolRiskPolicy = Get-Content -LiteralPath $toolRiskPolicyPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$etclovgMatrix = Get-Content -LiteralPath $etclovgMatrixPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$taskRuntimeSpec = Get-Content -LiteralPath $taskRuntimeSpecPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$intelligenceMaturity = Get-Content -LiteralPath $intelligenceMaturityPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$adDiagnostic = Get-Content -LiteralPath $adDiagnosticContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $businessCatalog = Get-Content -LiteralPath $businessCatalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $evidencePackLayering = Get-Content -LiteralPath $evidencePackLayeringPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $oneSkills = Get-Content -LiteralPath $oneSkillsContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -263,6 +279,12 @@ Add-Case $cases 'api_access_is_field_scoped_and_secret_ref_only' ($apiAccessPoli
 Add-Case $cases 'api_verification_never_receives_raw_payload' ($apiAccessPolicy.model_verification.raw_api_payload_to_model -eq $false -and $apiAccessPolicy.model_verification.secret_values_to_model -eq $false -and $apiAccessPolicy.model_verification.cross_validation_is_not_permission -eq $true)
 Add-Case $cases 'professional_tool_risk_levels_and_profiles_present' (@($toolRiskPolicy.risk_levels.PSObject.Properties).Count -eq 4 -and @($toolRiskPolicy.profiles.PSObject.Properties.Name) -contains 'reverse-readonly' -and @($toolRiskPolicy.profiles.PSObject.Properties.Name) -contains 'reverse-debug')
 Add-Case $cases 'professional_tool_resources_are_explicit_and_reversible' (@($toolRiskPolicy.resource_binding.required) -contains 'artifact_id' -and @($toolRiskPolicy.resource_binding.required) -contains 'session_id' -and $toolRiskPolicy.session_controls.revoke_before_next_call -eq $true -and $toolRiskPolicy.profiles.'reverse-debug'.current_release_decision -eq 'deny')
+Add-Case $cases 'etclovg_has_seven_mandatory_dimensions' (@($etclovgMatrix.dimensions.PSObject.Properties).Count -eq 7 -and @($etclovgMatrix.acceptance_rules.required_dimensions).Count -eq 7 -and $etclovgMatrix.acceptance_rules.missing_dimension -eq 'release_blocked')
+Add-Case $cases 'task_runtime_spec_is_dual_layer_and_candidate_only' ($taskRuntimeSpec.dual_layer.readable_spec_may_widen_machine_policy -eq $false -and $taskRuntimeSpec.dual_layer.prompt_may_override_machine_policy -eq $false -and $taskRuntimeSpec.authority.spec_is_execution_authority -eq $false -and $taskRuntimeSpec.improvement_loop.auto_apply -eq $false)
+Add-Case $cases 'intelligence_maturity_separate_from_task_risk' ($edition.Contains('intelligence_maturity: ./enterprise-intelligence-maturity.json') -and $edition.Contains('intelligence_maturity: C_R_A_I_O_separate_from_task_risk_L0_L4') -and $intelligenceMaturity.task_risk_levels_are_not_maturity_levels -eq $true)
+Add-Case $cases 'innovation_requires_validation_and_governance' (@($intelligenceMaturity.maturity_levels | Where-Object id -eq 'I').required_controls -contains 'independent_verification' -and @($intelligenceMaturity.maturity_levels | Where-Object id -eq 'I').required_controls -contains 'human_approval')
+Add-Case $cases 'organization_requires_no_authority_expansion' (@($intelligenceMaturity.maturity_levels | Where-Object id -eq 'O').required_controls -contains 'no_automatic_authority_expansion')
+Add-Case $cases 'amazon_ad_v1_is_bounded_production_loop' (($edition.Contains('v1_production_loop: amazon_ad_diagnostic_action_card_grant_approval_execute_readback_review')) -and $adDiagnostic.change_phase.human_approval -eq $true -and $adDiagnostic.change_phase.execution_authority_from_card -eq $false -and @($adDiagnostic.readback_windows).Count -eq 2)
 Add-Case $cases 'model_fusion_contracts_present' ((Test-Path -LiteralPath $modelPortfolioPath -PathType Leaf) -and (Test-Path -LiteralPath $fusionPlanPath -PathType Leaf))
 Add-Case $cases 'claim_pack_contract_present' (Test-Path -LiteralPath $claimPackPath -PathType Leaf)
 Add-Case $cases 'evidence_market_contract_present' ((Test-Path -LiteralPath $evidenceMarketPath -PathType Leaf) -and (Test-Path -LiteralPath $shadowReceiptPath -PathType Leaf))

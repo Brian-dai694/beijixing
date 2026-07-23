@@ -2,16 +2,17 @@
 
 [中文](README.md) · [English](README.en.md)
 
-[![Version](https://img.shields.io/badge/version-v2.12.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v2.14.0-blue.svg)](CHANGELOG.md)
 
 Beijixing is an enterprise Agent tiered-trust governance framework for Codex, Claude Code, CodeWhale, MCP servers, Skills, and specialist Agents. It governs admission, minimum task grants, evidence, budgets, audit, revocation, and rollback without replacing the execution runtime.
 
 ## Current release and iterations
 
-Current stable release: **v2.12.0 (2026-07-23)**
+Current stable release: **v2.14.0 (2026-07-23)**
 
 | Version | Date | Main changes | Authority impact |
 |---|---|---|---|
+| `v2.13.0` | 2026-07-23 | Makes ETCLOVG a seven-layer acceptance matrix and adds readable-workflow plus machine-policy Task Runtime Specs with a bounded Meta-Harness candidate gate | No authority expansion; a spec is not a Grant, L4 remains a human candidate, and candidates cannot auto-edit governance core controls |
 | `v2.12.0` | 2026-07-23 | Adds unified Tool Risk Levels and professional-tool Profiles for read, analysis, modification, and debug/memory-write capabilities, with resource binding, approval previews, evidence receipts, and revocation | No authority expansion; `reverse-debug` is denied in the current release and `reverse-edit` produces confirmation-bound plans only |
 | `v2.11.1` | 2026-07-23 | Adds API least-privilege gates: local Secret References, request/body field allowlists, response projections, sanitized cross-validation, and unknown-cost blocking | No authority expansion; Agents never receive secret values, full back-office access, or raw request bodies, and Broker control remains mandatory |
 | `v2.11.0` | 2026-07-22 | Corrects all three repository mappings from source; adds Service/Repository/MCP boundaries, independent scheduler identity, three non-destructive self-check tiers, and authorization-first hot-metadata/cold-evidence retrieval | No authority expansion; OAuth never replaces a Grant, self-checks never write production, and SPDK/NVMe are not adopted |
@@ -62,3 +63,27 @@ All professional tools use four shared risk levels: `R0` read-only query, `R1` a
 R0/R1 are limited to selected-resource reads and analysis. R2 produces patch/rename/type-change plans only and requires human approval, preflight, rollback, and post-change verification before execution. R3 debugger attach, arbitrary code, process-memory writes, and `py_eval` are denied in this release.
 
 Every call produces an evidence receipt containing the sample hash, tool version, parameter digest, observations, model claims, source locations, diff, verification status, approval reference, and revocation time. Process, workspace, call-count, runtime, and output limits are enforced independently; expiry, drift, timeout, budget exhaustion, or overreach revokes the session and denies the next call.
+
+## ETCLOVG and Task Runtime Specs
+
+Execution, Tooling, Context, Lifecycle, Observability, Verification, and Governance are mandatory production acceptance dimensions. A missing dimension blocks release; Agent self-report, prompt promises, and invented metrics are not mechanical evidence.
+
+A Task Runtime Spec has two layers. The readable layer explains the goal, capability profile, data scope, budget, state machine, confirmation points, evidence, and failure handling. The machine layer enforces identity, Grants, tool allowlists, sandbox attestation, data classification, budget, approval, audit, and revocation. A readable spec may narrow but never widen machine policy.
+
+Harness improvements remain candidates through static checks, frozen replay, quality/latency/cost/risk scoring, independent verification, human review, canary, and monitoring. Risk, approval, audit, secret, Grant, data-classification, and production configuration controls cannot be automatic modification targets.
+
+## Enterprise Intelligence Maturity
+
+Enterprise tasks continue to use `L0-L4` for action risk. Capability maturity is separate and uses `C/R/A/I/O`; neither scale can be inferred from the other:
+
+```text
+C Conversation: understand and respond to a person
+R Reasoning: produce checkable, evidence-backed analysis
+A Agent: complete a bounded task with tools
+I Innovation: propose hypotheses, test them, seek counterexamples, revise, and produce replayable work
+O Organization: sustain coordination among people, Agents, data, rules, and responsibility
+```
+
+`I` is not a stack of multimodality, multi-Agent systems, reinforcement learning, chain-of-thought, or simulation; its minimum proof is an experiment and counterexample loop. `O` is not a synonym for super-alignment; its minimum proof is a shared business world model, authority and responsibility, human-Agent handoffs, budget governance, versioned cross-task memory, audit review, and policy updates. An ontology is an object and constraint layer, not proof of truth or completed governance.
+
+Maturity claims must declare `publicly_verified`, `enterprise_verified`, `hypothesis`, or `unverified_claim`. Verification and governance are cross-cutting gates; no technology combination may expand a Grant or self-declare a higher maturity. Contract: `editions/enterprise/enterprise-intelligence-maturity.json`.

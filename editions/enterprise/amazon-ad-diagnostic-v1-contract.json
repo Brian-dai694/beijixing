@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "workflow_id": "amazon_ad_diagnostic_v1",
+  "purpose": "Evidence-backed Amazon advertising anomaly diagnosis and approval-bound change planning.",
+  "input_fields": ["campaign_id", "target_id", "spend", "sales", "acos", "cpc", "budget", "time_range"],
+  "action_card_required_fields": ["problem", "evidence", "recommendation", "impact", "authority", "rollback", "verification"],
+  "recommendations": ["pause", "lower_bid", "raise_bid", "adjust_budget", "hold"],
+  "read_phase": {"risk_level": "L2", "network_write": false, "approval_required": false},
+  "change_phase": {"risk_level": "L4", "human_approval": true, "second_confirmation": true, "execution_authority_from_card": false},
+  "required_change_controls": ["grant_id", "approval_ref", "pre_change_snapshot", "idempotency_key", "rollback_ref", "post_change_readback"],
+  "evidence_requirements": ["source_ref", "source_hash", "time_range", "metric_definition", "before_value", "proposed_value"],
+  "readback_windows": ["3d", "7d"],
+  "invariants": [
+    "No approval means no external write.",
+    "A recommendation is not execution authority.",
+    "Every change stores the previous value and a rollback reference.",
+    "Execution is incomplete until the post-change readback is recorded.",
+    "Unknown cost, missing source, missing time range, or missing rollback blocks the change."
+  ],
+  "success_states": ["diagnosed", "approval_required", "approved_for_runner", "executed_pending_readback", "verified", "blocked", "frozen", "rolled_back"],
+  "external_runner": "broker_only_approved_ad_adapter"
+}

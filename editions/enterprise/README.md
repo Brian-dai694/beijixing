@@ -144,6 +144,13 @@ Skill Intake never runs during ordinary conversation or startup. Static scanning
 - `tool-risk-policy.json`: Shared R0-R3 risk levels, reverse-tool Profiles, explicit resource bindings, approval preview, receipts, and revocation controls.
 - `invoke-enterprise-tool-profile-gate.ps1`: Offline Profile gate; returns a bounded plan and never starts a professional tool, debugger, network, or memory write.
 - `test-enterprise-tool-profile.ps1`: Offline regression for read-only, triage, edit, debug denial, implicit resource denial, evidence, and revocation boundaries.
+- `etclovg-acceptance-matrix.json`: Seven mandatory acceptance dimensions with controls, evidence, and fail-safe terminal states.
+- `task-runtime-spec-contract.json`: Dual-layer readable workflow and machine-policy contract for every governed enterprise task.
+- `invoke-enterprise-task-runtime-spec-gate.ps1`: Offline spec validator; it grants no execution or adoption authority.
+- `test-enterprise-task-runtime-spec.ps1`: Offline regression for Grant, state machine, L4 controls, verification independence, and candidate-only Harness improvement.
+- `enterprise-intelligence-maturity.json`: C/R/A/I/O maturity contract, separate from L0-L4 task risk; I requires an experiment and counterexample loop, O requires organizational governance evidence.
+- `amazon-ad-diagnostic-v1-contract.json`: First bounded production workflow for Amazon advertising anomaly diagnosis, action cards, approval-bound changes, rollback, and 3/7-day readback.
+- `invoke-amazon-ad-diagnostic-v1-gate.ps1` and `test-amazon-ad-diagnostic-v1.ps1`: Offline gate and regression; no external write or runner dispatch is performed.
 - `../../.qianlima/model-portfolio.yaml`: Model Passport fields, routing tiers, evidence metrics, and trust boundaries.
 - `../../.qianlima/fusion-plan-schema.yaml`: Evidence-first multi-model Fusion Plan contract.
 - `../../.qianlima/scripts/validate-fusion-plan.ps1`: Validates risk, independence, data, verifier, and human-approval requirements.
