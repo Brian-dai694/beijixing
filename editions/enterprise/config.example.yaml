@@ -18,6 +18,13 @@ enterprise_config:
     openai_credential_ref: model_provider_openai
     anthropic_credential_ref: model_provider_anthropic
     enabled: false
+  api_access:
+    policy: editions/enterprise/api-access-policy.json
+    private_config_ref: .qianlima/local-data/enterprise/api-access.local.yaml
+    secret_mode: secret_reference_only
+    agent_can_read_secret_values: false
+    agent_can_receive_full_api_response: false
+    unknown_cost_action: block
   runners:
     preferred: docker_local_isolated
     require_attestation: true

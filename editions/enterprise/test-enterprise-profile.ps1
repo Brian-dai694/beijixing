@@ -83,6 +83,8 @@ $collaborationOutcomePath = Join-Path $projectRoot '.qianlima\enterprise-collabo
 $collaborationOutcomeValidatorPath = Join-Path $projectRoot '.qianlima\scripts\validate-enterprise-collaboration-outcome.ps1'
 $collaborationRevocationValidatorPath = Join-Path $projectRoot '.qianlima\scripts\validate-enterprise-collaboration-revocation.ps1'
 $deploymentModePath = Join-Path $enterpriseRoot 'deployment-mode-policy.json'
+$apiAccessPolicyPath = Join-Path $enterpriseRoot 'api-access-policy.json'
+$apiAccessGatePath = Join-Path $enterpriseRoot 'invoke-enterprise-api-access-gate.ps1'
 $businessCatalogPath = Join-Path $projectRoot '.qianlima\specifications\business-capability-catalog.json'
 $boundaryChecker = Join-Path $projectRoot '.qianlima\scripts\check-harness-boundary.ps1'
 
@@ -122,6 +124,8 @@ if (-not (Test-Path -LiteralPath $employeeLifecyclePath -PathType Leaf)) { throw
 if (-not (Test-Path -LiteralPath $fileOrganizationPath -PathType Leaf)) { throw 'Missing file organization policy.' }
 if (-not (Test-Path -LiteralPath $reviewCompoundingPath -PathType Leaf)) { throw 'Missing review compounding policy.' }
 if (-not (Test-Path -LiteralPath $deploymentModePath -PathType Leaf)) { throw 'Missing API and Agent deployment mode policy.' }
+if (-not (Test-Path -LiteralPath $apiAccessPolicyPath -PathType Leaf)) { throw 'Missing enterprise API access policy.' }
+if (-not (Test-Path -LiteralPath $apiAccessGatePath -PathType Leaf)) { throw 'Missing enterprise API access gate.' }
 if (-not (Test-Path -LiteralPath $modelPortfolioPath -PathType Leaf)) { throw 'Missing model portfolio policy.' }
 if (-not (Test-Path -LiteralPath $fusionPlanPath -PathType Leaf)) { throw 'Missing fusion plan schema.' }
 if (-not (Test-Path -LiteralPath $claimPackPath -PathType Leaf)) { throw 'Missing claim pack schema.' }
@@ -191,6 +195,7 @@ $employeeLifecycle = Get-Content -LiteralPath $employeeLifecyclePath -Raw -Encod
 $fileOrganization = Get-Content -LiteralPath $fileOrganizationPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $reviewCompounding = Get-Content -LiteralPath $reviewCompoundingPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $deploymentModes = Get-Content -LiteralPath $deploymentModePath -Raw -Encoding UTF8 | ConvertFrom-Json
+$apiAccessPolicy = Get-Content -LiteralPath $apiAccessPolicyPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $businessCatalog = Get-Content -LiteralPath $businessCatalogPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $evidencePackLayering = Get-Content -LiteralPath $evidencePackLayeringPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $oneSkills = Get-Content -LiteralPath $oneSkillsContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -249,6 +254,8 @@ Add-Case $cases 'lesson_promotion_is_verified_and_human' (@($reviewCompounding.p
 Add-Case $cases 'four_api_agent_modes_defined' (@($deploymentModes.modes.PSObject.Properties).Count -eq 4 -and $deploymentModes.default_mode -eq 'E2')
 Add-Case $cases 'E4_is_restricted_by_default' ($deploymentModes.modes.E4.initial_trust_ceiling -eq 'T1' -and $deploymentModes.modes.E4.credential_mode -eq 'byok_secret_ref_only')
 Add-Case $cases 'deployment_mode_never_grants_business_authority' (@($deploymentModes.invariants | Where-Object { $_ -match 'L4' }).Count -gt 0 -and @($deploymentModes.invariants | Where-Object { $_ -match 'never grants MCP' }).Count -gt 0)
+Add-Case $cases 'api_access_is_field_scoped_and_secret_ref_only' ($apiAccessPolicy.default_action -eq 'deny' -and $apiAccessPolicy.secret_boundary.credential_mode -eq 'secret_reference_only' -and $apiAccessPolicy.request_contract.whole_api_access -eq 'deny' -and $apiAccessPolicy.request_contract.unlisted_body_field -eq 'deny')
+Add-Case $cases 'api_verification_never_receives_raw_payload' ($apiAccessPolicy.model_verification.raw_api_payload_to_model -eq $false -and $apiAccessPolicy.model_verification.secret_values_to_model -eq $false -and $apiAccessPolicy.model_verification.cross_validation_is_not_permission -eq $true)
 Add-Case $cases 'model_fusion_contracts_present' ((Test-Path -LiteralPath $modelPortfolioPath -PathType Leaf) -and (Test-Path -LiteralPath $fusionPlanPath -PathType Leaf))
 Add-Case $cases 'claim_pack_contract_present' (Test-Path -LiteralPath $claimPackPath -PathType Leaf)
 Add-Case $cases 'evidence_market_contract_present' ((Test-Path -LiteralPath $evidenceMarketPath -PathType Leaf) -and (Test-Path -LiteralPath $shadowReceiptPath -PathType Leaf))

@@ -138,6 +138,9 @@ Skill Intake never runs during ordinary conversation or startup. Static scanning
 - `deployment-mode-policy.json`: E1-E4 matrix for enterprise/BYOK API and fixed/employee-selected Agents.
 - `select-enterprise-deployment-mode.ps1`: Two-question beginner selector; it grants no runtime permissions.
 - `test-deployment-modes.ps1`: Offline regression for all four mappings and their hard boundaries.
+- `api-access-policy.json`: Field-level API request/body allowlists, response projections, local Secret References, and sanitized verifier boundary.
+- `invoke-enterprise-api-access-gate.ps1`: Offline Broker gate; returns a plan only and never calls a provider or reads secret values.
+- `test-enterprise-api-access.ps1`: Offline regression for credential leakage, unlisted fields, L4 confirmation, body allowlists, and cross-model privacy.
 - `../../.qianlima/model-portfolio.yaml`: Model Passport fields, routing tiers, evidence metrics, and trust boundaries.
 - `../../.qianlima/fusion-plan-schema.yaml`: Evidence-first multi-model Fusion Plan contract.
 - `../../.qianlima/scripts/validate-fusion-plan.ps1`: Validates risk, independence, data, verifier, and human-approval requirements.

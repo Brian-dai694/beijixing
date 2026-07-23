@@ -2,6 +2,12 @@
 
 本项目遵循语义化版本。日期为公开模板仓的发布日。
 
+## [v2.11.1] - 2026-07-23
+- 新增企业 API 最小权限合同与离线 Gate：API 默认拒绝，按 Provider、请求字段、写入 Body 字段、响应投影和任务数据范围放行。
+- 私密配置只允许保存在本机企业配置或批准的 Secret Manager；Agent、Prompt、审计和核验模型只接触 Secret Reference，不接触密钥值。
+- 多模型交叉核验改为脱敏 Claim Pack/Evidence Reference 输入，增加密钥、个人信息、作用域和字段白名单边界；交叉核验不产生权限。
+- 未知成本、未列字段、全量后台/全库请求、未确认 L4 写入和原始凭据输入均阻断；新增 9 项离线回归。
+
 ## [v2.11.0] - 2026-07-22
 - 源码级纠正：Helmsman 是磁盘 ANNS PoC，OpenSEO 是开源 SEO 数据分析平台，Apollo-11 是 AGC 原始源码数字化档案。
 - 新增企业 Service/Repository/MCP 边界：UI、MCP 与定时 Agent 共享业务服务层，强制组织/项目/店铺作用域、成本回执、Secret Reference 与任务 Grant。

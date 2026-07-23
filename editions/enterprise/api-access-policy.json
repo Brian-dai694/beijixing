@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "policy_id": "beijixing-enterprise-api-minimum-access",
+  "purpose": "Keep provider credentials and API request bodies behind the Broker while exposing only task-selected fields.",
+  "default_action": "deny",
+  "secret_boundary": {
+    "config_location": ".qianlima/local-data/enterprise/api-access.local.yaml",
+    "git_safe_template": "config.example.yaml",
+    "credential_mode": "secret_reference_only",
+    "load_authority": "broker_local_process_only",
+    "allowed_reference_formats": ["secretref:env/NAME", "secretref:os/NAME", "secretref:manager/NAME"],
+    "agent_visibility": "deny",
+    "prompt_visibility": "deny",
+    "trace_visibility": "reference_id_only",
+    "credential_value_in_request": "deny",
+    "credential_value_in_response": "deny"
+  },
+  "request_contract": {
+    "required": ["task_id", "grant_id", "provider_id", "operation", "data_classification", "requested_fields", "data_scope", "purpose", "time_range", "budget", "credential_ref"],
+    "operation_levels": {
+      "read_selected": "L2",
+      "analyze": "L2",
+      "prepare_write": "L3",
+      "execute_write": "L4"
+    },
+    "whole_api_access": "deny",
+    "whole_database_or_share_access": "deny",
+    "unlisted_field": "deny",
+    "unlisted_body_field": "deny",
+    "secret_or_identity_field": "deny"
+  },
+  "provider_profiles": {
+    "example_readonly": {
+      "allowed_operations": ["read_selected", "analyze"],
+      "allowed_request_fields": ["entity_id", "marketplace", "date_from", "date_to", "metric_names"],
+      "allowed_body_fields": [],
+      "response_projection": ["entity_id", "metric", "value", "observed_at", "source_ref"],
+      "denied_fields": ["access_token", "refresh_token", "password", "cookie", "customer_email", "bank_account", "raw_prompt", "full_response_dump"]
+    },
+    "example_controlled_write": {
+      "allowed_operations": ["prepare_write", "execute_write"],
+      "allowed_request_fields": ["entity_id", "marketplace", "change_reason", "effective_at", "idempotency_key"],
+      "allowed_body_fields": ["entity_id", "change_reason", "effective_at", "new_value", "idempotency_key"],
+      "response_projection": ["entity_id", "operation_id", "status", "receipt_ref"],
+      "denied_fields": ["access_token", "refresh_token", "password", "cookie", "customer_email", "bank_account", "bulk_selector", "unbounded_query"]
+    }
+  },
+  "write_controls": {
+    "default_enabled": false,
+    "required": ["enterprise_L4", "active_task_grant", "approved_operator", "explicit_second_confirmation", "preflight_snapshot", "idempotency_key", "rollback_or_compensation_ref", "post_change_verification"],
+    "max_items_without_batch_review": 1,
+    "batch_write": "deny",
+    "agent_may_generate_body": true,
+    "agent_may_send_body": false,
+    "broker_may_send_only_allowlisted_body": true,
+    "task_end": "revoke_grant_and_secret_session"
+  },
+  "model_verification": {
+    "enabled_by_default": false,
+    "independent_verifier_required_for": ["L3", "L4", "external_transfer", "sensitive_reference", "policy_exception"],
+    "verifier_input": "sanitized_claim_pack_and_evidence_refs_only",
+    "raw_api_payload_to_model": false,
+    "secret_values_to_model": false,
+    "same_provider_as_producer": "deny_for_independent_verification",
+    "disagreement": "needs_human_or_additional_authoritative_source",
+    "cross_validation_is_not_permission": true,
+    "privacy_check_before_verifier": ["secret_scan", "personal_data_scan", "scope_scan", "field_allowlist_scan"]
+  },
+  "audit": {
+    "required_receipt_fields": ["task_id", "grant_id", "provider_id", "operation", "requested_fields", "body_fields", "data_scope", "purpose", "time_range", "cost_status", "credential_ref", "response_projection", "verifier_ref", "revocation_status"],
+    "record_values": "references_hashes_and_projected_results_only",
+    "record_raw_request_body": false,
+    "record_secret_values": false,
+    "unknown_cost": "block",
+    "external_call_without_receipt": "freeze_and_revoke"
+  }
+}

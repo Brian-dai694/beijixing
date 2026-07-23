@@ -1,6 +1,6 @@
 edition:
   id: enterprise
-  version: 2.11.0
+  version: 2.11.1
   product_profile: enterprise-governed
   shared_core_root: ../..
   do_not_fork_harness: true
@@ -70,6 +70,8 @@ shared_contracts:
   collaboration_outcome: ../../.qianlima/enterprise-collaboration-outcome-contract.json
   collaboration_revocation_validator: ../../.qianlima/scripts/validate-enterprise-collaboration-revocation.ps1
   deployment_modes: ./deployment-mode-policy.json
+  api_access_policy: ./api-access-policy.json
+  api_access_gate: ./invoke-enterprise-api-access-gate.ps1
 
 enterprise_controls:
   identity: external_sso_or_local_enterprise_identity
@@ -101,6 +103,7 @@ enterprise_controls:
   operational_learning: review_to_candidate_then_replay_verify_and_human_promote
   api_agent_deployment: E1_E2_E3_E4_selected_by_two_questions
   model_collaboration: evidence_first_l3_only_l4_human_required
+  api_access: broker_only_field_allowlist_secret_ref_only_sanitized_verification
   fusion_loop: claim_pack_receipt_revoke_freeze_shadow_only
   evidence_market: disagreement_budget_signal_no_vote_authority
   shadow_runtime: internal_component_governed_fan_in_only
