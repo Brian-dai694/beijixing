@@ -2,6 +2,13 @@
 
 本项目遵循语义化版本。日期为公开模板仓的发布日。
 
+## [v2.12.0] - 2026-07-23
+- 新增统一企业 Tool Risk Policy：R0 只读查询、R1 分析推理、R2 修改、R3 调试/进程内存写入。
+- 新增 `reverse-readonly`、`reverse-triage`、`reverse-edit`、`reverse-debug` Profile 能力包；R3 当前版本机械拒绝，R2 只输出待人工确认计划。
+- 强制租户、项目、产物、会话、任务、Grant、设备、工具版本和 Manifest Hash 显式绑定，拒绝 `current_project`、`all_projects` 等隐式上下文。
+- 新增专业工具证据回执与会话控制：参数摘要、来源位置、差异、验证、审批、超时、预算、版本漂移和撤销均可追溯。
+- 新增 9 项离线 Tool Profile 回归；不启动专业工具、调试器、网络或内存写入。
+
 ## [v2.11.1] - 2026-07-23
 - 新增企业 API 最小权限合同与离线 Gate：API 默认拒绝，按 Provider、请求字段、写入 Body 字段、响应投影和任务数据范围放行。
 - 私密配置只允许保存在本机企业配置或批准的 Secret Manager；Agent、Prompt、审计和核验模型只接触 Secret Reference，不接触密钥值。

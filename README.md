@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml/badge.svg)](https://github.com/Brian-dai694/beijixing/actions/workflows/qianlima-verify.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-v2.11.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v2.12.0-blue.svg)](CHANGELOG.md)
 
 北极星是企业版 Agent 分级信任治理框架。它不是通用 Agent，也不替代 Codex、Claude Code、CodeWhale、MCP 或专业 Skill；它决定谁能做什么、能看到什么数据、预算多少、结果如何核验，以及何时撤销、冻结或回滚。
 
@@ -12,10 +12,11 @@
 
 ## 当前版本与迭代
 
-当前稳定版本：**v2.11.1（2026-07-23）**
+当前稳定版本：**v2.12.0（2026-07-23）**
 
 | 版本 | 日期 | 核心变化 | 权限影响 |
 |---|---|---|---|
+| `v2.12.0` | 2026-07-23 | 新增统一 Tool Risk Level 和专业工具 Profile：只读、分析、修改、调试/内存写入分级，强制资源绑定、审批预览、证据回执和会话撤销 | 不扩权；`reverse-debug` 当前版本默认拒绝，`reverse-edit` 只生成待确认计划 |
 | `v2.11.1` | 2026-07-23 | 新增 API 最小权限门禁：本地 Secret Reference、请求字段/写入 Body 白名单、响应投影、脱敏交叉核验和成本未知阻断 | 不扩权；Agent 不接触密钥值、全量后台或原始请求体，真实 API 调用仍由 Broker 控制 |
 | `v2.11.0` | 2026-07-22 | 源码级纠正三仓定位；新增 Service/Repository/MCP 边界、定时任务独立身份、三档非破坏性自检，以及授权前热元数据/冷证据检索 | 不扩权；OAuth 不替代 Grant，自检不写生产，SPDK/NVMe 不接入 |
 | `v2.10.0` | 2026-07-22 | 新增北极星内部声明式变更计划：当前态、目标态、差异、Plan Preview、证据包和可复算核验；原三仓来源归因已在 v2.11.0 纠正 | 不扩权；L4 仅候选待人工审核，外部写入仍禁用 |
@@ -72,6 +73,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ".\editions\enterprise\start
 多 AI 交叉验证不是权限控制。需要核验时，北极星先做密钥/个人信息/作用域/字段扫描，再只给核验模型脱敏 Claim Pack 和 Evidence Reference；原始 API Body、凭据、全量后台数据不会发送给任何模型。验证结果只能影响 `approved / needs_human / frozen` 结论，不能增加 API 权限。
 
 写入请求必须经过字段白名单、L4 Grant、负责人批准、二次确认、预检快照、幂等键、回滚引用和事后核验；默认仍是只读和计划模式。
+
+## 专业工具治理
+
+所有专业工具统一使用 `R0` 只读查询、`R1` 分析推理、`R2` 修改、`R3` 调试/内存写入四级风险。工具不是按单个 Agent 自由开放，而是通过 `reverse-readonly`、`reverse-triage`、`reverse-edit`、`reverse-debug` 等 Profile 能力包授予，并且每次调用必须绑定租户、项目、产物、会话、任务、Grant、设备、工具版本和清单哈希。
+
+当前版本中，R0/R1 只允许选定资源的有限读取和分析；R2 只能生成补丁/重命名/类型变更计划，执行前必须有人工审批、预检快照、回滚引用和事后验证；R3 的调试器、进程附加、任意代码、内存写入和 `py_eval` 默认拒绝。
+
+每次调用都要形成证据回执，记录样本哈希、工具版本、参数摘要、观察、模型主张、地址/函数/字符串引用、差异、验证状态、审批引用和撤销时间。进程、工作目录、调用次数、运行时间和输出大小独立受限，Grant 过期、版本漂移、超时、预算耗尽或越界后立即撤销并拒绝后续调用。
 
 ## 验证
 

@@ -2,16 +2,17 @@
 
 [中文](README.md) · [English](README.en.md)
 
-[![Version](https://img.shields.io/badge/version-v2.11.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v2.12.0-blue.svg)](CHANGELOG.md)
 
 Beijixing is an enterprise Agent tiered-trust governance framework for Codex, Claude Code, CodeWhale, MCP servers, Skills, and specialist Agents. It governs admission, minimum task grants, evidence, budgets, audit, revocation, and rollback without replacing the execution runtime.
 
 ## Current release and iterations
 
-Current stable release: **v2.11.1 (2026-07-23)**
+Current stable release: **v2.12.0 (2026-07-23)**
 
 | Version | Date | Main changes | Authority impact |
 |---|---|---|---|
+| `v2.12.0` | 2026-07-23 | Adds unified Tool Risk Levels and professional-tool Profiles for read, analysis, modification, and debug/memory-write capabilities, with resource binding, approval previews, evidence receipts, and revocation | No authority expansion; `reverse-debug` is denied in the current release and `reverse-edit` produces confirmation-bound plans only |
 | `v2.11.1` | 2026-07-23 | Adds API least-privilege gates: local Secret References, request/body field allowlists, response projections, sanitized cross-validation, and unknown-cost blocking | No authority expansion; Agents never receive secret values, full back-office access, or raw request bodies, and Broker control remains mandatory |
 | `v2.11.0` | 2026-07-22 | Corrects all three repository mappings from source; adds Service/Repository/MCP boundaries, independent scheduler identity, three non-destructive self-check tiers, and authorization-first hot-metadata/cold-evidence retrieval | No authority expansion; OAuth never replaces a Grant, self-checks never write production, and SPDK/NVMe are not adopted |
 | `v2.10.0` | 2026-07-22 | Adds Beijixing internal declarative change plans with current state, desired state, diffs, Plan Preview, evidence packs, and reproducible verification; the prior external-source attribution is corrected in v2.11.0 | No authority expansion; L4 is human-review candidate only and external writes remain disabled |
@@ -53,3 +54,11 @@ Private configuration stays in `.qianlima/local-data/enterprise/api-access.local
 Multi-model cross-validation is not an authorization mechanism. Before verification, Beijixing scans for secrets, personal data, scope violations, and field violations, then sends only a sanitized Claim Pack and Evidence References to the verifier. Raw API bodies, credentials, and full back-office data are never sent to a model. Verification can produce `approved`, `needs_human`, or `frozen`, but cannot expand API access.
 
 Writes require field allowlists, an L4 Grant, responsible approval, second confirmation, a preflight snapshot, an idempotency key, rollback reference, and post-change verification. Read-only and plan modes remain the default.
+
+## Professional Tool Governance
+
+All professional tools use four shared risk levels: `R0` read-only query, `R1` analysis, `R2` modification, and `R3` debugging or process-memory write. Tools are exposed through bounded Profiles such as `reverse-readonly`, `reverse-triage`, `reverse-edit`, and `reverse-debug`, not through free-form Agent tool access. Every call binds tenant, project, artifact, session, task, Grant, device, tool version, and manifest hash.
+
+R0/R1 are limited to selected-resource reads and analysis. R2 produces patch/rename/type-change plans only and requires human approval, preflight, rollback, and post-change verification before execution. R3 debugger attach, arbitrary code, process-memory writes, and `py_eval` are denied in this release.
+
+Every call produces an evidence receipt containing the sample hash, tool version, parameter digest, observations, model claims, source locations, diff, verification status, approval reference, and revocation time. Process, workspace, call-count, runtime, and output limits are enforced independently; expiry, drift, timeout, budget exhaustion, or overreach revokes the session and denies the next call.

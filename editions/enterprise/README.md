@@ -141,6 +141,9 @@ Skill Intake never runs during ordinary conversation or startup. Static scanning
 - `api-access-policy.json`: Field-level API request/body allowlists, response projections, local Secret References, and sanitized verifier boundary.
 - `invoke-enterprise-api-access-gate.ps1`: Offline Broker gate; returns a plan only and never calls a provider or reads secret values.
 - `test-enterprise-api-access.ps1`: Offline regression for credential leakage, unlisted fields, L4 confirmation, body allowlists, and cross-model privacy.
+- `tool-risk-policy.json`: Shared R0-R3 risk levels, reverse-tool Profiles, explicit resource bindings, approval preview, receipts, and revocation controls.
+- `invoke-enterprise-tool-profile-gate.ps1`: Offline Profile gate; returns a bounded plan and never starts a professional tool, debugger, network, or memory write.
+- `test-enterprise-tool-profile.ps1`: Offline regression for read-only, triage, edit, debug denial, implicit resource denial, evidence, and revocation boundaries.
 - `../../.qianlima/model-portfolio.yaml`: Model Passport fields, routing tiers, evidence metrics, and trust boundaries.
 - `../../.qianlima/fusion-plan-schema.yaml`: Evidence-first multi-model Fusion Plan contract.
 - `../../.qianlima/scripts/validate-fusion-plan.ps1`: Validates risk, independence, data, verifier, and human-approval requirements.

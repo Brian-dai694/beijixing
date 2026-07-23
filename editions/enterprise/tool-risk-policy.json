@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "policy_id": "beijixing-enterprise-tool-risk",
+  "purpose": "Govern professional tools that can inspect, modify, debug, or execute code without trusting the Agent prompt.",
+  "default_action": "deny",
+  "risk_levels": {
+    "R0_readonly_query": {
+      "meaning": "Read selected resources and return bounded observations.",
+      "default_profile": "reverse-readonly",
+      "requires": ["explicit_resource_binding", "task_grant", "tool_allowlist", "budget", "audit_receipt"],
+      "write": false,
+      "network": "deny_by_default"
+    },
+    "R1_analysis": {
+      "meaning": "Perform bounded analysis or triage over selected artifacts.",
+      "default_profile": "reverse-triage",
+      "requires": ["explicit_resource_binding", "task_grant", "verified_attestation", "independent_evidence_or_verifier", "audit_receipt"],
+      "write": false,
+      "network": "deny_by_default"
+    },
+    "R2_modify": {
+      "meaning": "Change a file, database, artifact, or analysis state.",
+      "default_profile": "reverse-edit",
+      "requires": ["explicit_resource_binding", "enterprise_L4", "responsible_approval", "second_confirmation", "preflight_snapshot", "rollback_ref", "post_change_verification"],
+      "write": true,
+      "network": "allowlisted_only"
+    },
+    "R3_execute_or_memory_write": {
+      "meaning": "Debug, execute arbitrary code, write process memory, or use unrestricted evaluation.",
+      "default_profile": "reverse-debug",
+      "requires": ["security_admin_and_business_owner_review", "dedicated_isolated_runner", "incident_or_research_ticket", "human_enablement"],
+      "write": true,
+      "default_decision": "deny"
+    }
+  },
+  "profiles": {
+    "reverse-readonly": {
+      "risk_level": "R0_readonly_query",
+      "allowed_operations": ["list_symbols", "read_metadata", "read_selected_bytes", "read_strings", "read_references"],
+      "denied_operations": ["patch", "rename", "change_type", "start_debugger", "write_memory", "py_eval", "export_sensitive"],
+      "max_calls": 100,
+      "max_runtime_seconds": 300,
+      "max_output_bytes": 1048576,
+      "network": "none",
+      "filesystem": "artifact_scope_only",
+      "approval": "none_for_R0_but_task_grant_required"
+    },
+    "reverse-triage": {
+      "risk_level": "R1_analysis",
+      "allowed_operations": ["list_symbols", "read_metadata", "read_selected_bytes", "read_strings", "read_references", "detect_patterns", "build_call_graph", "compare_observations"],
+      "denied_operations": ["patch", "rename", "change_type", "start_debugger", "write_memory", "py_eval", "export_sensitive"],
+      "max_calls": 60,
+      "max_runtime_seconds": 600,
+      "max_output_bytes": 2097152,
+      "network": "none",
+      "filesystem": "artifact_scope_only",
+      "approval": "task_owner_or_verifier"
+    },
+    "reverse-edit": {
+      "risk_level": "R2_modify",
+      "allowed_operations": ["prepare_patch", "prepare_rename", "prepare_type_change", "prepare_database_update"],
+      "denied_operations": ["execute_patch", "write_memory", "py_eval", "start_debugger", "bulk_update", "unbounded_export"],
+      "max_calls": 20,
+      "max_runtime_seconds": 300,
+      "max_output_bytes": 1048576,
+      "network": "none",
+      "filesystem": "task_workspace_only",
+      "approval": "human_required_before_execution"
+    },
+    "reverse-debug": {
+      "risk_level": "R3_execute_or_memory_write",
+      "allowed_operations": [],
+      "denied_operations": ["start_debugger", "write_memory", "py_eval", "arbitrary_code", "process_attach"],
+      "max_calls": 0,
+      "max_runtime_seconds": 0,
+      "max_output_bytes": 0,
+      "network": "none",
+      "filesystem": "none",
+      "approval": "security_review_required_but_not_enabled_in_current_release",
+      "current_release_decision": "deny"
+    }
+  },
+  "resource_binding": {
+    "required": ["tenant_id", "project_id", "artifact_id", "session_id", "task_id", "grant_id", "agent_id", "agent_version", "device_id", "tool_id", "tool_version", "tool_manifest_hash"],
+    "implicit_values_denied": ["current_project", "current_database", "last_artifact", "default_session", "all_projects", "all_users"],
+    "artifact_hash_required": true,
+    "cross_project": "deny_without_new_grant_and_owner_approval"
+  },
+  "approval_preview": {
+    "required_fields": ["target_object", "planned_action", "impact_scope", "risk_explanation", "rollback_method", "expected_evidence", "approval_ref"],
+    "required_for": ["R2_modify", "R3_execute_or_memory_write", "export_sensitive"],
+    "agent_self_approval": "deny"
+  },
+  "evidence_receipt": {
+    "required": ["receipt_id", "task_id", "grant_id", "session_id", "tool_id", "tool_version", "tool_manifest_hash", "artifact_sha256", "call_parameters_digest", "observations", "model_claims", "source_locations", "diff_ref", "verification_status", "approval_ref", "terminal_state", "revoked_at"],
+    "raw_secret_values": false,
+    "raw_hidden_reasoning": false,
+    "raw_sensitive_export": false,
+    "command_success_is_business_success": false
+  },
+  "session_controls": {
+    "isolated_process": true,
+    "isolated_workspace": true,
+    "temporary_secret": "task_scoped_reference_only",
+    "timeout_isolation": true,
+    "max_calls_enforced": true,
+    "max_output_enforced": true,
+    "revoke_before_next_call": true,
+    "revoke_triggers": ["grant_expired", "grant_revoked", "session_cancelled", "timeout", "budget_exhausted", "tool_version_drift", "manifest_drift", "overreach", "receipt_missing"],
+    "post_revoke_calls": "deny"
+  }
+}
