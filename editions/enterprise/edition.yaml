@@ -95,6 +95,8 @@ shared_contracts:
   bundle_replenishment_v1_planner: ./new-bundle-replenishment-draft.ps1
   cross_functional_alignment: ./cross-functional-alignment-contract.json
   cross_functional_impact_calculator: ./calculate-enterprise-plan-impact.ps1
+  execution_package: ./execution-package-contract.json
+  trajectory_gate: ./invoke-enterprise-trajectory-gate.ps1
 
 enterprise_controls:
   identity: external_sso_or_local_enterprise_identity
@@ -140,6 +142,7 @@ enterprise_controls:
   outcome_evaluation: evidence_backed_score_routes_only_no_execution_authority
   bundle_replenishment_v1: governed_readonly_bom_inventory_inbound_to_purchase_requisition_draft
   cross_functional_alignment: plan_requirement_resource_commitment_evidence_exception_with_field_ownership
+  execution_package: model_proposal_only_harness_preflight_and_trajectory_fail_closed
   meta_harness: candidate_static_replay_score_verify_human_canary_no_auto_apply
   fusion_loop: claim_pack_receipt_revoke_freeze_shadow_only
   evidence_market: disagreement_budget_signal_no_vote_authority

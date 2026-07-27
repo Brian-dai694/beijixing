@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "contract_id": "beijixing-execution-package",
+  "purpose": "Make every proposed Agent action a bounded, auditable Harness request before any connector or tool is invoked.",
+  "required_fields": ["package_id", "tenant_id", "organization_id", "department_id", "requester_id", "agent_id", "agent_version", "task_id", "grant_id", "business_purpose", "data_scope", "tool_request", "risk_level", "budget", "approval", "expected_outcome", "verification", "recovery"],
+  "model_authority": "proposal_only",
+  "harness_decisions": ["allow_preflight", "shrink", "pause", "revoke", "freeze"],
+  "trajectory_required": ["goal_matches_business_purpose", "scope_within_grant", "approval_bypass_attempts", "tool_calls_in_window", "failed_attempts", "observed_evidence_refs", "declared_vs_observed_consistent"],
+  "hard_failures": ["goal_drift", "scope_overreach", "approval_bypass", "budget_exceeded", "revoked_or_expired_grant", "unverified_high_risk_result"],
+  "invariants": ["package_is_not_execution_authority", "approval_is_external_fact_reference_not_prompt_text", "tool_request_must_be_narrow_typed_and_resource_bound", "trajectory_anomaly_shrinks_or_stops_authority", "every_decision_requires_audit_event_before_real_execution"]
+}
