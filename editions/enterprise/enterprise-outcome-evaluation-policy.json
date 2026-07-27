@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "policy_id": "beijixing-enterprise-outcome-evaluation",
+  "policy_version": "1.0.0",
+  "status": "active",
+  "purpose": "Turn a business outcome into evidence-backed scoring and routing without granting action authority.",
+  "lifecycle": ["candidate", "offline_evaluated", "human_approved", "canary", "active", "suspended", "rolled_back", "revoked"],
+  "required_input": ["evaluation_id", "candidate_id", "tenant_id", "organization_id", "project_id", "user_id", "agent_id", "agent_version", "task_id", "grant_id", "expected_outcome", "observed_evidence_refs", "metrics", "constraints"],
+  "preconditions": ["task_grant_and_policy_gate_checked_before_evaluation", "evidence_refs_are_controlled_system_references", "evaluation_never_substitutes_for_approval"],
+  "dimensions": {
+    "resolution_quality": {"weight": 0.35, "meaning": "Customer issue is actually resolved, not merely closed."},
+    "compliance_quality": {"weight": 0.25, "meaning": "Required policy and sensitive-data handling checks pass."},
+    "escalation_accuracy": {"weight": 0.15, "meaning": "The case was escalated when its facts required it."},
+    "human_review_alignment": {"weight": 0.15, "meaning": "Independent human review agrees when a review is available."},
+    "refund_risk_inverse": {"weight": 0.05, "meaning": "Lower unsupported-refund risk scores higher."},
+    "repeat_contact_risk_inverse": {"weight": 0.05, "meaning": "Lower repeat-contact risk scores higher."}
+  },
+  "hard_constraints": ["compliance_passed", "sensitive_data_handling_passed", "evidence_complete"],
+  "routing": {
+    "recommendation_ready_min_score": 0.85,
+    "human_review_min_score": 0.60,
+    "recommendation_ready": "recommendation_only_then_separate_action_gate",
+    "human_review": "pause_for_human_review",
+    "below_threshold_or_constraint_failure": "freeze_and_escalate"
+  },
+  "invariants": ["case_closure_rate_is_not_a_reward_dimension", "score_never_grants_tool_data_or_business_action_authority", "policy_or_weight_change_requires_versioned_human_approval", "model_training_or_skill_reuse_requires_offline_evaluation_canary_and_rollback", "audit_records_references_and_decision_not_raw_customer_content"]
+}

@@ -89,6 +89,8 @@ shared_contracts:
   governance_handbook: ./enterprise-governance-handbook-policy.json
   governance_handbook_index: ./governance-handbook-index.json
   obsidian_governance_integration: ./obsidian-integration-policy.json
+  outcome_evaluation_policy: ./enterprise-outcome-evaluation-policy.json
+  outcome_evaluation_gate: ./evaluate-enterprise-outcome.ps1
 
 enterprise_controls:
   identity: external_sso_or_local_enterprise_identity
@@ -131,6 +133,7 @@ enterprise_controls:
   enterprise_tool_governance: decision_lifecycle_verification_authorization_feedback_and_rollback
   governance_handbook: behavior_navigation_change_impact_and_resync
   obsidian_governance_collaboration: sanitized_outbox_and_candidate_only_feedback
+  outcome_evaluation: evidence_backed_score_routes_only_no_execution_authority
   meta_harness: candidate_static_replay_score_verify_human_canary_no_auto_apply
   fusion_loop: claim_pack_receipt_revoke_freeze_shadow_only
   evidence_market: disagreement_budget_signal_no_vote_authority

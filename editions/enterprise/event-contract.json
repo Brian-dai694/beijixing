@@ -94,7 +94,9 @@
                            "tool_call_screened",
                            "tool_feedback_candidate_created",
                            "obsidian_note_exported",
-                           "obsidian_feedback_candidate_created"
+                           "obsidian_feedback_candidate_created",
+                           "outcome_evaluation_scored",
+                           "outcome_evaluation_escalated"
                        ],
     "decision_values":  [
                             "allow",
