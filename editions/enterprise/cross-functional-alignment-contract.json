@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "contract_id": "beijixing-cross-functional-alignment",
+  "purpose": "Align departments around versioned plans, quantified requirements, controlled commitments, evidence, and targeted exceptions.",
+  "objects": {
+    "plan": {"required_fields": ["plan_id", "version", "owner_id", "deadline", "success_condition"], "owner_controls": ["objective", "quantity", "deadline", "priority"]},
+    "requirement": {"required_fields": ["requirement_id", "plan_id", "resource_id", "required_quantity", "responsible_role"], "formula": "required_quantity is the demand-side requirement for one resource."},
+    "resource": {"required_fields": ["resource_id", "available_quantity", "owner_id", "evidence_refs"], "formula": "available_quantity is the currently verified usable resource."},
+    "commitment": {"required_fields": ["commitment_id", "resource_id", "committed_quantity", "eta", "owner_id", "status", "evidence_refs"], "owner_controls": ["quantity", "eta", "supplier_or_provider", "cost"]},
+    "evidence": {"required_fields": ["evidence_id", "subject_ref", "system_ref", "observed_at", "verification_status"], "rule": "Only verified evidence may satisfy a commitment."},
+    "exception": {"required_fields": ["exception_id", "plan_id", "resource_id", "type", "impact", "responsible_owner_id", "decision_deadline", "evidence_refs"], "rule": "Only affected responsible owners receive a decision request."}
+  },
+  "formulas": {
+    "on_time_committed_supply": "sum(committed_quantity where status in confirmed_or_shipped and eta <= plan.deadline and evidence is verified)",
+    "resource_gap": "max(0, required_quantity - available_quantity - on_time_committed_supply)",
+    "version_impact": "current_required_quantity - baseline_required_quantity",
+    "risk": "late_commitment + unverified_commitment + resource_gap + policy_or_cost_threshold"
+  },
+  "field_ownership": {
+    "plan_owner_may_not_change": ["resource.available_quantity", "commitment.eta", "commitment.committed_quantity", "evidence.verification_status"],
+    "resource_owner_may_not_change": ["plan.objective", "plan.quantity", "commitment.eta"],
+    "commitment_owner_may_not_change": ["plan.quantity", "resource.available_quantity", "evidence.verification_status"],
+    "verifier_may_not_change": ["plan", "requirement", "resource", "commitment"],
+    "all_external_or_business_writes": "Enterprise_L4_separate_grant_approval_readback"
+  },
+  "domain_adapters": {
+    "bundle_procurement": ["BOM demand", "available inventory", "inbound purchase commitment", "warehouse receipt and QC evidence"],
+    "product_launch": ["launch deliverables", "inventory", "listing assets", "owner completion evidence"],
+    "promotion": ["demand target", "inventory lock", "budget", "price and asset approvals"],
+    "advertising": ["growth target", "budget", "creative", "inventory safety line"],
+    "order_exception": ["fulfillment deadline", "inventory", "logistics", "customer compensation evidence"],
+    "collection": ["receivable", "reconciliation", "invoice", "expected payment commitment"],
+    "data_governance": ["dataset requirement", "source", "quality checks", "access approval"]
+  },
+  "invariants": ["agent_status_never_completes_a_plan", "plan_version_change_requires_recalculation", "commitment_without_verified_evidence_is_risk_not_supply", "exception_does_not_change_any_business_state", "calculation_and_field_ownership_are_both_required"]
+}
