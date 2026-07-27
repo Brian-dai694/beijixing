@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "matrix_id": "beijixing-tool-business-authorization",
+  "default_decision": "deny",
+  "role_scopes": [
+    {"role_id": "customer_service", "tool_capability": "order.read", "data_scope": "assigned_orders", "actions": ["read"]},
+    {"role_id": "department_manager", "tool_capability": "order.read", "data_scope": "department_orders", "actions": ["read"]},
+    {"role_id": "finance", "tool_capability": "order.read", "data_scope": "amounts_and_refunds", "actions": ["read"]},
+    {"role_id": "executive", "tool_capability": "order.read", "data_scope": "global_aggregates", "actions": ["read"]}
+  ],
+  "hard_boundaries": {
+    "tool_capability_is_not_business_authority": true,
+    "cross_role_scope_inference": false,
+    "role_scope_expansion_by_learning": false,
+    "task_grant_required": true
+  }
+}

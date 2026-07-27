@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "behavior_id": "sensitive-data-export",
+  "title": "敏感客户数据导出",
+  "business_trigger": "Agent 提议将客户数据导出到任务产物或外部系统",
+  "risk_classification": ["L4", "confidential", "external_write"],
+  "agent_routes": ["agent_registry", "data_guard", "task_orchestrator", "tool_gate"],
+  "tool_scope": ["customer.read", "customer.export", "file.write", "external.send"],
+  "data_scope": ["classification_confidential", "role_filtered", "tenant_bound", "purpose_bound", "脱敏后引用"],
+  "approval_points": ["data_scope_preview", "redaction_review", "human_approval", "dual_confirmation_for_external_send"],
+  "state_registers": ["data_classification", "redaction_state", "grant_state", "approval_state", "artifact_state", "verification_state"],
+  "audit_evidence": ["source_hash", "data_scope_ref", "redaction_receipt", "policy_ref", "approval_ref", "export_artifact_hash", "responsible_party"],
+  "abort_conditions": ["unredacted_data", "cross_tenant_scope", "missing_approval", "unknown_destination", "verification_failed", "revoked_grant"],
+  "rollback_path": ["cancel_export", "revoke_grant", "quarantine_artifact", "record_incident", "append_rollback_receipt"],
+  "implementation_refs": [
+    {"path": "editions/enterprise/invoke-enterprise-connection-gate.ps1", "anchor": "data_class_and_network_zone"},
+    {"path": "editions/enterprise/invoke-enterprise-tool-gate.ps1", "anchor": "role_data_scope_policy_gate"},
+    {"path": "editions/enterprise/append-enterprise-audit-event.ps1", "anchor": "metadata_only_audit"},
+    {"path": "editions/enterprise/rollback-enterprise-tool-version.ps1", "anchor": "append_only_rollback_receipt"}
+  ],
+  "test_refs": [
+    "editions/enterprise/test-enterprise-connections.ps1",
+    "editions/enterprise/test-enterprise-tool-governance.ps1",
+    "editions/enterprise/test-enterprise-audit-event.ps1"
+  ],
+  "source_hashes": {}
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "policy_id": "beijixing-enterprise-product-validation",
+  "policy_version": "2.14.0",
+  "purpose": "Validate enterprise AI value with bounded, reversible experiments before expanding autonomy.",
+  "governed_subjects": ["agent", "model", "skill", "tool", "mcp", "data_connection", "workflow", "automation"],
+  "required_problem_definition": ["target_role", "real_scenario", "current_experience", "expected_experience", "core_user_value", "migration_costs"],
+  "experience_priority": ["usable", "easy_to_administer", "stable", "optional_delight"],
+  "required_supply_capabilities": ["identity", "policy", "data_guard", "approval", "evidence", "audit", "revocation_or_rollback"],
+  "experiment_requirements": ["hypothesis", "bounded_scope", "baseline", "success_metrics", "failure_metrics", "independent_evaluator", "stop_conditions", "rollback_ref", "time_and_cost_budget"],
+  "hard_boundaries": {
+    "candidate_only": true,
+    "production_authority": false,
+    "business_write": false,
+    "permission_expansion": false,
+    "raw_sensitive_data": false,
+    "independent_evaluation_required": true,
+    "failed_experiment_action": "freeze_rollback_or_abandon",
+    "failure_cannot_be_repaired_by_expanding_data_or_permission": true
+  },
+  "promotion_path": ["candidate", "static_check", "isolated_replay", "independent_evaluation", "human_review", "limited_pilot", "regression_monitoring", "promote_or_revoke"]
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "registry_id": "beijixing-enterprise-agent-registry-example",
+  "default_action": "deny",
+  "agents": [
+    {
+      "agent_id": "ad-readonly-agent",
+      "agent_version": "ad-diagnostic-v1",
+      "status": "approved",
+      "owner_role": "business_manager",
+      "capabilities": ["read_advertising", "emit_action_card"],
+      "allowed_data_scopes": ["advertising"],
+      "risk_ceiling": "L2",
+      "network": "none",
+      "write_access": "none",
+      "can_delegate": false
+    }
+  ]
+}

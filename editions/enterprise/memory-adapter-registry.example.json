@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "registry_id": "beijixing-enterprise-memory-adapters",
+  "default_enabled": false,
+  "adapters": [
+    {
+      "adapter_id": "local_sqlite_fts5",
+      "kind": "local_sqlite",
+      "version": "0.1.0",
+      "enabled": false,
+      "execution_enabled": false,
+      "manifest_hash": "sha256:replace-with-reviewed-manifest-hash",
+      "supports": ["metadata", "fts5", "time_index", "vector_reference"],
+      "network": "none",
+      "raw_payload": false,
+      "requires": ["registered_runner_attestation", "task_grant", "cube_scope", "audit_event"]
+    },
+    {
+      "adapter_id": "mcp_memory_candidate",
+      "kind": "mcp",
+      "version": "0.0.0",
+      "enabled": false,
+      "execution_enabled": false,
+      "manifest_hash": "sha256:disabled",
+      "transport": "stdio_only",
+      "network": "none",
+      "requires": ["north_star_broker", "registered_server", "task_grant"]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "behavior_id": "high-risk-agent-human-approval",
+  "title": "高风险 Agent 必须人工审批",
+  "business_trigger": "付款、改价、退款或客户数据导出计划进入执行前阶段",
+  "risk_classification": ["L4", "sensitive_data", "external_write"],
+  "agent_routes": ["agent_registry", "task_orchestrator", "tool_gate"],
+  "tool_scope": ["payment.write", "price.write", "refund.write", "customer.export"],
+  "data_scope": ["task_bound", "role_filtered", "classification_checked"],
+  "approval_points": ["plan_preview", "human_approval", "dual_confirmation_for_critical_action"],
+  "state_registers": ["task_state", "grant_state", "approval_state", "tool_release_state", "budget_state", "trust_state"],
+  "audit_evidence": ["policy_ref", "decision_reason", "approval_ref", "data_scope_ref", "side_effect_summary", "verification_ref", "responsible_party"],
+  "abort_conditions": ["grant_revoked", "budget_exceeded", "policy_mismatch", "verification_failed", "audit_sink_unavailable"],
+  "rollback_path": ["revoke_grant", "freeze_task", "compensating_action_or_previous_value", "append_rollback_receipt"],
+  "implementation_refs": [
+    {"path": "editions/enterprise/invoke-enterprise-task-gate.ps1", "anchor": "risk_and_approval_gate"},
+    {"path": "editions/enterprise/invoke-enterprise-tool-gate.ps1", "anchor": "task_grant_budget_and_risk_checks"},
+    {"path": "editions/enterprise/append-enterprise-audit-event.ps1", "anchor": "strategy_audit_fields"},
+    {"path": "editions/enterprise/revoke-enterprise-grant.ps1", "anchor": "append_only_revocation"}
+  ],
+  "test_refs": [
+    "editions/enterprise/test-enterprise-tool-governance.ps1",
+    "editions/enterprise/test-enterprise-task-terminal.ps1",
+    "editions/enterprise/test-enterprise-ad-diagnostic-v1.ps1"
+  ],
+  "source_hashes": {}
+}

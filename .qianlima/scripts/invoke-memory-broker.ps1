@@ -16,7 +16,9 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $validator = Join-Path $PSScriptRoot 'validate-memory-read.ps1'
-$validationOutput = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $validator -RequestPath $RequestPath -GrantPath $GrantPath -MemoryPath $MemoryPath -PassThru 2>&1)
+$resolver = Join-Path $PSScriptRoot 'resolve-qianlima-powershell.ps1'; . $resolver
+$powerShellCommand = Get-QianlimaPowerShellCommand
+$validationOutput = @(& $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File $validator -RequestPath $RequestPath -GrantPath $GrantPath -MemoryPath $MemoryPath -PassThru 2>&1)
 $validationCode = $LASTEXITCODE
 $validationText = ($validationOutput -join "`n")
 $validation = $null

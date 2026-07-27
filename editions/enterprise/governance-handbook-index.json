@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "handbook_id": "beijixing-enterprise-governance-handbook",
+  "cards": [
+    "editions/enterprise/behavior-cards/high-risk-agent-human-approval.json",
+    "editions/enterprise/behavior-cards/sensitive-data-export.json"
+  ],
+  "implementation_root": "editions/enterprise",
+  "source_hash_policy": "sha256",
+  "line_anchors_are_navigation_only": true,
+  "execution_authority": false
+}

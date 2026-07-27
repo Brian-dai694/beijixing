@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "policy_id": "beijixing-enterprise-governance-handbook",
+  "policy_version": "2.14.0",
+  "purpose": "Map enterprise governance behaviors to real policy, code, state, evidence, and tests.",
+  "progressive_disclosure": [
+    "behavior",
+    "policy_and_roles",
+    "implementation_and_state",
+    "verification_and_rollout"
+  ],
+  "card_required": [
+    "behavior_id",
+    "business_trigger",
+    "risk_classification",
+    "agent_routes",
+    "tool_scope",
+    "data_scope",
+    "approval_points",
+    "state_registers",
+    "audit_evidence",
+    "rollback_path",
+    "implementation_refs",
+    "test_refs",
+    "source_hashes"
+  ],
+  "change_plan_required": ["behavior_id", "declared_diff_ref", "source_snapshot", "source_snapshot_algorithm", "source_freshness_required_before_approval", "approval_points", "test_refs"],
+  "resync_rules": {
+    "source_of_truth": "real_files_and_declared_diff",
+    "sync_mode": "hash_and_anchor_manifest",
+    "stale_card_action": "block_promotion_and_request_review",
+    "auto_mutate_production_code": false,
+    "auto_approve_policy_change": false,
+    "append_only_sync_receipts": true,
+    "unresolved_call_action": "record_dropped_calls_and_require_review",
+    "stale_anchor_action": "mark_stale_and_block_change_promotion"
+  },
+  "handbook_invariants": [
+    "behavior_mapping_must_include_approval_and_audit",
+    "every_high_risk_behavior_must_include_abort_and_rollback",
+    "implementation_refs_must_resolve_inside_enterprise_profile",
+    "test_refs_must_resolve_inside_enterprise_profile",
+    "handbook_navigation_never_grants_execution_authority"
+  ]
+}

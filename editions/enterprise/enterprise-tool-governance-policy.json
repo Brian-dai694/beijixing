@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "policy_id": "beijixing-enterprise-tool-governance",
+  "policy_version": "2.14.0",
+  "layers": ["decision", "lifecycle", "verification", "authorization", "feedback_evolution"],
+  "states": ["discovered", "candidate", "static_checked", "sandboxed", "approved", "canary", "active", "suspended", "rolled_back", "revoked"],
+  "risk_levels": {
+    "L1": {"approval": "none", "environment": "sandbox_or_internal", "max_calls_per_task": 100, "default_data_class": "public"},
+    "L2": {"approval": "task_grant", "environment": "sandbox_or_internal", "max_calls_per_task": 50, "default_data_class": "internal_sanitized"},
+    "L3": {"approval": "human_review", "environment": "sandbox_or_canary", "max_calls_per_task": 20, "default_data_class": "confidential_reference_only"},
+    "L4": {"approval": "dual_confirmation", "environment": "sandbox_only_until_explicit_release", "max_calls_per_task": 5, "default_data_class": "confidential_reference_only"}
+  },
+  "passport_required": ["tool_id", "tool_version", "owner_id", "tenant_id", "organization_id", "project_id", "purpose", "applicable_scenarios", "input_schema_ref", "output_schema_ref", "capability_boundary", "access_permissions", "data_class", "declared_dependencies", "risk_level", "cost_model", "audit_requirements", "rollback_ref", "artifact_ref", "integrity_hash"],
+  "promotion_requirements": {
+    "static_checked": ["source_pinned", "dependency_scan", "secret_scan", "capability_diff", "data_flow_review"],
+    "sandboxed": ["isolated_runner", "no_production_data", "no_external_calls", "test_receipt", "budget_bound"],
+    "approved": ["sandbox_receipt", "independent_verifier", "owner_approval", "rollback_verified"],
+    "canary": ["approved_release", "canary_scope", "canary_budget", "monitoring_plan", "rollback_ready"],
+    "active": ["approved_release", "separate_task_grant_still_required"]
+  },
+  "hard_boundaries": {
+    "generated_tool_direct_production": false,
+    "unknown_dependency_auto_install": false,
+    "skill_reuse_grants_tool_authority": false,
+    "feedback_changes_permission": false,
+    "learning_expands_grant": false,
+    "cross_organization_publish": "deny",
+    "production_write_without_dual_confirmation": false,
+    "release_history_append_only": true
+  },
+  "efficiency_objective": "minimize_unnecessary_calls_subject_to_quality_security_and_evidence",
+  "authorization_boundary": "tool_capability_never_grants_business_data_or_action_authority",
+  "execution_zones": {"exploration": ["discovered", "candidate"], "verification": ["static_checked", "sandboxed", "approved", "canary"], "production": ["active"]},
+  "strategy_audit_required": ["policy_ref", "decision_reason", "data_scope_ref", "approval_ref", "side_effect_summary", "verification_ref", "responsible_party"],
+  "audit_events": ["tool_registered", "tool_static_checked", "tool_sandboxed", "tool_approved", "tool_canary_started", "tool_activated", "tool_suspended", "tool_rolled_back", "tool_revoked", "tool_call_screened", "tool_feedback_candidate_created"]
+}

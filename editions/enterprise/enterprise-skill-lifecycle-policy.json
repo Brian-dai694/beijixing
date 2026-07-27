@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "policy_id": "beijixing-enterprise-skill-lifecycle",
+  "policy_version": "2.14.0",
+  "states": ["candidate", "static_checked", "isolated_trial", "approved", "active", "suspended", "rolled_back", "revoked"],
+  "required_metadata": ["skill_id", "skill_version", "artifact_ref", "integrity_hash", "source_ref", "owner_id", "tenant_id", "organization_id", "project_id", "classification", "declared_capabilities", "declared_tools", "risk_level", "rollback_ref"],
+  "promotion_requirements": {
+    "static_checked": ["source_pinned", "dependency_scan", "capability_diff", "secret_scan"],
+    "isolated_trial": ["static_check_receipt", "sandbox", "no_production_data", "no_business_write", "bounded_budget"],
+    "approved": ["trial_receipt", "independent_verifier", "human_approver", "rollback_verified"],
+    "active": ["approved_release", "separate_task_grant_still_required"]
+  },
+  "hard_boundaries": {
+    "skill_reuse_grants_execution": false,
+    "skill_install_grants_tools": false,
+    "skill_approval_expands_data_scope": false,
+    "trial_has_production_authority": false,
+    "cross_organization_publish": "deny",
+    "rollback_is_append_only": true,
+    "agent_cannot_self_publish": true
+  }
+}

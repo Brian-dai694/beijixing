@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "policy_id": "beijixing-enterprise-obsidian-collaboration",
+  "policy_version": "2.14.0",
+  "positioning": "business_knowledge_and_governance_explanation_layer_not_source_of_truth",
+  "system_of_record": {
+    "identity_permission_approval_budget_audit_evidence": "beijixing",
+    "sensitive_source_data": "enterprise_dms_or_database",
+    "readable_project_knowledge": "obsidian"
+  },
+  "sync_model": {
+    "direction": "asymmetric_bidirectional",
+    "beijixing_to_obsidian": ["sanitized_task_summary", "approved_status_summary", "risk_summary", "tool_and_skill_catalog", "audit_id", "evidence_link", "project_review"],
+    "obsidian_to_beijixing": ["business_feedback", "requirement", "improvement_suggestion", "pending_rule_change_candidate"],
+    "obsidian_may_directly_change": [],
+    "candidate_only_on_import": true
+  },
+  "allowed_note_classes": ["public", "internal_sanitized"],
+  "prohibited_vault_content": ["secret_value", "credential", "approval_token", "customer_raw_private_data", "financial_detail", "production_connection", "complete_audit_log", "real_permission_configuration"],
+  "official_sync_limitations": {
+    "fine_grained_enterprise_authorization": false,
+    "enterprise_sso_is_assumed": false,
+    "self_hosted_control_is_assumed": false,
+    "member_removal_deletes_local_history": false,
+    "offboarding_residual_copy_risk": "accepted_and_recorded_or_use_managed_dms_instead"
+  },
+  "hard_boundaries": {
+    "vault_text_grants_permission": false,
+    "vault_text_changes_approval": false,
+    "vault_text_changes_budget": false,
+    "vault_text_changes_data_scope": false,
+    "vault_text_changes_production_tool_config": false,
+    "direct_obsidian_sync_enabled_by_default": false,
+    "outbound_requires_sanitized_content": true,
+    "inbound_requires_identity_and_policy_revalidation": true
+  },
+  "audit_events": ["obsidian_note_exported", "obsidian_feedback_candidate_created"],
+  "audit_required": ["tenant_id", "project_id", "task_id", "source_note_hash_or_audit_id", "data_class", "authority_boundary", "responsible_party"],
+  "note_freshness": {
+    "required_fields": ["policy_version", "generated_at", "expires_at", "source_of_truth"],
+    "expired_note_is_authoritative": false,
+    "expired_note_action": "display_stale_and_requery_north_star"
+  }
+}

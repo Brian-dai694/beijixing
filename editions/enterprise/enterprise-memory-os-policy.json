@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "policy_id": "beijixing-enterprise-memory-os",
+  "policy_version": "2.14.0",
+  "positioning": "memory_and_skill_subsystem_reference_not_enterprise_governance_authority",
+  "memory_layers": ["trajectory", "strategy", "world_model", "skill"],
+  "cube": {
+    "required_dimensions": ["tenant_id", "organization_id", "project_id", "role_id"],
+    "optional_views": ["agent_private", "project", "team", "organization_shared"],
+    "cross_organization_default": "deny",
+    "shared_read_requires": ["task_grant", "memory_share_grant", "classification_allowlist", "purpose", "audit_event"],
+    "revocation_check": "before_every_read"
+  },
+  "record_integrity": {
+    "required": ["source_refs", "record_version", "owner_id", "audit_chain_ref", "confidence", "expires_at", "classification"],
+    "immutable_record": true,
+    "state_changes": "append_only_events",
+    "deduplication": "content_ref_source_version_fingerprint",
+    "conflict_action": "candidate_and_freeze_authoritative_promotion"
+  },
+  "retrieval": {
+    "mandatory_order": ["task_and_grant_gate", "cube_scope_filter", "classification_filter", "state_expiry_revocation_filter", "deduplicate", "fts5_recall", "vector_recall", "temporal_recall", "rerank", "minimum_pack", "audit"],
+    "fusion": "weighted_reciprocal_rank_with_policy_filters",
+    "similarity_never_bypasses_scope": true,
+    "expired_or_conflicting_never_authoritative": true
+  },
+  "asynchronous_ingest": {
+    "enabled": true,
+    "security_check_before_enqueue": true,
+    "raw_sensitive_payload_in_queue": false,
+    "idempotency_required": true,
+    "dead_letter_queue": true,
+    "retry_is_bounded": true,
+    "interactive_request_does_not_wait_for_indexing": true
+  },
+  "storage_adapters": {
+    "local_sqlite": {"status": "registered_adapter_required", "features": ["metadata", "fts5", "time_index", "vector_reference"], "runtime_gate": "invoke-enterprise-memory-adapter-gate.ps1"},
+    "mcp": {"status": "disabled_until_registered_and_brokered", "transport": "stdio_only"},
+    "openclaw": {"status": "candidate_plugin_only"},
+    "hermes": {"status": "candidate_plugin_only"}
+  },
+  "skill_boundary": {
+    "skill_memory_is_reusable": true,
+    "skill_memory_grants_execution": false,
+    "skill_memory_grants_tools": false,
+    "skill_memory_expands_data_scope": false,
+    "publication_requires_separate_lifecycle": true
+  },
+  "hard_boundaries": ["no_full_chat_archive", "no_raw_secret", "no_cross_org_read", "no_global_memory", "no_permission_learning", "no_agent_direct_share", "no_business_write"]
+}

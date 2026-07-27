@@ -80,6 +80,15 @@ shared_contracts:
   intelligence_maturity: ./enterprise-intelligence-maturity.json
   amazon_ad_diagnostic_v1: ./amazon-ad-diagnostic-v1-contract.json
   amazon_ad_diagnostic_v1_gate: ./invoke-amazon-ad-diagnostic-v1-gate.ps1
+  enterprise_memory_record: ../../.qianlima/specifications/enterprise-memory-record-contract.json
+  memory_os_policy: ./enterprise-memory-os-policy.json
+  enterprise_skill_lifecycle: ./enterprise-skill-lifecycle-policy.json
+  enterprise_tool_governance: ./enterprise-tool-governance-policy.json
+  enterprise_tool_registry: ./tool-registry.example.json
+  enterprise_tool_authorization_matrix: ./tool-authorization-matrix.example.json
+  governance_handbook: ./enterprise-governance-handbook-policy.json
+  governance_handbook_index: ./governance-handbook-index.json
+  obsidian_governance_integration: ./obsidian-integration-policy.json
 
 enterprise_controls:
   identity: external_sso_or_local_enterprise_identity
@@ -117,6 +126,11 @@ enterprise_controls:
   task_runtime_spec: readable_workflow_plus_machine_policy_no_prompt_override
   intelligence_maturity: C_R_A_I_O_separate_from_task_risk_L0_L4
   v1_production_loop: amazon_ad_diagnostic_action_card_grant_approval_execute_readback_review
+  enterprise_memory_os: cube_scoped_hybrid_retrieval_reference_only
+  enterprise_skill_lifecycle: candidate_trial_approval_rollback_without_authority
+  enterprise_tool_governance: decision_lifecycle_verification_authorization_feedback_and_rollback
+  governance_handbook: behavior_navigation_change_impact_and_resync
+  obsidian_governance_collaboration: sanitized_outbox_and_candidate_only_feedback
   meta_harness: candidate_static_replay_score_verify_human_canary_no_auto_apply
   fusion_loop: claim_pack_receipt_revoke_freeze_shadow_only
   evidence_market: disagreement_budget_signal_no_vote_authority

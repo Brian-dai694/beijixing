@@ -23,10 +23,6 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $contextScript = Join-Path $PSScriptRoot 'qianlima-context-fast.ps1'
-function Get-PowerShellExecutable() {
-  if ($PSVersionTable.PSEdition -eq 'Core') { return 'pwsh' }
-  return 'powershell'
-}
 function Parse-JsonResult([object[]]$Output) {
   $text = ($Output -join "`n"); $start = $text.IndexOf('{'); $end = $text.LastIndexOf('}')
   if ($start -ge 0 -and $end -gt $start) { try { return ($text.Substring($start, $end - $start + 1) | ConvertFrom-Json) } catch { } }
@@ -45,7 +41,9 @@ if ($memoryRequested -and (-not $MemoryRequestPath -or -not $MemoryGrantPath -or
   exit 1
 }
 if ($memoryRequested) { $contextArgs += @('-MemoryRequestPath', $MemoryRequestPath, '-MemoryGrantPath', $MemoryGrantPath, '-MemoryPath', $MemoryPath) }
-$contextOutput = @(& (Get-PowerShellExecutable) -NoProfile -ExecutionPolicy Bypass -File $contextScript @contextArgs 2>&1)
+$resolver = Join-Path $PSScriptRoot 'resolve-qianlima-powershell.ps1'; . $resolver
+$powerShellCommand = Get-QianlimaPowerShellCommand
+$contextOutput = @(& $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File $contextScript @contextArgs 2>&1)
 $contextCode = $LASTEXITCODE
 $context = Parse-JsonResult $contextOutput
 if ($contextCode -ne 0 -or $null -eq $context) {
