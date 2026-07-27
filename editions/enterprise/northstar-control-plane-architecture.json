@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "architecture_id": "beijixing-enterprise-control-plane",
+  "purpose": "Make Northstar the enterprise control plane rather than a collection of business Agents.",
+  "planes": {
+    "control": {
+      "owns": ["Identity", "Tenant", "Organization", "Role", "Policy", "Grant", "Approval", "Budget", "Revocation"],
+      "decision_outputs": ["allow_preflight", "shrink", "pause", "revoke", "freeze"],
+      "may_execute_business_action": false
+    },
+    "work": {
+      "owns": ["Plan", "Requirement", "Resource", "Commitment", "Evidence", "Exception"],
+      "may_write": ["versioned_plan_proposal", "commitment_proposal", "exception_projection"],
+      "may_execute_business_action": false
+    },
+    "execution": {
+      "entry_object": "ExecutionPackage",
+      "requires": ["active_grant", "policy_decision", "trajectory_gate", "narrow_typed_tool", "explicit_resource_binding", "audit_event"],
+      "adapters": ["MCP", "A2A", "business_connector", "sandbox"],
+      "may_execute_business_action": "only_through_L4_specific_adapter"
+    },
+    "evidence_learning": {
+      "owns": ["AuditEvent", "VerificationReceipt", "Readback", "Review", "EvaluationPolicy", "MemoryCandidate", "SkillCandidate"],
+      "learning_effect": "candidate_route_or_recommendation_only",
+      "may_expand_authority": false
+    }
+  },
+  "canonical_objects": ["Identity", "Policy", "Grant", "Plan", "Requirement", "Resource", "Commitment", "ExecutionPackage", "ToolCall", "Evidence", "Exception", "AuditEvent"],
+  "single_execution_entry": {
+    "required_order": ["work_intent", "execution_package", "control_preflight", "trajectory_gate", "connector_specific_gate", "tool_or_adapter", "system_readback", "evidence_and_audit", "work_projection_update"],
+    "model_direct_execution": "deny",
+    "business_module_direct_connector_execution": "deny",
+    "ui_is_authority": false
+  },
+  "event_envelope": {
+    "required_fields": ["event_id", "event_type", "occurred_at", "tenant_id", "organization_id", "task_id", "grant_id", "policy_version", "decision", "evidence_refs"],
+    "required_when_execution_package_bound": ["execution_package_id"],
+    "source_of_truth": "append_only_audit_event_and_business_system_receipt",
+    "projections_are_authority": false,
+    "prohibited": ["raw_prompt", "hidden_reasoning", "secret_value", "unbounded_private_payload"]
+  },
+  "invariants": ["agent_card_skill_memory_or_prompt_never_bypasses_execution_package", "approval_reference_must_be_external_fact", "business_system_readback_is_required_for_completion", "learning_cannot_expand_grant_or_policy", "all_cross_plane_changes_are_versioned_and_auditable"]
+}
