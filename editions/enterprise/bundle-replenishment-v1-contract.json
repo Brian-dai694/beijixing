@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "workflow_id": "bundle_replenishment_v1",
+  "purpose": "Turn one bundle production plan into an evidence-backed, non-executing purchase requisition draft.",
+  "read_phase": {"risk_level": "L2", "required_grant_operations": ["read_bom", "read_inventory", "read_supplier_directory"], "external_write": false},
+  "required_sources": ["bundle_bom", "inventory_snapshot", "inbound_purchase_snapshot", "supplier_directory"],
+  "required_plan_fields": ["plan_id", "bundle_sku", "planned_quantity", "required_available_date", "owner_id", "source_refs"],
+  "inventory_formula": "available_inventory = physical_quantity - order_locked_quantity - bundle_reserved_quantity - quality_hold_quantity",
+  "supply_formula": "on_time_supply = available_inventory + confirmed_or_shipped_unallocated_inbound_with_eta_on_or_before_required_date",
+  "shortage_formula": "max(0, component_demand - on_time_supply)",
+  "suggested_quantity_formula": "shortage_zero_else_ceil(max(shortage, moq) / case_pack) * case_pack",
+  "inbound_statuses_counted": ["supplier_confirmed", "shipped"],
+  "inbound_statuses_not_counted": ["draft", "submitted_unconfirmed", "cancelled", "received_pending_qc"],
+  "supplier_fields_are_references": ["supplier_profile_ref", "product_link_ref", "contact_ref", "wechat_ref"],
+  "invariants": ["warehouse_total_is_not_available_inventory", "late_inbound_never_reduces_current_shortage", "unconfirmed_purchase_never_reduces_current_shortage", "purchase_requisition_draft_is_not_purchase_order", "supplier_selection_does_not_authorize_contact_or_order", "plan_change_requires_new_draft_and_recalculation", "erp_write_external_send_and_purchase_creation_remain_L4"]
+}

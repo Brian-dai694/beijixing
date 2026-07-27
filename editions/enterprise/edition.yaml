@@ -91,6 +91,8 @@ shared_contracts:
   obsidian_governance_integration: ./obsidian-integration-policy.json
   outcome_evaluation_policy: ./enterprise-outcome-evaluation-policy.json
   outcome_evaluation_gate: ./evaluate-enterprise-outcome.ps1
+  bundle_replenishment_v1: ./bundle-replenishment-v1-contract.json
+  bundle_replenishment_v1_planner: ./new-bundle-replenishment-draft.ps1
 
 enterprise_controls:
   identity: external_sso_or_local_enterprise_identity
@@ -134,6 +136,7 @@ enterprise_controls:
   governance_handbook: behavior_navigation_change_impact_and_resync
   obsidian_governance_collaboration: sanitized_outbox_and_candidate_only_feedback
   outcome_evaluation: evidence_backed_score_routes_only_no_execution_authority
+  bundle_replenishment_v1: governed_readonly_bom_inventory_inbound_to_purchase_requisition_draft
   meta_harness: candidate_static_replay_score_verify_human_canary_no_auto_apply
   fusion_loop: claim_pack_receipt_revoke_freeze_shadow_only
   evidence_market: disagreement_budget_signal_no_vote_authority
