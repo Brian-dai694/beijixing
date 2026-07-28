@@ -82,7 +82,7 @@ if (Test-Path -LiteralPath $workflowIndexPath -PathType Leaf) {
 }
 
 $secretPatterns = @(
-  'sk-[A-Za-z0-9_-]{20,}',
+  '(?<![A-Za-z0-9])sk-[A-Za-z0-9_-]{20,}',
   'AKIA[0-9A-Z]{16}',
   '(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[''\"]?[A-Za-z0-9_./+=-]{16,}',
   '(?i)(aws_access_key_id|aws_secret_access_key)\s*[:=]'
