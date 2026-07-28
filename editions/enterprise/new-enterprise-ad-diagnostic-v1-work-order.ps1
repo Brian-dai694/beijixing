@@ -39,6 +39,14 @@ function Emit([hashtable]$Value, [int]$Code = 0) {
   if ($PassThru) { $Value | ConvertTo-Json -Depth 12 } else { $Value | Format-List }
   if ($Code -ne 0) { exit $Code }
 }
+function Get-DiagnosticResultHash([object]$Diagnostic) {
+  $cards = @($Diagnostic.action_cards | ForEach-Object {
+    @($_.campaign_id, $_.target_id, $_.issue, $_.recommendation, $_.evidence.source_hash, $_.evidence.data_as_of, $_.evidence.spend, $_.evidence.sales, $_.evidence.acos, $_.evidence.cpc, $_.evidence.budget) -join '|'
+  } | Sort-Object)
+  $canonical = @("task_id=$($Diagnostic.task_id)", "grant_id=$($Diagnostic.grant_id)", "status=$($Diagnostic.status)", "source_hash=$($Diagnostic.source_hash)", "data_as_of=$($Diagnostic.data_as_of)", 'cards=', ($cards -join "`n")) -join "`n"
+  $sha = [Security.Cryptography.SHA256]::Create()
+  try { return ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($canonical)))).Replace('-', '').ToLowerInvariant() } finally { $sha.Dispose() }
+}
 if (-not (Test-Path -LiteralPath $DiagnosticPackPath -PathType Leaf)) { Emit ([ordered]@{status='blocked';reason='diagnostic_pack_not_found';execution_authorized=$false}) 1 }
 try { $pack = Get-Content -LiteralPath $DiagnosticPackPath -Raw -Encoding UTF8 | ConvertFrom-Json } catch { Emit ([ordered]@{status='blocked';reason='diagnostic_pack_invalid';execution_authorized=$false}) 1 }
 try { $grantFull=(Resolve-Path -LiteralPath $GrantPath -ErrorAction Stop).Path } catch { Emit ([ordered]@{status='blocked';reason='grant_not_found';execution_authorized=$false}) 1 }
@@ -65,7 +73,7 @@ if ([string]$VerifierId -ne [string]$verificationReceipt.verifier_id) { Emit ([o
 if ([string]$grant.grant_id -ne [string]$pack.grant_id -or [string]$grant.task_id -ne [string]$pack.task_id) { Emit ([ordered]@{status='blocked';reason='grant_work_order_binding_mismatch';execution_authorized=$false}) 1 }
 if ([string]$grant.tenant_id -ne $TenantId -or [string]$grant.organization_id -ne $OrganizationId -or [string]$grant.employee_id -ne $EmployeeId -or [string]$grant.device_id -ne $DeviceId -or [string]$grant.project_id -ne $ProjectId -or [string]$grant.cost_center -ne $CostCenter -or $RequesterId -ne $EmployeeId) { Emit ([ordered]@{status='blocked';reason='grant_identity_scope_mismatch';execution_authorized=$false}) 1 }
 if ([string]$diagnosticReceipt.tenant_id -ne $TenantId -or [string]$diagnosticReceipt.organization_id -ne $OrganizationId -or [string]$diagnosticReceipt.employee_id -ne $EmployeeId -or [string]$diagnosticReceipt.device_id -ne $DeviceId -or [string]$diagnosticReceipt.project_id -ne $ProjectId) { Emit ([ordered]@{status='blocked';reason='diagnostic_receipt_identity_scope_mismatch';execution_authorized=$false}) 1 }
-$packCanonical=$pack|ConvertTo-Json -Depth 15 -Compress;$sha=[Security.Cryptography.SHA256]::Create();try{$packResultHash=([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($packCanonical)))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
+$packResultHash = Get-DiagnosticResultHash $pack
 if ([string]::IsNullOrWhiteSpace([string]$diagnosticReceipt.diagnostic_result_hash) -or $packResultHash -ne [string]$diagnosticReceipt.diagnostic_result_hash) { Emit ([ordered]@{status='blocked';reason='diagnostic_result_hash_mismatch';execution_authorized=$false}) 1 }
 $cards = @($pack.action_cards)
 if ($ActionCardIndex -lt 0 -or $ActionCardIndex -ge $cards.Count) { Emit ([ordered]@{status='blocked';reason='action_card_not_found';execution_authorized=$false}) 1 }

@@ -44,6 +44,14 @@ function Invoke-Json([string]$Path,[string[]]$ScriptArgs) {
   if($start -ge 0 -and $end -gt $start){try{$value=$text.Substring($start,$end-$start+1)|ConvertFrom-Json}catch{}}
   return [pscustomobject]@{exit_code=$code;text=$text;value=$value}
 }
+function Get-DiagnosticResultHash([object]$Diagnostic) {
+  $cards = @($Diagnostic.action_cards | ForEach-Object {
+    @($_.campaign_id, $_.target_id, $_.issue, $_.recommendation, $_.evidence.source_hash, $_.evidence.data_as_of, $_.evidence.spend, $_.evidence.sales, $_.evidence.acos, $_.evidence.cpc, $_.evidence.budget) -join '|'
+  } | Sort-Object)
+  $canonical = @("task_id=$($Diagnostic.task_id)", "grant_id=$($Diagnostic.grant_id)", "status=$($Diagnostic.status)", "source_hash=$($Diagnostic.source_hash)", "data_as_of=$($Diagnostic.data_as_of)", 'cards=', ($cards -join "`n")) -join "`n"
+  $sha = [Security.Cryptography.SHA256]::Create()
+  try { return ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($canonical)))).Replace('-', '').ToLowerInvariant() } finally { $sha.Dispose() }
+}
 
 if(-not(Test-Path -LiteralPath $InputPath -PathType Leaf)){Emit ([ordered]@{status='blocked';reason='input_not_found';external_calls=$false;execution_authorized=$false}) 1}
 try{$input=Get-Content -LiteralPath $InputPath -Raw -Encoding UTF8|ConvertFrom-Json}catch{Emit ([ordered]@{status='blocked';reason='invalid_input';external_calls=$false;execution_authorized=$false}) 1}
@@ -75,7 +83,7 @@ $diagnosticArgs=@('-InputPath',$InputPath,'-ExpectedTaskId',[string]$input.task_
 $diagnosticResult=Invoke-Json $diagnostic $diagnosticArgs
 if($diagnosticResult.exit_code -ne 0 -or $null -eq $diagnosticResult.value){Emit ([ordered]@{status='blocked';reason='diagnostic_denied';diagnostic=$diagnosticResult.value;external_calls=$false;execution_authorized=$false}) 1}
 $result=$diagnosticResult.value
-$diagnosticCanonical=$result|ConvertTo-Json -Depth 15 -Compress;$sha=[Security.Cryptography.SHA256]::Create();try{$diagnosticResultHash=([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($diagnosticCanonical)))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
+$diagnosticResultHash = Get-DiagnosticResultHash $result
 $receiptId='receipt-ad-diagnostic-v1-'+[Guid]::NewGuid().ToString('n')
 $receipt=[ordered]@{
   schema_version=1; receipt_id=$receiptId; receipt_type='enterprise_readonly_diagnostic'
