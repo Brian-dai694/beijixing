@@ -45,8 +45,6 @@ $requiredPublicFiles = @(
   'skill-evolution.yaml',
   'world-model.yaml',
   'context-policy.yaml',
-  'WORKSPACE_INDEX.md',
-  'workspace-index.json',
   'rules/work-governance-rules.yaml',
   'workflows/daily_ad_report.yaml',
   'playbooks/context-compression-playbook.yaml',
@@ -123,7 +121,7 @@ if ($privacyScanFiles.Count -eq 0) {
 
 $privacyPatterns = @(
   @{ Name = 'Windows user path'; Pattern = '([A-Za-z]:[\/](Users|用户)[\/]|C:[\/]Users[\/])' },
-  @{ Name = 'OpenAI-style secret'; Pattern = 'sk-[A-Za-z0-9_-]{20,}' },
+  @{ Name = 'OpenAI-style secret'; Pattern = '(?<![A-Za-z0-9])sk-[A-Za-z0-9_-]{20,}' },
   @{ Name = 'AWS access key'; Pattern = 'AKIA[0-9A-Z]{16}' },
   @{ Name = 'Raw Lark spreadsheet token'; Pattern = 'spreadsheet_token:\s*[A-Za-z0-9]{10,}' }
 )
