@@ -34,8 +34,8 @@ $packPath = Join-Path $tmp 'diagnostic-pack.json'
 $raw | Set-Content -LiteralPath $packPath -Encoding UTF8
 $result = $raw | ConvertFrom-Json
 $workOrderScript = Join-Path $PSScriptRoot 'new-enterprise-ad-diagnostic-v1-work-order.ps1'
-$workOrderRaw = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $workOrderScript -DiagnosticPackPath $packPath -GrantPath $grantPath -DiagnosticReceiptPath $diagnosticReceiptPath -VerificationReceiptPath $verificationReceiptPath -RequesterId 'employee-1' -ApproverId 'manager-1' -ConfirmationId 'approval-1' -TenantId 'tenant-1' -OrganizationId 'org-1' -EmployeeId 'employee-1' -DeviceId 'device-1' -ProjectId 'project-1' -CostCenter 'ads-1' -VerifierId 'independent-verifier' -ApproverRole 'department_manager' -BeforeBid 1.25 -BeforeBudget 150 -OutputPath $workOrderPath -Confirmed -PassThru
-if ($LASTEXITCODE -ne 0) { throw 'Approved work-order preview unexpectedly failed.' }
+$workOrderRaw = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $workOrderScript -DiagnosticPackPath $packPath -GrantPath $grantPath -DiagnosticReceiptPath $diagnosticReceiptPath -VerificationReceiptPath $verificationReceiptPath -RequesterId 'employee-1' -ApproverId 'manager-1' -ConfirmationId 'approval-1' -TenantId 'tenant-1' -OrganizationId 'org-1' -EmployeeId 'employee-1' -DeviceId 'device-1' -ProjectId 'project-1' -CostCenter 'ads-1' -VerifierId 'independent-verifier' -ApproverRole 'department_manager' -BeforeBid 1.25 -BeforeBudget 150 -OutputPath $workOrderPath -Confirmed -PassThru 2>&1)
+if ($LASTEXITCODE -ne 0) { throw ('Approved work-order preview unexpectedly failed: ' + ($workOrderRaw -join "`n")) }
 $workOrder = $workOrderRaw | ConvertFrom-Json
 $persistedWorkOrder = Get-Content -LiteralPath $workOrderPath -Raw -Encoding UTF8|ConvertFrom-Json
 $auditPath=Join-Path $root '.qianlima\run-traces\enterprise-audit-events.jsonl'
