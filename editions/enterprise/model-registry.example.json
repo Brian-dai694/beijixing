@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "network_dispatch_enabled": false,
+  "models": [
+    {
+      "model_id": "llada-2.2",
+      "provider_id": "llada",
+      "version": "2.2",
+      "status": "shadow_candidate",
+      "allowed_data": ["public", "internal_sanitized"],
+      "max_calls": 8,
+      "max_cost_usd": 0.5,
+      "max_latency_ms": 30000,
+      "capabilities": ["long_context_analysis", "drafting", "plan_revision"],
+      "evaluation": {
+        "structured_output": "pending",
+        "tool_schema_adherence": "pending",
+        "long_horizon_stop": "pending",
+        "constraint_retention": "pending",
+        "failure_recovery": "pending",
+        "cost_measurement": "pending",
+        "independent_evaluation_ref": "evaluation://llada-2.2/pending"
+      },
+      "fallback_model_id": "qwen-enterprise-readonly-v1"
+    },
+    {
+      "model_id": "qwen-enterprise-readonly-v1",
+      "provider_id": "qwen",
+      "version": "1.0.0",
+      "status": "production_approved",
+      "allowed_data": ["public", "internal_sanitized"],
+      "max_calls": 6,
+      "max_cost_usd": 0.25,
+      "max_latency_ms": 45000,
+      "capabilities": ["structured_analysis", "evidence_summary"],
+      "evaluation": {
+        "structured_output": "passed",
+        "tool_schema_adherence": "passed",
+        "long_horizon_stop": "passed",
+        "constraint_retention": "passed",
+        "failure_recovery": "passed",
+        "cost_measurement": "measured",
+        "independent_evaluation_ref": "evaluation://qwen-enterprise-readonly-v1/1.0.0"
+      },
+      "fallback_model_id": ""
+    }
+  ]
+}

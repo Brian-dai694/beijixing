@@ -98,6 +98,8 @@ shared_contracts:
   execution_package: ./execution-package-contract.json
   trajectory_gate: ./invoke-enterprise-trajectory-gate.ps1
   control_plane_architecture: ./northstar-control-plane-architecture.json
+  model_registry: ./model-registry.example.json
+  model_route_gate: ./invoke-enterprise-model-route-gate.ps1
 
 enterprise_controls:
   identity: external_sso_or_local_enterprise_identity
