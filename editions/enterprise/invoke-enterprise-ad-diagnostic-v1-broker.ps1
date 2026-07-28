@@ -46,7 +46,7 @@ function Invoke-Json([string]$Path,[string[]]$ScriptArgs) {
 }
 function Get-DiagnosticResultHash([object]$Diagnostic) {
   $cards = @($Diagnostic.action_cards | ForEach-Object {
-    @($_.campaign_id, $_.target_id, $_.issue, $_.recommendation, $_.evidence.source_hash, $_.evidence.data_as_of, $_.evidence.spend, $_.evidence.sales, $_.evidence.acos, $_.evidence.cpc, $_.evidence.budget) -join '|'
+    @($_.campaign_id, $_.target_id, $_.issue, $_.recommendation, $_.evidence.source_hash, $_.evidence.data_as_of) -join '|'
   } | Sort-Object)
   $canonical = @("task_id=$($Diagnostic.task_id)", "grant_id=$($Diagnostic.grant_id)", "status=$($Diagnostic.status)", "source_hash=$($Diagnostic.source_hash)", "data_as_of=$($Diagnostic.data_as_of)", 'cards=', ($cards -join "`n")) -join "`n"
   $sha = [Security.Cryptography.SHA256]::Create()
